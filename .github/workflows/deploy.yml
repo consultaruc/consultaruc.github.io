@@ -1,0 +1,139 @@
+name: Deploy a cPanel
+
+# Despliegue continuo: cada push a main sincroniza el código al servidor
+# cPanel por SSH, instala dependencias allí y reinicia la app con PM2.
+#
+# Este proyecto NO es un sitio estático: /ruc/:ruc, /badge/:ruc, todo /api/*
+# y sitemap/robots/llms/ai.txt se generan en el servidor (ver src/server.js).
+# Por eso se despliega la app completa y se ejecuta con Node en cPanel.
+#
+# Detalles del entorno y la puesta en marcha: docs/DEPLOY.md
+on:
+  push:
+    branches: [main]
+  # Permite lanzar un despliegue a mano desde la pestaña Actions.
+  workflow_dispatch:
+
+# Un despliegue a la vez. Si se empujan dos commits seguidos, el segundo
+# espera en lugar de pisar al primero a mitad del rsync.
+concurrency:
+  group: deploy-cpanel
+  cancel-in-progress: false
+
+env:
+  # Node del sistema en el servidor es la 16; la app necesita >=22.5 por
+  # `node:sqlite`, y sólo 24+ trae SQLite compilado CON FTS5 (búsqueda por
+  # razón social). Se instaló a mano y ~/opt/node apunta a esa versión.
+  REMOTE_NODE_BIN: /home/consultarucpe/opt/node/bin
+
+jobs:
+  deploy:
+    name: Sincronizar y reiniciar
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Comprobación mínima antes de tocar producción: si el código no parsea,
+      # no tiene sentido subirlo. (Es lo que pide CONTRIBUTING.md.)
+      - name: Verificar sintaxis de los módulos del back
+        run: |
+          for f in src/*.js src/public/components.js ecosystem.config.js; do
+            node --check "$f"
+          done
+          echo "Sintaxis OK"
+
+      - name: Configurar clave SSH
+        run: |
+          mkdir -p ~/.ssh
+          # La clave se crea con permisos restrictivos ANTES de tener
+          # contenido; si no, ssh la rechaza por "permissions are too open".
+          install -m 600 /dev/null ~/.ssh/id_deploy
+          printf '%s\n' "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_deploy
+          # Fija la huella del host en vez de StrictHostKeyChecking=no, que
+          # aceptaría cualquier servidor que respondiera (MITM).
+          ssh-keyscan -p "${{ secrets.CPANEL_SSH_PORT }}" -H "${{ secrets.CPANEL_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Sincronizar archivos (rsync)
+        env:
+          DEPLOY_PATH: ${{ secrets.CPANEL_DEPLOY_PATH }}
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_deploy -p ${{ secrets.CPANEL_SSH_PORT }} -o BatchMode=yes" \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='node_modules/' \
+            --exclude='assets/' \
+            --exclude='docs/' \
+            --exclude='.env' \
+            --exclude='tmp/' \
+            --exclude='data/' \
+            ./ "${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}:$DEPLOY_PATH/"
+
+      - name: Instalar dependencias y reiniciar la app
+        env:
+          DEPLOY_PATH: ${{ secrets.CPANEL_DEPLOY_PATH }}
+        run: |
+          ssh -i ~/.ssh/id_deploy -p "${{ secrets.CPANEL_SSH_PORT }}" -o BatchMode=yes \
+            "${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}" \
+            "DEPLOY_PATH='$DEPLOY_PATH' NODE_BIN='${{ env.REMOTE_NODE_BIN }}' bash -s" <<'REMOTE'
+          set -euo pipefail
+          export PATH="$NODE_BIN:$PATH"
+          cd "$DEPLOY_PATH"
+
+          node --version
+
+          # La app necesita FTS5 para la búsqueda por razón social. Si un
+          # cambio de versión de Node dejara SQLite sin FTS5, el buscador
+          # devolvería 0 resultados EN SILENCIO (searchByName captura el error
+          # y retorna []), así que se comprueba aquí y se aborta el despliegue.
+          node -e "
+            const { DatabaseSync } = require('node:sqlite');
+            const db = new DatabaseSync(':memory:');
+            db.exec('CREATE VIRTUAL TABLE t USING fts5(x)');
+          " 2>/dev/null || { echo 'ERROR: este Node no trae SQLite con FTS5'; exit 1; }
+
+          # Playwright sólo hace falta para el scraper en vivo y su descarga de
+          # navegadores (~500MB) suele exceder la cuota de un shared host.
+          export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
+          npm ci --omit=dev --no-audit --no-fund
+
+          # data/ está excluido del rsync: la base SQLite y las credenciales
+          # admin sobreviven a cada despliegue. Sólo se asegura que exista.
+          mkdir -p data tmp
+
+          pm2 restart consultaruc --update-env || pm2 start ecosystem.config.js
+          pm2 save
+
+          echo "Despliegue completado en $DEPLOY_PATH"
+          REMOTE
+
+      - name: Comprobar que el sitio responde
+        run: |
+          sleep 8
+          fail=0
+          for p in "/" "/faq/" "/robots.txt" "/ruc/20100070970"; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 45 "https://consultaruc-pe.com$p" || echo 000)
+            echo "$p -> $code"
+            [ "$code" = "200" ] || fail=1
+          done
+
+          # La API pasa por el anti-reuse gate (apiGuard). Se comprueba que
+          # deja pasar al propio sitio Y que sigue bloqueando a un tercero:
+          # un despliegue que rompa cualquiera de los dos lados es un fallo.
+          ok=$(curl -sS --max-time 30 -H "Referer: https://consultaruc-pe.com/" "https://consultaruc-pe.com/api/stats" || echo '')
+          echo "api propio: $ok"
+          case "$ok" in *'"success":true'*) ;; *) echo "La API rechaza al propio sitio"; fail=1 ;; esac
+
+          blocked=$(curl -sS --max-time 30 -H "Referer: https://ejemplo-ajeno.com/" "https://consultaruc-pe.com/api/stats" || echo '')
+          case "$blocked" in *'no autorizado'*) ;; *) echo "La API ya no bloquea origenes ajenos"; fail=1 ;; esac
+
+          if [ "$fail" != "0" ]; then
+            echo "Revisa: pm2 logs consultaruc --err" >&2
+            exit 1
+          fi
+          echo "Sitio verificado"

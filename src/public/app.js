@@ -300,18 +300,34 @@ function titleCase(s) {
   return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-// When `departamento` isn't set, fall back to reading it off the address tail
+// Mirror of deriveDept() in src/geo.js — browser JS can't require() it.
+// Keep the two in sync.
+const DEPT_BY_UBIGEO = {
+  '01': 'AMAZONAS', '02': 'ANCASH', '03': 'APURIMAC', '04': 'AREQUIPA',
+  '05': 'AYACUCHO', '06': 'CAJAMARCA', '07': 'CALLAO', '08': 'CUSCO',
+  '09': 'HUANCAVELICA', '10': 'HUANUCO', '11': 'ICA', '12': 'JUNIN',
+  '13': 'LA LIBERTAD', '14': 'LAMBAYEQUE', '15': 'LIMA', '16': 'LORETO',
+  '17': 'MADRE DE DIOS', '18': 'MOQUEGUA', '19': 'PASCO', '20': 'PIURA',
+  '21': 'PUNO', '22': 'SAN MARTIN', '23': 'TACNA', '24': 'TUMBES',
+  '25': 'UCAYALI'
+};
+
+// When `departamento` isn't set, read it off the address tail
 // ("... DEPARTAMENTO - PROVINCIA - DISTRITO"). Longest name first so
-// "LA LIBERTAD" wins over a stray "LIMA".
-function deriveDept(departamento, address) {
+// "LA LIBERTAD" wins over a stray "LIMA". Addresses that are just a street
+// ("AV. MATERIALES NRO. 2828") carry no department at all, so the ubigeo's
+// first two digits — which are the department code — are the last resort.
+function deriveDept(departamento, address, ubigeo) {
   if (departamento) return departamento;
   const up = (address || '').toUpperCase();
-  if (!up) return '';
-  const keys = Object.keys(DEPT_COORDS).sort((a, b) => b.length - a.length);
-  for (const k of keys) {
-    if (up.includes(k)) return k;
+  if (up) {
+    const keys = Object.keys(DEPT_COORDS).sort((a, b) => b.length - a.length);
+    for (const k of keys) {
+      if (up.includes(k)) return k;
+    }
   }
-  return '';
+  const code = String(ubigeo || '').trim().slice(0, 2);
+  return DEPT_BY_UBIGEO[code] || '';
 }
 
 function setMapMarker(departamento) {
@@ -346,7 +362,7 @@ async function renderResult(data, source) {
   if (notFound) notFound.style.display = "none";
 
   const addr = data.domicilioFiscal || data.domicilio_fiscal || "";
-  const dept = deriveDept(data.departamento, addr);
+  const dept = deriveDept(data.departamento, addr, data.ubigeo);
   const coords = DEPT_COORDS[dept];
 
   const pathD = await window.getPeruPath();

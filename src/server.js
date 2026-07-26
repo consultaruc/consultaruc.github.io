@@ -125,8 +125,33 @@ const loginLimiter = rateLimit({
 function hostOf(u) {
   try { return new URL(u).host; } catch { return null; }
 }
+
+/**
+ * The host this request was ADDRESSED to by the visitor's browser.
+ *
+ * In production the app sits behind LiteSpeed on cPanel, which reverse-proxies
+ * to 127.0.0.1:PORT - so `Host` arrives as "127.0.0.1:31500" while Origin and
+ * Referer still carry the real domain. Comparing the two would never match and
+ * apiGuard would 403 our own frontend (it did). X-Forwarded-Host is set by the
+ * proxy in public_html/.htaccess; falling back to SITE_URL's host covers a
+ * proxy that forwards nothing, and only then do we trust the raw Host header.
+ *
+ * Safe against spoofing: an attacker who sets X-Forwarded-Host must ALSO set a
+ * matching Origin/Referer, and a browser refuses to let page JS forge those -
+ * which is exactly the cross-origin embedding this guard exists to block.
+ */
+function requestHost(req) {
+  const fwd = req.get('x-forwarded-host');
+  if (fwd) return fwd.split(',')[0].trim();
+  if (process.env.SITE_URL) {
+    const h = hostOf(process.env.SITE_URL);
+    if (h) return h;
+  }
+  return req.get('host');
+}
+
 function apiGuard(req, res, next) {
-  const self = req.get('host');
+  const self = requestHost(req);
   const origin = req.get('origin');
   const referer = req.get('referer');
   const token = req.get('x-api-token');
@@ -171,7 +196,7 @@ const RECENT_MAX = 24;
 const recentLookups = [];
 function recordLookup(record) {
   if (!record || !record.ruc || !record.razonSocial) return;
-  const dept = deriveDept(record.departamento, record.domicilioFiscal);
+  const dept = deriveDept(record.departamento, record.domicilioFiscal, record.ubigeo);
   const item = {
     ruc: record.ruc,
     razonSocial: record.razonSocial,
@@ -444,7 +469,7 @@ function renderRucPage(req, ruc, record) {
     `Consulta el RUC ${ruc} de ${razon}. Estado: ${estado || 'no disponible'}, ` +
     `condición de domicilio: ${condicion || 'no disponible'}${record.domicilioFiscal ? `, domicilio fiscal en ${record.domicilioFiscal}` : ''}.`;
 
-  const dept = deriveDept(record.departamento, record.domicilioFiscal);
+  const dept = deriveDept(record.departamento, record.domicilioFiscal, record.ubigeo);
   const coords = DEPT_COORDS[dept];
 
   const schema = {

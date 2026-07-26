@@ -3,7 +3,15 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const AdmZip = require('adm-zip');
-const { bulkInsert, bulkInsertSucursales, clearAll, rebuildFtsIndex, countRecords } = require('./db');
+const {
+  bulkInsert,
+  bulkInsertSucursales,
+  clearAll,
+  snapshotEnrichedRows,
+  restoreEnrichedRows,
+  rebuildFtsIndex,
+  countRecords
+} = require('./db');
 
 // Verified live 2026-07-23, see memory/reference_sunat_data_sources.md
 const RUC_ZIP_URL = 'http://www2.sunat.gob.pe/padron_reducido_ruc.zip';
@@ -23,6 +31,15 @@ const BATCH_SIZE = 10000;
  * 3 CONDICIÓN DE DOMICILIO | 4 UBIGEO | 5 TIPO DE VÍA | 6 NOMBRE DE VÍA |
  * 7 CÓDIGO DE ZONA | 8 TIPO DE ZONA | 9 NÚMERO | 10 INTERIOR | 11 LOTE |
  * 12 DEPARTAMENTO | 13 MANZANA | 14 KILÓMETRO
+ *
+ * CAREFUL - column 12 "DEPARTAMENTO" is NOT the Peruvian department
+ * (Lima, Cusco…). It is the apartment/flat number of the address: real values
+ * are "902", "205", "03", "A", and there are ~4,000 distinct ones where a
+ * department column would have 25. Feeding it into ruc.departamento made the
+ * ficha show "Departamento: 902", so it goes into the address string instead
+ * (as "DPTO. 902") and ruc.departamento is left NULL - geo.js deriveDept()
+ * recovers the real department from the address tail, which the padrón writes
+ * as "… DEPARTAMENTO - PROVINCIA - DISTRITO".
  */
 function clean(value) {
   const v = (value || '').trim();
@@ -37,11 +54,12 @@ function clean(value) {
  * sub-field is "-") - returns null rather than a fake "direccion registrada"
  * placeholder when there's genuinely nothing.
  */
-function buildDireccion({ tipoVia, nombreVia, tipoZona, codigoZona, numero, interior, lote, manzana, km }) {
+function buildDireccion({ tipoVia, nombreVia, tipoZona, codigoZona, numero, interior, lote, manzana, km, depto }) {
   const segments = [];
   if (tipoVia || nombreVia) segments.push([tipoVia, nombreVia].filter(Boolean).join(' '));
   if (numero) segments.push(`NRO. ${numero}`);
   if (interior) segments.push(`INT. ${interior}`);
+  if (depto) segments.push(`DPTO. ${depto}`);
   if (manzana) segments.push(`MZ. ${manzana}`);
   if (lote) segments.push(`LT. ${lote}`);
   if (km) segments.push(`KM. ${km}`);
@@ -50,25 +68,74 @@ function buildDireccion({ tipoVia, nombreVia, tipoZona, codigoZona, numero, inte
   return segments.length > 0 ? segments.join(' ').trim() : null;
 }
 
-async function downloadIfMissing(url, destPath, label) {
-  if (fs.existsSync(destPath)) {
-    console.log(`[Bulk Sync] ${label} already downloaded, skipping fetch.`);
-    return;
+/**
+ * Downloads the dump only when SUNAT's copy is actually newer than ours.
+ *
+ * "Skip if the file exists" was the old rule, and on a scheduled re-sync it
+ * silently re-ingested yesterday's zip: the run logged "Success!" and the
+ * database ended up exactly as stale as before. SUNAT publishes a
+ * Last-Modified (they refresh the padrón roughly daily), so compare against it
+ * and re-download whenever it moves. If the HEAD request fails we download
+ * anyway - wasting bandwidth is much better than serving stale RUC data.
+ *
+ * Returns true when fresh bytes were fetched, false when ours was already
+ * current, so the caller can skip the whole reload.
+ */
+async function downloadIfStale(url, destPath, label) {
+  let remoteModified = null;
+  try {
+    const head = await axios({ method: 'head', url, timeout: 30000 });
+    const lm = head.headers['last-modified'];
+    if (lm) remoteModified = new Date(lm);
+  } catch (err) {
+    console.warn(`[Bulk Sync] ${label}: no se pudo consultar Last-Modified (${err.message}); se descargará igual.`);
   }
+
+  if (fs.existsSync(destPath) && remoteModified && !isNaN(remoteModified)) {
+    const localModified = fs.statSync(destPath).mtime;
+    if (localModified >= remoteModified) {
+      console.log(
+        `[Bulk Sync] ${label} ya está al día ` +
+          `(local ${localModified.toISOString()} >= SUNAT ${remoteModified.toISOString()}), no se descarga.`
+      );
+      return false;
+    }
+    console.log(`[Bulk Sync] ${label}: SUNAT publicó una versión más reciente (${remoteModified.toISOString()}).`);
+  }
+
   console.log(`[Bulk Sync] Downloading ${label} from ${url} ...`);
+  // Write to a temp file and rename only on success: a download killed halfway
+  // through would otherwise leave a truncated zip that looks complete enough to
+  // extract, and the next run would happily ingest a partial padrón.
+  const tmpPath = `${destPath}.part`;
   const response = await axios({ method: 'get', url, responseType: 'stream', timeout: 120000 });
-  const writer = fs.createWriteStream(destPath);
+  const writer = fs.createWriteStream(tmpPath);
   response.data.pipe(writer);
   await new Promise((resolve, reject) => {
     writer.on('finish', resolve);
     writer.on('error', reject);
+    response.data.on('error', reject);
   });
+  fs.renameSync(tmpPath, destPath);
+  // Stamp the local file with SUNAT's own timestamp so the comparison above
+  // stays meaningful across runs.
+  if (remoteModified && !isNaN(remoteModified)) {
+    fs.utimesSync(destPath, remoteModified, remoteModified);
+  }
   console.log(`[Bulk Sync] ${label} download complete.`);
+  return true;
 }
 
 function extractZip(zipPath, expectedTxtPath) {
+  // Reuse the extracted .txt only if it is at least as new as the zip it came
+  // from. Checking "exists and non-empty" alone meant a freshly downloaded zip
+  // was never unpacked while yesterday's .txt sat next to it - the sync then
+  // re-ingested the old text and reported success.
   if (fs.existsSync(expectedTxtPath) && fs.statSync(expectedTxtPath).size > 0) {
-    return expectedTxtPath;
+    if (fs.statSync(expectedTxtPath).mtime >= fs.statSync(zipPath).mtime) {
+      return expectedTxtPath;
+    }
+    console.log(`[Bulk Sync] ${path.basename(expectedTxtPath)} es más antiguo que el zip; se vuelve a extraer.`);
   }
   const zip = new AdmZip(zipPath);
   zip.extractAllTo(path.dirname(zipPath), true);
@@ -109,7 +176,9 @@ async function ingestRucFile(txtPath) {
       estado: clean(parts[2]) || null,
       condicion: clean(parts[3]) || null,
       ubigeo: clean(parts[4]) || null,
-      departamento: clean(parts[12]) || null,
+      // Left NULL on purpose - see the column-layout note above. geo.js
+      // derives the real department from the address.
+      departamento: null,
       direccion: buildDireccion({
         tipoVia: clean(parts[5]),
         nombreVia: clean(parts[6]),
@@ -118,6 +187,7 @@ async function ingestRucFile(txtPath) {
         numero: clean(parts[9]),
         interior: clean(parts[10]),
         lote: clean(parts[11]),
+        depto: clean(parts[12]),
         manzana: clean(parts[13]),
         km: clean(parts[14])
       })
@@ -199,21 +269,43 @@ async function ingestSucursalesFile(txtPath) {
 }
 
 /**
- * Full daily-refresh sync: downloads both SUNAT dumps (skips download if the
- * zip is already on disk - the caller is responsible for clearing data/downloads
- * before calling this if a fresh re-download is actually wanted), wipes the
- * existing tables, and re-ingests everything from scratch. A full reload each
- * run is simpler and safer than incremental upsert + keeping the FTS index in
- * sync row-by-row across 11M+ records.
+ * Refresh sync, safe to run daily from cron.
+ *
+ * Re-downloads each dump only when SUNAT's Last-Modified is newer than our
+ * copy, and if NEITHER file moved it returns early without touching the
+ * database - re-ingesting an unchanged padrón costs ~40 minutes of CPU and
+ * leaves the data byte-identical.
+ *
+ * Pass { force: true } to reload regardless (useful after changing how rows
+ * are parsed, e.g. a column-mapping fix).
  */
-async function downloadAndProcessDump() {
+async function downloadAndProcessDump(options = {}) {
+  const force = !!options.force;
   if (!fs.existsSync(DOWNLOAD_DIR)) fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
 
-  await downloadIfMissing(RUC_ZIP_URL, RUC_ZIP_PATH, 'Padrón RUC principal');
-  await downloadIfMissing(ANEXO_ZIP_URL, ANEXO_ZIP_PATH, 'Local Anexo (sucursales)');
+  const rucFresh = await downloadIfStale(RUC_ZIP_URL, RUC_ZIP_PATH, 'Padrón RUC principal');
+  const anexoFresh = await downloadIfStale(ANEXO_ZIP_URL, ANEXO_ZIP_PATH, 'Local Anexo (sucursales)');
+
+  if (!rucFresh && !anexoFresh && !force) {
+    const current = countRecords();
+    console.log(
+      `[Bulk Sync] Sin cambios en SUNAT: la base ya está al día ` +
+        `(${current.toLocaleString()} registros). No se recarga.`
+    );
+    return { success: true, skipped: true, rucCount: current, sucursalCount: 0 };
+  }
 
   const rucTxtPath = extractZip(RUC_ZIP_PATH, path.join(DOWNLOAD_DIR, 'padron_reducido_ruc.txt'));
   const anexoTxtPath = extractZip(ANEXO_ZIP_PATH, path.join(DOWNLOAD_DIR, 'padron_reducido_local_anexo.txt'));
+
+  // clearAll() wipes the detail fields the live scraper spent its rate-limited
+  // budget collecting (tipo contribuyente, actividad económica, comprobantes…),
+  // which the padrón does not contain and cannot restore. Snapshot them first
+  // and write them back after the reload, so a routine refresh doesn't undo
+  // weeks of progressive enrichment.
+  console.log('[Bulk Sync] Preservando fichas enriquecidas antes de recargar...');
+  const enriched = snapshotEnrichedRows();
+  console.log(`[Bulk Sync] ${enriched.length.toLocaleString()} fichas enriquecidas guardadas.`);
 
   console.log('[Bulk Sync] Clearing existing tables for a fresh full reload...');
   clearAll();
@@ -226,6 +318,12 @@ async function downloadAndProcessDump() {
   const sucursalCount = await ingestSucursalesFile(anexoTxtPath);
   console.log(`[Bulk Sync] Sucursales done: ${sucursalCount.toLocaleString()} records.`);
 
+  if (enriched.length > 0) {
+    console.log('[Bulk Sync] Restaurando fichas enriquecidas...');
+    const restored = restoreEnrichedRows(enriched);
+    console.log(`[Bulk Sync] ${restored.toLocaleString()} fichas enriquecidas restauradas.`);
+  }
+
   console.log('[Bulk Sync] Rebuilding FTS5 search index...');
   rebuildFtsIndex();
 
@@ -236,7 +334,10 @@ async function downloadAndProcessDump() {
 }
 
 if (require.main === module) {
-  downloadAndProcessDump().catch((err) => {
+  // `npm run download-bulk -- --force` reloads even when SUNAT hasn't
+  // republished (after changing how rows are parsed, for instance).
+  const force = process.argv.includes('--force');
+  downloadAndProcessDump({ force }).catch((err) => {
     console.error('[Bulk Sync Error]:', err);
     process.exit(1);
   });

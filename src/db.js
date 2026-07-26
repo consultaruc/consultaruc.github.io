@@ -264,8 +264,13 @@ const stmtInsertRuc = db.prepare(`
     razon_social = excluded.razon_social,
     estado = excluded.estado,
     condicion = excluded.condicion,
-    ubigeo = excluded.ubigeo,
-    departamento = excluded.departamento,
+    -- COALESCE like the detail fields below: ubigeo/departamento only ever
+    -- come from the bulk padrón - SUNAT's live ficha doesn't publish them. A
+    -- live check (or the enrichment worker) would otherwise overwrite a real
+    -- ubigeo with NULL, and the ficha's "Ubicación" tab would lose the ubigeo
+    -- and the map marker for exactly the records people look at most.
+    ubigeo = COALESCE(excluded.ubigeo, ruc.ubigeo),
+    departamento = COALESCE(excluded.departamento, ruc.departamento),
     direccion = excluded.direccion,
     tipo_contribuyente = COALESCE(excluded.tipo_contribuyente, ruc.tipo_contribuyente),
     nombre_comercial = COALESCE(excluded.nombre_comercial, ruc.nombre_comercial),
@@ -441,6 +446,51 @@ function bulkInsertSucursales(rows) {
 function clearAll() {
   db.exec('DELETE FROM ruc');
   db.exec('DELETE FROM ruc_sucursal');
+  _recordCount = null; // force a recount; the cached total is now wrong
+}
+
+// Detail fields that ONLY ever come from SUNAT's live ficha - the reduced
+// padrón has none of them. tipo_contribuyente is the marker for "this row was
+// enriched" (see getEnrichedRucs).
+const ENRICHED_COLS = [
+  'tipo_contribuyente', 'nombre_comercial', 'fecha_inscripcion',
+  'fecha_inicio_actividades', 'actividad_economica', 'comercio_exterior',
+  'sistema_emision', 'sistema_contabilidad', 'comprobantes_pago',
+  'sistema_emision_electronica', 'emisor_electronico_desde',
+  'comprobantes_electronicos', 'ple_desde', 'padrones'
+];
+
+/**
+ * Rows the live scraper has filled in, so a bulk reload can put them back.
+ *
+ * Collecting these costs one indexed scan; losing them costs weeks - the
+ * scraper is capped at a handful of live checks per 10 minutes on purpose, so
+ * re-enriching a few thousand fichas is not something you can just redo.
+ */
+function snapshotEnrichedRows() {
+  return db
+    .prepare(`SELECT ruc, ${ENRICHED_COLS.join(', ')} FROM ruc WHERE tipo_contribuyente IS NOT NULL`)
+    .all();
+}
+
+/**
+ * Writes a snapshot back after the reload. Only touches rows that still exist
+ * in the fresh padrón: a RUC that SUNAT dropped should stay gone, not be
+ * resurrected by our cache.
+ */
+function restoreEnrichedRows(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) return 0;
+  const setClause = ENRICHED_COLS.map((c) => `${c} = ?`).join(', ');
+  const stmt = db.prepare(`UPDATE ruc SET ${setClause} WHERE ruc = ?`);
+  let restored = 0;
+  const run = db.transaction((items) => {
+    for (const r of items) {
+      const info = stmt.run(...ENRICHED_COLS.map((c) => r[c] ?? null), r.ruc);
+      if (info.changes > 0) restored++;
+    }
+  });
+  run(rows);
+  return restored;
 }
 
 function rebuildFtsIndex() {
@@ -479,6 +529,8 @@ module.exports = {
   bulkInsert,
   bulkInsertSucursales,
   clearAll,
+  snapshotEnrichedRows,
+  restoreEnrichedRows,
   rebuildFtsIndex,
   countRecords,
   getLastSyncTime,

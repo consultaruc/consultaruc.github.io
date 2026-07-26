@@ -1,0 +1,35 @@
+# Consulta RUC Perú — todo el tráfico va a la app Node (PM2, puerto 31500).
+# La app es un servidor Express: sirve sus propios estáticos y renderiza
+# /ruc/:ruc, /badge/:ruc, /api/* y sitemap/robots/llms/ai.txt. Por eso NO se
+# excluye ningún path: nada se sirve desde public_html.
+
+RewriteEngine On
+
+# Forzar HTTPS. Sin esto el sitio se servía completo por http:// además de
+# https://: dos URLs con el mismo contenido (contenido duplicado para Google,
+# que además ya recibe canonicals https desde la app) y tráfico en claro.
+# Va ANTES del proxy para que la redirección ocurra sin tocar la app.
+# Se excluye .well-known para no romper la renovación del certificado.
+RewriteCond %{HTTPS} !=on
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+# El proxy reescribe Host a 127.0.0.1:31500, así que la app pierde el dominio
+# real. Sin esto, apiGuard (src/server.js) compara Referer contra "127.0.0.1"
+# y devuelve 403 al propio buscador del sitio.
+RequestHeader set X-Forwarded-Host "consultaruc-pe.com"
+# Refleja el protocolo REAL de la petición. Fijarlo a "https" a secas mentía
+# en las peticiones http, y con `trust proxy` activo Express habría dado por
+# segura una conexión que no lo era.
+RequestHeader set X-Forwarded-Proto "https" env=HTTPS
+RequestHeader set X-Forwarded-Proto "http" env=!HTTPS
+
+# Let's Encrypt / validación de dominio debe seguir sirviéndose del disco.
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteRule ^(.*)$ http://127.0.0.1:31500/$1 [P,L]
+
+# php -- BEGIN cPanel-generated handler, do not edit
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php82 .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit
