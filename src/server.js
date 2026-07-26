@@ -1,0 +1,1156 @@
+const express = require('express');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const session = require('express-session');
+const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
+const {
+  getByRuc,
+  searchByName,
+  countRecords,
+  upsertRucRecord,
+  getLastSyncTime,
+  getLatestTipoCambio,
+  getRecentTipoCambio,
+  enqueueEnrichment,
+  getEnrichStats,
+  getSitemapRucs
+} = require('./db');
+const enrichmentWorker = require('./enrichmentWorker');
+const { downloadAndProcessDump } = require('./bulkDownloader');
+const { seed } = require('./seedData');
+const { scrapeRucLive, closeBrowser, getHealth, testLiveApi, getQuotaStatus } = require('./liveScraper');
+const { credentials, verifyLogin, requireAuth } = require('./adminAuth');
+const { DEPT_COORDS, deriveDept, titleCase } = require('./geo');
+const { renderNav } = require('./nav');
+const CRP = require('./public/components.js');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const isProd = process.env.NODE_ENV === 'production';
+
+// Trust the first proxy hop (needed when deployed behind nginx/Cloudflare so
+// express-rate-limit and secure cookies see the real client IP/protocol,
+// not the proxy's).
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        // Existing pages use inline <script>/<style> blocks - a stricter
+        // nonce-based CSP is a further hardening step, but 'unsafe-inline'
+        // here still blocks any externally-injected/foreign-origin script,
+        // which is the main XSS vector this guards against.
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        // Google Fonts must be allowed explicitly: the stylesheet comes from
+        // fonts.googleapis.com and the actual font files from fonts.gstatic.com.
+        // Without these two entries the CSP silently blocks both and every page
+        // falls back to system fonts (which is exactly what was happening).
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        imgSrc: ["'self'", 'data:'],
+        connectSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'none'"]
+      }
+    },
+    // Don't advertise Express/Node error pages if something slips through.
+    hidePoweredBy: true
+  })
+);
+
+// No wide-open CORS: the API is only meant to be called from this site's
+// own frontend, not embedded cross-origin by third parties. Note this stops
+// *browser* JS on other domains from reading responses - it does nothing
+// against a script/curl hitting the API directly, which is what the
+// rate-limiters below are for.
+
+app.use(express.json({ limit: '10kb' }));
+app.use(
+  session({
+    name: 'sid', // avoid the default 'connect.sid' fingerprinting express-session
+    secret: credentials.sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: 'strict',
+      secure: isProd, // requires HTTPS in production; keep false for local http dev
+      maxAge: 8 * 60 * 60 * 1000 // 8h
+    }
+  })
+);
+
+// Generic rate limits - throttle scraping/enumeration of the public API and
+// brute-forcing the admin login, without needing to know anything about
+// *why* a client is making requests.
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Demasiadas solicitudes. Intente de nuevo en un minuto.' }
+});
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: { success: false, error: 'Demasiados intentos. Intente de nuevo en 15 minutos.' }
+});
+
+// --- Anti-reuse gate for the public data API ---------------------------------
+// The API is meant to be called ONLY by this site's own frontend, never by a
+// third party embedding it on their page or scraping it from a server. Two
+// layers, on top of the rate-limiter:
+//
+//   1. Origin/Referer allowlist: a browser sets Origin/Referer HONESTLY and a
+//      page's JS cannot forge them, so any cross-origin site trying to fetch
+//      our data gets 403 (and CORS already stops it from reading a response).
+//   2. Per-session token: our pages hand the browser a token (issued below,
+//      mirrored into a readable `ctok` cookie); site.js echoes it back in the
+//      `x-api-token` header. A stateless `curl` with neither a matching
+//      Origin/Referer nor a valid session token is refused - to succeed a
+//      scraper must first load a real page, keep the session cookie, and
+//      replay the token, i.e. behave like a stateful client, not a one-shot.
+//
+// Header checks are not spoof-proof against a determined server-side client
+// (that is a WAF/Cloudflare job); this stops browser embedding outright and
+// raises the bar meaningfully for everything else.
+function hostOf(u) {
+  try { return new URL(u).host; } catch { return null; }
+}
+function apiGuard(req, res, next) {
+  const self = req.get('host');
+  const origin = req.get('origin');
+  const referer = req.get('referer');
+  const token = req.get('x-api-token');
+  const originOk = origin ? hostOf(origin) === self : false;
+  const refererOk = referer ? hostOf(referer) === self : false;
+  const tokenOk = !!(token && req.session && req.session.apiToken && token === req.session.apiToken);
+  if (originOk || refererOk || tokenOk) return next();
+  return res.status(403).json({ success: false, error: 'Origen no autorizado.' });
+}
+
+// Hand every real page load a per-session token, mirrored into a readable
+// (non-httpOnly), same-site cookie so the frontend JS can echo it back. Kept
+// stable for the life of the session; only issued for HTML navigations, never
+// for API/asset requests.
+app.use((req, res, next) => {
+  const wantsHtml = req.method === 'GET' && (req.headers.accept || '').includes('text/html');
+  if (wantsHtml && !req.path.startsWith('/api') && !req.path.startsWith('/badge')) {
+    if (!req.session.apiToken) req.session.apiToken = crypto.randomBytes(24).toString('hex');
+    res.cookie('ctok', req.session.apiToken, {
+      httpOnly: false,
+      sameSite: 'strict',
+      secure: isProd,
+      maxAge: 8 * 60 * 60 * 1000
+    });
+  }
+  next();
+});
+
+const publicDir = path.join(__dirname, 'public');
+app.use(express.static(publicDir));
+
+// Seed a handful of curated demo companies so the search works out of the box
+// even before the full SUNAT dump has been ingested.
+if (countRecords() === 0) {
+  seed();
+}
+
+// --- Recent lookups: an in-memory ring buffer of the companies people just
+// consulted. Surfaced in the directory ("Consultas recientes") and available
+// via /api/recent. Not persisted (resets on restart), deduped by RUC.
+const RECENT_MAX = 24;
+const recentLookups = [];
+function recordLookup(record) {
+  if (!record || !record.ruc || !record.razonSocial) return;
+  const dept = deriveDept(record.departamento, record.domicilioFiscal);
+  const item = {
+    ruc: record.ruc,
+    razonSocial: record.razonSocial,
+    estado: record.estado || '',
+    condicion: record.condicion || '',
+    dept: dept ? titleCase(dept) : ''
+  };
+  const i = recentLookups.findIndex((r) => r.ruc === item.ruc);
+  if (i >= 0) recentLookups.splice(i, 1);
+  recentLookups.unshift(item);
+  if (recentLookups.length > RECENT_MAX) recentLookups.pop();
+}
+
+/**
+ * Embeddable "Verificado" badge (see /sello-verificado/). This is the one
+ * route on the whole site that MUST be embeddable in a <iframe> on a
+ * third-party business's own domain - the opposite of every other page,
+ * which the global helmet config above deliberately blocks from framing
+ * (frame-ancestors 'none' + X-Frame-Options: SAMEORIGIN) to prevent
+ * clickjacking. Override both headers for just this route.
+ */
+app.get('/badge/:ruc', apiLimiter, (req, res) => {
+  res.removeHeader('X-Frame-Options');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors *;");
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+
+  const ruc = (req.params.ruc || '').trim();
+  const record = /^\d{11}$/.test(ruc) ? getByRuc(ruc) : null;
+  const theme = req.query.theme === 'dark' ? 'dark' : 'light';
+
+  res.type('html').send(renderBadgeHtml(ruc, record, theme, siteOrigin(req)));
+});
+
+/**
+ * Colour for a status pill. Only genuinely positive states go green - SUNAT
+ * also returns things like "NO APLICABLE", which shouldn't be dressed up as a
+ * pass, and "NO HABIDO", which is a warning rather than a hard failure.
+ */
+function pillTone(value) {
+  const v = (value || '').toUpperCase();
+  if (v === 'ACTIVO' || v === 'HABIDO') return 'ok';
+  if (v === 'NO HABIDO' || v === 'SUSPENSION TEMPORAL') return 'warn';
+  if (v === 'BAJA DE OFICIO' || v.startsWith('BAJA')) return 'bad';
+  return 'neutral';
+}
+
+function renderBadgeHtml(ruc, record, theme, origin) {
+  const ok = !!record;
+  const estado = ok ? record.estado || '' : '';
+  const condicion = ok ? record.condicion || '' : '';
+  const dark = theme === 'dark';
+
+  const accent = !ok ? '#94A3B8' : estado === 'ACTIVO' ? '#16A34A' : '#DC2626';
+  const name = ok ? record.razonSocial : 'RUC no registrado';
+
+  const pills = ok
+    ? [estado, condicion].filter(Boolean).map((v) => `<span class="pill ${pillTone(v)}">${escapeHtml(v)}</span>`).join('')
+    : '<span class="pill neutral">Sin registro</span>';
+
+  const c = dark
+    ? { bg: '#111C33', border: 'rgba(255,255,255,0.10)', name: '#F1F5F9', muted: '#93A3BC', ruc: '#CBD5E1', shadow: '0 1px 2px rgba(0,0,0,.4)' }
+    : { bg: '#FFFFFF', border: '#E4E9F0', name: '#14213D', muted: '#69778C', ruc: '#334155', shadow: '0 1px 2px rgba(16,33,61,.05), 0 4px 14px -6px rgba(16,33,61,.14)' };
+
+  return `<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="robots" content="noindex">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    background:transparent;padding:1px;
+  }
+  a{
+    display:flex;height:100%;width:100%;text-decoration:none;overflow:hidden;
+    background:${c.bg};border:1px solid ${c.border};border-radius:12px;
+    box-shadow:${c.shadow};transition:box-shadow .18s ease,transform .18s ease;
+  }
+  a:hover{transform:translateY(-1px);box-shadow:0 3px 6px rgba(16,33,61,.08),0 10px 24px -8px rgba(16,33,61,.22)}
+  .accent{width:4px;flex:0 0 4px;background:${accent}}
+  .body{flex:1;min-width:0;padding:9px 12px;display:flex;flex-direction:column;justify-content:center;gap:3px}
+  .top{display:flex;align-items:center;gap:6px;min-width:0}
+  .check{width:14px;height:14px;flex:0 0 14px}
+  .name{
+    font-size:12.5px;font-weight:700;color:${c.name};letter-spacing:-.2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .mid{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .ruc{
+    font-family:ui-monospace,'SF Mono','Cascadia Code','IBM Plex Mono',monospace;
+    font-size:11px;font-weight:600;color:${c.ruc};letter-spacing:.3px;
+  }
+  .pill{
+    font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+    padding:2px 6px;border-radius:5px;white-space:nowrap;
+  }
+  .pill.ok{background:rgba(22,163,74,.13);color:#15803D}
+  .pill.warn{background:rgba(217,119,6,.14);color:#B45309}
+  .pill.bad{background:rgba(220,38,38,.13);color:#B91C1C}
+  .pill.neutral{background:rgba(100,116,139,.14);color:${c.muted}}
+  .brand{display:flex;align-items:center;gap:4px;font-size:9.5px;color:${c.muted};margin-top:1px}
+  .brand b{color:${c.name};font-weight:700}
+  .flag{display:flex;width:11px;height:8px;border-radius:1.5px;overflow:hidden;flex:0 0 11px}
+  .flag i{flex:1}
+</style></head>
+<body>
+  <a href="${escapeHtml(origin)}/ruc/${encodeURIComponent(ruc)}" target="_blank" rel="noopener" title="Ver ficha RUC completa">
+    <span class="accent"></span>
+    <span class="body">
+      <span class="top">
+        <svg class="check" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" fill="${accent}"/>
+          <path d="M8 12.4l2.6 2.6L16 9.6" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="name">${escapeHtml(name)}</span>
+      </span>
+      <span class="mid">
+        <span class="ruc">${escapeHtml(ruc)}</span>
+        ${pills}
+      </span>
+      <span class="brand">
+        <span class="flag"><i style="background:#D91023"></i><i style="background:#fff"></i><i style="background:#D91023"></i></span>
+        Verificado por <b>consultaruc-pe.com</b>
+      </span>
+    </span>
+  </a>
+</body></html>`;
+}
+
+function escapeHtml(str) {
+  return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ==========================================================
+// Programmatic SEO: one indexable page per RUC.
+// ==========================================================
+
+// Inlined once at boot so each SSR page ships the map without an extra request.
+const PERU_MAP_PATH = (() => {
+  try {
+    const svg = fs.readFileSync(path.join(publicDir, 'peru-map.svg'), 'utf8');
+    const m = svg.match(/<path d="([\s\S]*?)"/);
+    return m ? m[1] : '';
+  } catch {
+    return '';
+  }
+})();
+
+function siteOrigin(req) {
+  // No domain is registered yet, so derive it from the request. Set SITE_URL
+  // in the environment once the real domain is live so canonical/sitemap URLs
+  // are stable regardless of which host header we're reached on.
+  if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/$/, '');
+  // Registered production domain — used for canonical/sitemap/OG so they never
+  // leak a localhost or proxy host. Override with SITE_URL only if it changes.
+  return 'https://consultaruc-pe.com';
+}
+
+/**
+ * Builds the page's prose summary out of that record's OWN values rather than
+ * one fixed paragraph with a couple of words swapped in. Templates repeated
+ * verbatim across millions of URLs are what actually triggers "thin content"
+ * judgements - the sentences a page gets here depend on which fields it has,
+ * so pages genuinely differ from one another.
+ */
+function buildSummary(ruc, record, dept) {
+  const tipo = ruc.startsWith('10') ? 'persona natural' : 'persona jurídica';
+  const parts = [`El RUC ${ruc} corresponde a ${record.razonSocial}, registrado ante SUNAT como ${tipo}.`];
+
+  if (record.estado) {
+    parts.push(
+      record.estado === 'ACTIVO'
+        ? 'Actualmente figura con estado ACTIVO, es decir que mantiene actividades formales vigentes.'
+        : `Actualmente figura con estado ${record.estado}, por lo que no mantiene actividades vigentes.`
+    );
+  }
+  if (record.condicion) {
+    parts.push(
+      record.condicion === 'HABIDO'
+        ? 'Su condición de domicilio es HABIDO: SUNAT pudo verificar la dirección fiscal declarada.'
+        : `Su condición de domicilio es ${record.condicion}, lo que indica que SUNAT no pudo confirmar la dirección declarada.`
+    );
+  }
+  if (record.domicilioFiscal) {
+    parts.push(`Su domicilio fiscal declarado está en ${record.domicilioFiscal}${dept ? ` (${titleCase(dept)})` : ''}.`);
+  }
+  if (record.fechaInscripcion) {
+    parts.push(`Fue inscrito en el registro el ${record.fechaInscripcion}.`);
+  }
+  if (Array.isArray(record.actividadEconomica) && record.actividadEconomica.length > 0) {
+    parts.push(`Su actividad económica principal declarada es: ${record.actividadEconomica[0].replace(/^Principal\s*-\s*/, '')}.`);
+  }
+  if (Array.isArray(record.comprobantesPago) && record.comprobantesPago.length > 0) {
+    parts.push(`Está autorizado a emitir: ${record.comprobantesPago.join(', ').toLowerCase()}.`);
+  }
+  return parts.join(' ');
+}
+
+/**
+ * Builds a per-RUC FAQ from the record's own fields. Each answer targets a
+ * real long-tail query ("¿el RUC X está activo?", "¿a quién pertenece?") and
+ * feeds both the visible accordion and the FAQPage schema, so every page ships
+ * unique, question-shaped content rather than one repeated paragraph.
+ */
+function buildRucFaq(ruc, record, dept) {
+  const tipo = ruc.startsWith('10') ? 'persona natural' : 'persona jurídica';
+  const razon = record.razonSocial || 'el titular';
+  const faq = [];
+  faq.push({
+    q: `¿A quién pertenece el RUC ${ruc}?`,
+    a: `El RUC ${ruc} pertenece a ${razon}, registrado ante la SUNAT como ${tipo}.`
+  });
+  if (record.estado) {
+    faq.push({
+      q: `¿El RUC ${ruc} está activo?`,
+      a: record.estado === 'ACTIVO'
+        ? `Sí. El RUC ${ruc} figura con estado ACTIVO en la SUNAT, es decir que ${razon} mantiene actividades formales vigentes.`
+        : `No. El RUC ${ruc} figura con estado ${record.estado} en la SUNAT, por lo que no mantiene actividades vigentes en este momento.`
+    });
+  }
+  if (record.condicion) {
+    faq.push({
+      q: `¿El RUC ${ruc} es habido o no habido?`,
+      a: record.condicion === 'HABIDO'
+        ? `El RUC ${ruc} tiene condición de domicilio HABIDO: la SUNAT pudo verificar la dirección fiscal declarada por ${razon}.`
+        : `El RUC ${ruc} tiene condición ${record.condicion}: la SUNAT no pudo confirmar la dirección fiscal declarada. Conviene tener precaución antes de operar.`
+    });
+  }
+  if (record.domicilioFiscal) {
+    faq.push({
+      q: `¿Dónde está el domicilio fiscal de ${razon}?`,
+      a: `El domicilio fiscal declarado de ${razon} está en ${record.domicilioFiscal}${dept ? `, en el departamento de ${titleCase(dept)}` : ''}.`
+    });
+  }
+  if (Array.isArray(record.actividadEconomica) && record.actividadEconomica.length > 0) {
+    faq.push({
+      q: `¿Cuál es la actividad económica del RUC ${ruc}?`,
+      a: `La actividad económica principal declarada del RUC ${ruc} es: ${record.actividadEconomica[0].replace(/^Principal\s*-\s*/, '')}.`
+    });
+  }
+  if (Array.isArray(record.comprobantesPago) && record.comprobantesPago.length > 0) {
+    faq.push({
+      q: `¿Qué comprobantes puede emitir ${razon}?`,
+      a: `Según la SUNAT, ${razon} está autorizado a emitir: ${record.comprobantesPago.join(', ').toLowerCase()}.`
+    });
+  }
+  return faq;
+}
+
+function renderRucPage(req, ruc, record) {
+  const razon = record.razonSocial || '';
+  const estado = (record.estado || '').toUpperCase();
+  const condicion = (record.condicion || '').toUpperCase();
+  const origin = siteOrigin(req);
+  const canonical = `${origin}/ruc/${ruc}`;
+
+  // Indexability threshold: a real domicilio fiscal. With it the page carries
+  // enough of its own data (razón social, estado, condición, address, ubigeo,
+  // department) that the unique content outweighs the template. Without it
+  // there's little more than a name and a status, which genuinely is thin -
+  // those stay noindex,follow (crawlable, links followed, just not indexed)
+  // until the enrichment worker fills them in.
+  //
+  // Note this is separate from the sitemap: indexability is about not BLOCKING
+  // good pages, the sitemap cap is about not PUSHING too many at once.
+  const isIndexable = !!record.domicilioFiscal || !!record.tipoContribuyente;
+
+  const condTag = condicion ? `[${condicion}] ` : '';
+  const title = `${condTag}RUC ${ruc} - ${razon} | Estado SUNAT`;
+  const description =
+    `Consulta el RUC ${ruc} de ${razon}. Estado: ${estado || 'no disponible'}, ` +
+    `condición de domicilio: ${condicion || 'no disponible'}${record.domicilioFiscal ? `, domicilio fiscal en ${record.domicilioFiscal}` : ''}.`;
+
+  const dept = deriveDept(record.departamento, record.domicilioFiscal);
+  const coords = DEPT_COORDS[dept];
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: razon,
+    taxID: ruc,
+    identifier: ruc,
+    url: canonical
+  };
+  if (record.domicilioFiscal || dept) {
+    schema.address = {
+      '@type': 'PostalAddress',
+      streetAddress: record.domicilioFiscal || undefined,
+      addressRegion: dept ? titleCase(dept) : undefined,
+      addressCountry: 'PE'
+    };
+  }
+
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${origin}/` },
+      { '@type': 'ListItem', position: 2, name: 'Consulta RUC', item: `${origin}/ficha-ruc/` },
+      { '@type': 'ListItem', position: 3, name: `RUC ${ruc}`, item: canonical }
+    ]
+  };
+
+  const faqList = buildRucFaq(ruc, record, dept);
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqList.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a }
+    }))
+  };
+
+  const mapSvg = PERU_MAP_PATH
+    ? `<div class="field result-map-cell">
+        <span class="field-label">Ubicación Geográfica</span>
+        <div class="result-map-wrap"><div class="result-map">
+          <svg viewBox="0 0 1024 1024" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mapa del Perú">
+            <g transform="translate(0,1024) scale(0.1,-0.1)" fill="currentColor"><path d="${PERU_MAP_PATH}"/></g>
+            ${coords ? `<circle class="lima-dot" cx="${coords[0]}" cy="${coords[1]}" r="16"/><text class="lima-label" x="${coords[0] + 22}" y="${coords[1] + 12}">${escapeHtml(titleCase(dept))}</text>` : ''}
+          </svg>
+        </div></div>
+      </div>`
+    : '';
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <title>${escapeHtml(title)}</title>
+  <meta name="description" content="${escapeHtml(description)}">
+  <link rel="canonical" href="${escapeHtml(canonical)}">
+  ${isIndexable ? '' : '<meta name="robots" content="noindex,follow">'}
+  <link rel="stylesheet" href="/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script type="application/ld+json">${JSON.stringify(schema)}</script>
+  <script type="application/ld+json">${JSON.stringify(breadcrumb)}</script>
+  <script type="application/ld+json">${JSON.stringify(faqSchema)}</script>
+</head>
+<body class="light-theme">
+  <header class="top-nav">
+    <div class="nav-container">
+      <a class="logo" href="/">
+        <img src="/img/logo.webp" srcset="/img/logo.webp 1x, /img/logo@2x.webp 2x" width="38" height="38" alt="consultaruc-pe.com" class="logo-mark">
+        <span class="logo-title"><span class="logo-l1">Consulta</span><span class="logo-l2">RUC Perú</span></span>
+      </a>
+      <div class="header-stat">
+        <div class="header-stat-text"><strong id="statCount">${countRecords().toLocaleString('es-PE')}</strong><span>registros totales</span></div>
+        <svg class="header-stat-chart" viewBox="0 0 16 16" aria-hidden="true">
+          <rect x="1" y="8" width="3.2" height="7" rx="1" fill="#F87171"/>
+          <rect x="6.4" y="4.5" width="3.2" height="10.5" rx="1" fill="#4ADE80"/>
+          <rect x="11.8" y="1.5" width="3.2" height="13.5" rx="1" fill="#60A5FA"/>
+        </svg>
+        <svg class="header-stat-deco" viewBox="0 0 128 36" fill="none" aria-hidden="true">
+          <path d="M2 22 H68" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 5" stroke-linecap="round" opacity="0.55"/>
+          <circle cx="73" cy="22" r="3.4" fill="#F97316"/>
+          <g stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.75">
+            <path d="M108 4 L124 12.5 L124 27 L108 35 L92 27 L92 12.5 Z"/>
+            <path d="M108 4 L108 19 L92 12.5 M108 19 L124 12.5"/>
+          </g>
+        </svg>
+      </div>
+      <button id="menuToggle" class="menu-btn" aria-label="Abrir menú" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
+    </div>
+  </header>
+
+${renderNav('ficha-ruc')}
+
+  <nav class="breadcrumb"><a href="/">Inicio</a> › <a href="/ficha-ruc/">Consulta RUC</a> › RUC ${escapeHtml(ruc)}</nav>
+
+  <main class="geo-result" style="margin-top:1.5rem;">
+    <div class="print-only print-head">
+      <img src="/img/logo.webp" class="print-logo" alt="consultaruc-pe.com">
+      <div class="print-head-txt">
+        <strong>Consulta RUC Perú</strong>
+        <span>Ficha RUC · Datos públicos de la SUNAT</span>
+      </div>
+      <div class="print-head-url">consultaruc-pe.com</div>
+    </div>
+    <h1 class="ruc-page-h1">${escapeHtml(razon)} <span class="ruc-page-h1-ruc">RUC ${escapeHtml(ruc)}</span></h1>
+    ${CRP.resultPanel(record, { mapSvg: mapSvg, deptName: dept ? titleCase(dept) : '', heading: false })}
+    <div class="print-only print-foot">
+      <span>Ficha generada en <strong>consultaruc-pe.com</strong> · Fuente: datos públicos de la SUNAT · Documento informativo, no oficial.</span>
+    </div>
+
+    <section class="ruc-summary">
+      <h2>Resumen del RUC ${escapeHtml(ruc)}</h2>
+      <p class="ruc-summary-lead">${escapeHtml(buildSummary(ruc, record, dept))}</p>
+
+      <h2 class="ruc-faq-title">Preguntas frecuentes sobre el RUC ${escapeHtml(ruc)}</h2>
+      <div class="ruc-faq">
+        ${faqList.map((f) => `<div class="ruc-faq-item"><h3>${escapeHtml(f.q)}</h3><p>${escapeHtml(f.a)}</p></div>`).join('\n        ')}
+      </div>
+
+      <div class="ruc-summary-links">
+        <a href="/ficha-ruc/">Consultar otro RUC</a>
+        <a href="/verificar-ruc-multiple/">Verificar varios a la vez</a>
+        <a href="/razon-social/">Buscar por nombre</a>
+        <a href="/empresas-populares/">Directorio de empresas</a>
+        <a href="/faq/">Preguntas frecuentes</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-main">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="footer-logo">
+            <img src="/img/logo.webp" srcset="/img/logo.webp 1x, /img/logo@2x.webp 2x" width="44" height="44" alt="consultaruc-pe.com" class="footer-logo-img">
+            <span class="footer-logo-text">Consulta<br><b>RUC Perú</b></span>
+          </a>
+          <p class="footer-desc">Consulta gratuita de RUC con datos oficiales de la SUNAT: razón social, estado, condición de domicilio y actividad económica de cualquier contribuyente del Perú.</p>
+          <div class="footer-stat">
+            <span class="footer-stat-ic" data-icon="database"></span>
+            <div><strong>${countRecords().toLocaleString('es-PE')}</strong><span>registros indexados</span></div>
+          </div>
+          <p class="footer-flag"><span class="footer-flag-chip"></span> Hecho en el Perú, para el Perú.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Consultas</h4>
+          <a href="/">Consulta por RUC</a>
+          <a href="/razon-social/">Por razón social</a>
+          <a href="/verificar-ruc-multiple/">Búsqueda masiva</a>
+          <a href="/ficha-ruc/">Ficha RUC</a>
+        </div>
+        <div class="footer-col">
+          <h4>Herramientas</h4>
+          <a href="/calculadora-tributaria/">Calculadora de régimen</a>
+          <a href="/tipo-de-cambio-sunat/">Tipo de cambio SUNAT</a>
+          <a href="/sello-verificado/">Sello de verificación</a>
+          <a href="/comercio-exterior-ruc/">Comercio exterior</a>
+          <a href="/consulta-essalud/">Consulta EsSalud</a>
+          <a href="/consulta-rnp/">Consulta RNP</a>
+        </div>
+        <div class="footer-col">
+          <h4>Guías y recursos</h4>
+          <a href="/#f1">¿Qué es el RUC?</a>
+          <a href="/faq/">Preguntas frecuentes</a>
+          <a href="/clave-sol/">Clave SOL</a>
+          <a href="/recibo-por-honorarios/">Recibo por honorarios</a>
+          <a href="/sat-lima-vs-sunat/">SAT vs SUNAT</a>
+          <a href="/empresas-populares/">Empresas populares</a>
+        </div>
+        <div class="footer-col">
+          <h4>Institucional</h4>
+          <a href="/sobre-nosotros/">Sobre nosotros</a>
+          <a href="/contacto/">Contacto</a>
+          <a href="/politica-de-privacidad/">Política de privacidad</a>
+          <a href="/terminos-y-condiciones/">Términos y condiciones</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-bottom-inner">
+        <p class="footer-copy">© 2026 <strong>Consulta RUC Perú</strong> — Buscador de RUC SUNAT Perú. Todos los derechos reservados.</p>
+        <p class="footer-disclaimer">Portal informativo independiente basado en datos públicos de la SUNAT. No estamos afiliados oficialmente a la administración tributaria ni la representamos.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/site.js"></script>
+</body>
+</html>`;
+}
+
+/**
+ * Sitemap.
+ *
+ * Deliberately does NOT list all 18M RUCs. Submitting millions of thin,
+ * un-enriched pages is a known way to burn crawl budget and get the whole
+ * domain marked as low quality. Only the static pages plus RUCs that already
+ * carry the full ficha go in - the set grows on its own as the enrichment
+ * worker fills records in. Everything else stays discoverable through
+ * internal links (and is served with noindex,follow until it's enriched).
+ */
+// PACING LEVER. A brand-new domain submitting millions of URLs reads as a
+// content farm and burns crawl budget it hasn't earned. Start small, raise it
+// once Search Console shows indexing is healthy (1k → 10k → 50k; past 50k the
+// sitemap must be split into a sitemap-index, that's the per-file limit).
+// Pages NOT listed here are still indexable - they're simply left for Google
+// to discover naturally instead of being pushed at it.
+const SITEMAP_MAX_RUCS = Number(process.env.SITEMAP_MAX_RUCS || 1000);
+
+const STATIC_PAGES = [
+  '', 'ficha-ruc', 'razon-social', 'verificar-ruc-multiple', 'sello-verificado',
+  'tipo-de-cambio-sunat', 'calculadora-tributaria', 'empresas-populares', 'faq',
+  'clave-sol', 'recibo-por-honorarios', 'sat-lima-vs-sunat', 'comercio-exterior-ruc',
+  'consulta-essalud', 'consulta-rnp', 'sobre-nosotros', 'contacto',
+  'politica-de-privacidad', 'terminos-y-condiciones'
+];
+
+const SITE_NAME = 'Consulta RUC Perú';
+const TOOL_SLUGS = new Set(['ficha-ruc', 'razon-social', 'verificar-ruc-multiple', 'calculadora-tributaria', 'tipo-de-cambio-sunat', 'empresas-populares', 'sello-verificado']);
+const GUIDE_SLUGS = new Set(['clave-sol', 'recibo-por-honorarios', 'sat-lima-vs-sunat', 'comercio-exterior-ruc', 'consulta-essalud', 'consulta-rnp', 'faq']);
+
+// Read each page's real <title>/<description> straight from disk so llms.txt /
+// ai.txt describe the site as it actually is (dynamic, not a hand-maintained
+// duplicate). Cached after first build - static pages don't change at runtime.
+let _pageMeta = null;
+function getPageMeta() {
+  if (_pageMeta) return _pageMeta;
+  _pageMeta = STATIC_PAGES.map((slug) => {
+    let title = slug || 'Inicio';
+    let desc = '';
+    try {
+      const h = fs.readFileSync(path.join(publicDir, slug, 'index.html'), 'utf8');
+      title = ((h.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || title).replace(/<[^>]+>/g, '').replace(/\s*[|·].*$/, '').trim();
+      desc = ((h.match(/<meta name="description" content="([\s\S]*?)">/) || [])[1] || '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').trim();
+    } catch (e) { /* leave defaults */ }
+    return { slug, title, desc };
+  });
+  return _pageMeta;
+}
+
+function buildLlmsTxt(origin) {
+  const meta = getPageMeta();
+  const url = (s) => `${origin}/${s}${s ? '/' : ''}`;
+  const section = (heading, pick) => {
+    const items = meta.filter((m) => pick(m.slug)).map((m) => `- [${m.title}](${url(m.slug)})${m.desc ? ': ' + m.desc : ''}`);
+    return items.length ? `## ${heading}\n${items.join('\n')}\n` : '';
+  };
+  const home = meta.find((m) => m.slug === '');
+  return [
+    `# ${SITE_NAME}`,
+    '',
+    `> ${(home && home.desc) || 'Consulta gratuita del RUC de cualquier empresa o persona registrada en la SUNAT (Perú): estado, condición de domicilio, razón social, actividad económica y más.'}`,
+    '',
+    'Portal informativo y de consulta pública sobre el RUC peruano. La información proviene de fuentes públicas de la SUNAT. Este sitio no está afiliado oficialmente a la SUNAT.',
+    '',
+    section('Herramientas de consulta', (s) => s === '' || TOOL_SLUGS.has(s)),
+    section('Guías y recursos', (s) => GUIDE_SLUGS.has(s)),
+    section('Información del sitio', (s) => s !== '' && !TOOL_SLUGS.has(s) && !GUIDE_SLUGS.has(s)),
+    '## Notas para agentes y LLMs',
+    `- La consulta individual de un RUC se sirve en ${origin}/ruc/{RUC} (11 dígitos).`,
+    '- Todo el contenido está en español de Perú (es-PE) y el uso de la moneda es el sol (PEN).',
+    `- El scraping masivo y el uso de la API interna por terceros no están permitidos; ver ${origin}/ai.txt.`,
+    ''
+  ].filter((x) => x !== false).join('\n');
+}
+
+function buildAiTxt(origin) {
+  return [
+    `# ai.txt — Política de uso para agentes e IA · ${SITE_NAME}`,
+    `# ${origin}`,
+    '',
+    'User-Agent: *',
+    'Allow: /',
+    'Allow: /ruc/',
+    'Disallow: /admin/',
+    'Disallow: /api/',
+    '',
+    '# El contenido editorial (guías y artículos) puede citarse siempre con atribución y enlace a la URL de origen.',
+    '# Los datos de RUC provienen de fuentes públicas de la SUNAT; verifica siempre en la fuente oficial.',
+    '# No se permite el scraping masivo del sitio ni el uso de la API interna por terceros.',
+    'Content-Usage: attribution-required',
+    `Sitemap: ${origin}/sitemap.xml`,
+    `Contact: ${origin}/contacto/`,
+    ''
+  ].join('\n');
+}
+
+/**
+ * Served dynamically rather than as a static file because the Sitemap
+ * directive must be an absolute URL, and the real domain isn't registered
+ * yet (see siteOrigin()). Disallows stay deliberately broad - robots.txt is
+ * world-readable, so naming individual internal endpoints in it would just
+ * hand a recon list to anyone who looks.
+ */
+app.get('/robots.txt', (req, res) => {
+  const o = siteOrigin(req);
+  res.type('text/plain').send(
+    'User-agent: *\n' +
+    'Allow: /\n' +
+    'Disallow: /admin/\n' +
+    'Disallow: /api/\n' +
+    'Disallow: /badge/\n' +
+    'Disallow: /*?print=1\n\n' +
+    '# AI/LLM crawlers welcome (with attribution) — see the policy files\n' +
+    `Sitemap: ${o}/sitemap.xml\n` +
+    `# ${o}/llms.txt · ${o}/ai.txt\n`
+  );
+});
+
+// One representative image per page for the image-sitemap extension (helps
+// image SEO). Content pages use their hero; home uses the branded OG card.
+const PAGE_IMG = {
+  '': '/img/og-home.png',
+  'ficha-ruc': '/img/ficha-ruc-01-anatomia.webp',
+  'razon-social': '/img/razon-social-01-del-nombre-al-ruc.webp',
+  'clave-sol': '/img/clave-sol-1-llave.webp',
+  'recibo-por-honorarios': '/img/recibo-1-documento.webp',
+  'comercio-exterior-ruc': '/img/comercio-1-hero.webp',
+  'consulta-essalud': '/img/essalud-1-hero.webp',
+  'consulta-rnp': '/img/rnp-1-hero.webp',
+  'sat-lima-vs-sunat': '/img/sat-1-hero.webp',
+  'calculadora-tributaria': '/img/regimen-01-escalera.webp',
+  'tipo-de-cambio-sunat': '/img/tc-01-tres-tipos.webp',
+  'verificar-ruc-multiple': '/img/masiva-01-dashboard.webp',
+  'sello-verificado': '/img/consulta-ruc-15-seguridad.webp',
+  'faq': '/img/consulta-ruc-16-que-es.webp',
+  'empresas-populares': '/img/consulta-ruc-01-pasos.webp'
+};
+
+app.get('/sitemap.xml', (req, res) => {
+  const origin = siteOrigin(req);
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Priority/changefreq tiered by page role so crawlers spend budget where it
+  // matters: home > tools > guides > legal/info.
+  const meta = (p) => {
+    if (p === '') return { pr: '1.0', cf: 'daily' };
+    if (TOOL_SLUGS.has(p)) return { pr: '0.9', cf: 'weekly' };
+    if (GUIDE_SLUGS.has(p)) return { pr: '0.8', cf: 'monthly' };
+    return { pr: '0.4', cf: 'yearly' };
+  };
+  const urls = STATIC_PAGES.map((p) => {
+    const { pr, cf } = meta(p);
+    const loc = escapeHtml(`${origin}/${p}${p ? '/' : ''}`);
+    const img = PAGE_IMG[p]
+      ? `\n    <image:image><image:loc>${origin}${PAGE_IMG[p]}</image:loc></image:image>`
+      : '';
+    return `  <url><loc>${loc}</loc><lastmod>${today}</lastmod><changefreq>${cf}</changefreq><priority>${pr}</priority>${img}</url>`;
+  });
+
+  for (const ruc of getSitemapRucs(SITEMAP_MAX_RUCS)) {
+    urls.push(`  <url><loc>${origin}/ruc/${ruc}</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>`);
+  }
+
+  res.type('application/xml').send(
+    '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n' +
+    urls.join('\n') + '\n</urlset>'
+  );
+});
+
+// Machine-readable site guides for LLMs/agents (llmstxt.org convention) and an
+// AI-usage policy — both generated from the live page list, never hardcoded.
+app.get(['/llms.txt', '/llm.txt'], (req, res) => {
+  res.type('text/plain; charset=utf-8').send(buildLlmsTxt(siteOrigin(req)));
+});
+app.get('/ai.txt', (req, res) => {
+  res.type('text/plain; charset=utf-8').send(buildAiTxt(siteOrigin(req)));
+});
+
+app.get('/ruc/:ruc', apiLimiter, (req, res) => {
+  const ruc = (req.params.ruc || '').trim();
+  if (!/^\d{11}$/.test(ruc)) {
+    return res.status(404).type('html').send(renderRucNotFound(req, ruc));
+  }
+
+  const record = getByRuc(ruc);
+  if (!record) {
+    return res.status(404).type('html').send(renderRucNotFound(req, ruc));
+  }
+
+  // Organic traffic doubles as the enrichment signal: if someone lands on a
+  // thin page, queue it so the next visitor (and Googlebot) gets the full one.
+  if (!record.tipoContribuyente) enqueueEnrichment(ruc);
+
+  recordLookup(record);
+  res.type('html').send(renderRucPage(req, ruc, record));
+});
+
+function renderRucNotFound(req, ruc) {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <title>RUC no encontrado | Consulta RUC Perú</title>
+  <meta name="robots" content="noindex,follow">
+  <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="light-theme">
+  <main class="content-page" style="text-align:center;padding-top:4rem;">
+    <h1>RUC no encontrado</h1>
+    <p>El RUC ${escapeHtml(ruc)} no figura en los registros públicos de SUNAT.</p>
+    <p><a href="/">Volver al buscador</a></p>
+  </main>
+  <script src="/site.js"></script>
+</body>
+</html>`;
+}
+
+/**
+ * Query RUC by 11-digit number or company name.
+ *
+ * Default: local SUNAT padrón database only (instant, no fake data).
+ * With ?live=true: tries a real-browser live check against SUNAT's portal
+ * first (see liveScraper.js); if that doesn't produce data for ANY reason
+ * (not found, blocked, rate-limited, or a parsing error), it falls back to
+ * the local database. Only if BOTH come up empty do we report "not found" -
+ * the public API never surfaces *why* the live check didn't pan out, that
+ * detail is for the admin dashboard's health check, not end users.
+ */
+app.get('/api/ruc/:query', apiLimiter, apiGuard, async (req, res) => {
+  const query = (req.params.query || '').trim();
+  const wantsLive = req.query.live === 'true';
+
+  if (!query) {
+    return res.status(400).json({
+      success: false,
+      error: 'Debe ingresar un número de RUC de 11 dígitos o una razón social.'
+    });
+  }
+
+  if (/^\d{11}$/.test(query)) {
+    if (wantsLive) {
+      let liveData = null;
+      try {
+        liveData = await scrapeRucLive(query);
+      } catch (err) {
+        console.error(`[Live Scraper Error] RUC ${query}:`, err.message);
+      }
+
+      const quota = publicQuota();
+
+      if (liveData) {
+        upsertRucRecord(liveData);
+        const record = getByRuc(query);
+        recordLookup(record);
+        return res.json({ success: true, found: true, source: 'live', data: record, quota });
+      }
+
+      // Nothing from the real-time path - fall back to what we already have
+      // before giving up. Availability is always returned so the frontend can
+      // show whether real-time verification can be used right now.
+      const cached = getByRuc(query);
+      if (cached) {
+        recordLookup(cached);
+        return res.json({ success: true, found: true, source: 'index', data: cached, quota });
+      }
+
+      return res.status(404).json({
+        success: false,
+        found: false,
+        ruc: query,
+        error: 'El RUC ingresado no se encuentra en el Padrón de la SUNAT.',
+        quota
+      });
+    }
+
+    const record = getByRuc(query);
+    if (!record) {
+      return res.status(404).json({
+        success: false,
+        found: false,
+        ruc: query,
+        error: 'El RUC ingresado no se encuentra en el Padrón de la SUNAT.'
+      });
+    }
+    // Detail fields missing - queue it so the next visitor gets the full
+    // record instantly (see enrichmentWorker.js).
+    if (!record.tipoContribuyente) enqueueEnrichment(query);
+    recordLookup(record);
+    return res.json({ success: true, found: true, source: 'index', data: record });
+  }
+
+  const results = searchByName(query, 25);
+  if (results.length === 0) {
+    return res.status(404).json({
+      success: false,
+      found: false,
+      query,
+      error: 'No se encontraron empresas coincidentes con ese nombre.'
+    });
+  }
+
+  return res.json({
+    success: true,
+    found: true,
+    source: 'index',
+    query,
+    total: results.length,
+    data: results
+  });
+});
+
+/**
+ * Bulk RUC verification (for accountants/gestores checking many vendors at
+ * once). Deliberately queries ONLY the local database, never the live
+ * scraper - a 200-RUC batch would instantly exhaust the shared live-check
+ * quota (4 per 10 min) and likely trip SUNAT's own rate limiter. See
+ * project memory on the live-scraper rate-limit incident.
+ */
+const MAX_BULK_RUCS = 200;
+app.post('/api/ruc/bulk', apiLimiter, apiGuard, (req, res) => {
+  const input = Array.isArray(req.body?.rucs) ? req.body.rucs : [];
+
+  const cleaned = [...new Set(input.map((r) => String(r).trim()))]
+    .filter((r) => /^\d{11}$/.test(r))
+    .slice(0, MAX_BULK_RUCS);
+
+  if (cleaned.length === 0) {
+    return res.status(400).json({
+      success: false,
+      error: 'No se encontraron números de RUC válidos (11 dígitos) en la lista.'
+    });
+  }
+
+  const results = cleaned.map((ruc) => {
+    const record = getByRuc(ruc);
+    return record
+      ? { ruc, found: true, razonSocial: record.razonSocial, estado: record.estado, condicion: record.condicion }
+      : { ruc, found: false, razonSocial: null, estado: null, condicion: null };
+  });
+
+  res.json({
+    success: true,
+    total: results.length,
+    truncated: input.length > MAX_BULK_RUCS,
+    maxPerRequest: MAX_BULK_RUCS,
+    results
+  });
+});
+
+/**
+ * Triggers a full re-download + re-ingest of both SUNAT padrón files.
+ * Intended to be called from a daily cron job, not on every request.
+ * requireAuth: this is an expensive, disruptive operation (wipes and
+ * reloads the whole DB) - was previously wide open to anyone on the
+ * internet, now admin-session or cron-secret only (see note below).
+ */
+app.post('/api/sync-bulk', requireAuth, (req, res) => {
+  res.json({ message: 'Sincronización masiva de SUNAT iniciada en segundo plano.' });
+  downloadAndProcessDump().catch((err) => {
+    console.error('[Bulk Sync Error]:', err.message);
+  });
+});
+
+app.get('/api/status', apiLimiter, apiGuard, (req, res) => {
+  res.json({ totalRucRegistrados: countRecords() });
+});
+
+/**
+ * Public: how many "Verificar en Vivo" checks are left in the current
+ * shared window, so the frontend can show this upfront (e.g. "puedes
+ * verificar en vivo hasta 4 veces cada 10 min") before the user even tries.
+ */
+/**
+ * Public: total indexed RUC record count, shown as the header stat counter
+ * site-wide (site.js fetches this on every page load). Cheap COUNT(*) query,
+ * no rate-limit concerns beyond the standard apiLimiter.
+ */
+app.get('/api/stats', apiLimiter, apiGuard, (req, res) => {
+  res.json({ success: true, count: countRecords() });
+});
+
+/**
+ * Public availability of real-time verification.
+ *
+ * Deliberately returns only "can you use it right now, and if not for how
+ * long" - NOT our internal budget size or window length. Those are
+ * operational details about how we talk to the upstream source and are
+ * exposed only on the authenticated admin endpoint.
+ */
+function publicQuota() {
+  const q = getQuotaStatus();
+  return { available: q.remaining > 0, retryAfterSeconds: q.retryAfterSeconds };
+}
+
+app.get('/api/live-quota', apiLimiter, apiGuard, (req, res) => {
+  res.json(publicQuota());
+});
+
+/**
+ * Tipo de cambio SUNAT - always served from our own daily-synced cache
+ * (tipoCambioSync.js, run once a day via cron), never scraped live per
+ * request. Exchange rate is a single shared value that changes at most
+ * once a day, so there is no reason to pay SUNAT's WAF/rate-limit cost
+ * on every pageview the way an individual RUC lookup would.
+ */
+app.get('/api/recent', apiLimiter, apiGuard, (req, res) => {
+  res.json({ success: true, data: recentLookups.slice(0, 12) });
+});
+
+app.get('/api/tipo-cambio', apiLimiter, apiGuard, (req, res) => {
+  const latest = getLatestTipoCambio();
+  if (!latest) {
+    return res.status(503).json({
+      success: false,
+      error: 'El tipo de cambio aún no ha sido sincronizado. Intenta más tarde.'
+    });
+  }
+  const historial = getRecentTipoCambio(30);
+  res.json({ success: true, fecha: latest.fecha, compra: latest.compra, venta: latest.venta, historial });
+});
+
+// ==========================================================
+// Admin dashboard - protected by session login (see adminAuth.js)
+// ==========================================================
+const adminPublicDir = path.join(__dirname, 'adminPublic');
+
+app.get('/admin/login', (req, res) => {
+  res.sendFile(path.join(adminPublicDir, 'login.html'));
+});
+
+app.post('/admin/login', loginLimiter, (req, res) => {
+  const { username, password } = req.body || {};
+  if (verifyLogin(username, password)) {
+    req.session.regenerate((err) => {
+      // regenerate() issues a fresh session ID on login, preventing session
+      // fixation (an attacker pre-setting a victim's session ID before login).
+      if (err) return res.status(500).json({ success: false, error: 'Error al iniciar sesión.' });
+      req.session.isAdmin = true;
+      return res.json({ success: true });
+    });
+    return;
+  }
+  return res.status(401).json({ success: false, error: 'Usuario o contraseña incorrectos.' });
+});
+
+app.get('/admin/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.clearCookie('sid');
+    res.redirect('/admin/login');
+  });
+});
+
+app.get('/admin/dashboard', requireAuth, (req, res) => {
+  res.sendFile(path.join(adminPublicDir, 'dashboard.html'));
+});
+
+app.get('/api/admin/health', requireAuth, (req, res) => {
+  res.json({
+    liveApi: getHealth(),
+    quota: getQuotaStatus(),
+    dbCount: countRecords(),
+    lastSyncAt: getLastSyncTime(),
+    enrichment: getEnrichStats()
+  });
+});
+
+app.post('/api/admin/test-live', requireAuth, apiLimiter, async (req, res) => {
+  const result = await testLiveApi();
+  res.json(result);
+});
+
+// ==========================================================
+// Generic 404 + error handling - never leak stack traces, internal file
+// paths, or library names to the client. Full detail goes to the server
+// console only.
+// ==========================================================
+app.use((req, res) => {
+  res.status(404).json({ success: false, error: 'No encontrado.' });
+});
+
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error('[Unhandled Error]', err);
+  res.status(500).json({ success: false, error: 'Ocurrió un error inesperado. Intente de nuevo.' });
+});
+
+async function shutdown() {
+  enrichmentWorker.stop();
+  await closeBrowser();
+  process.exit(0);
+}
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+app.listen(PORT, () => {
+  console.log(`====================================================`);
+  console.log(`Consulta RUC Perú Engine listening on port ${PORT}`);
+  console.log(`Open in browser: http://localhost:${PORT}`);
+  console.log(`Records indexed: ${countRecords().toLocaleString()}`);
+  console.log(`====================================================`);
+  enrichmentWorker.start();
+});

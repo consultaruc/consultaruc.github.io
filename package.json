@@ -1,0 +1,44 @@
+{
+  "name": "consultaruc-pe",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Consulta RUC Perú (consultaruc-pe.com) — portal gratuito para consultar el RUC de cualquier empresa o persona en el padrón oficial de la SUNAT (Perú): estado, condición de domicilio, razón social, actividad económica y comprobantes.",
+  "keywords": [
+    "ruc",
+    "sunat",
+    "peru",
+    "consulta-ruc",
+    "ficha-ruc",
+    "padron-ruc",
+    "razon-social",
+    "tipo-de-cambio",
+    "express",
+    "govtech"
+  ],
+  "homepage": "https://consultaruc-pe.com",
+  "author": "ConsultaRUC.pe",
+  "license": "UNLICENSED",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "download-bulk": "node src/bulkDownloader.js",
+    "sync-tipo-cambio": "node src/tipoCambioSync.js"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.12",
+    "axios": "^1.7.2",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^8.6.0",
+    "express-session": "^1.19.0",
+    "helmet": "^8.3.0",
+    "playwright": "^1.45.0",
+    "png-to-ico": "^3.0.2",
+    "sharp": "^0.35.3"
+  }
+}

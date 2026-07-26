@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard - Consulta RUC Perú</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 2rem;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  h1 { font-size: 1.4rem; }
+  a.logout { color: #94a3b8; text-decoration: none; font-size: 0.9rem; }
+  a.logout:hover { color: #e2e8f0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    max-width: 900px;
+    margin: 0 auto 1.5rem auto;
+  }
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+  .card h2 { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em; }
+  .card .value { font-size: 1.6rem; font-weight: 600; }
+  .badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .badge.ok { background: #064e3b; color: #6ee7b7; }
+  .badge.blocked { background: #78350f; color: #fcd34d; }
+  .badge.rate_limited_self { background: #1e3a5f; color: #7dd3fc; }
+  .badge.error { background: #7f1d1d; color: #fca5a5; }
+  .badge.unknown { background: #334155; color: #94a3b8; }
+  .badge.not_found { background: #334155; color: #cbd5e1; }
+  .detail { font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem; }
+  .actions { max-width: 900px; margin: 0 auto; }
+  button {
+    padding: 0.7rem 1.4rem;
+    background: #1d4ed8;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  button:hover { background: #1e40af; }
+  button:disabled { background: #334155; cursor: wait; }
+  #testResult { margin-top: 1rem; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>Consulta RUC Perú — Panel de Admin</h1>
+    <a class="logout" href="/admin/logout">Cerrar sesión</a>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Estado del API en vivo (SUNAT)</h2>
+      <div id="liveStatusBadge" class="badge unknown">Cargando...</div>
+      <div class="detail" id="liveStatusDetail">-</div>
+    </div>
+    <div class="card">
+      <h2>Registros en la base de datos</h2>
+      <div class="value" id="dbCount">-</div>
+      <div class="detail">RUCs indexados del padrón SUNAT</div>
+    </div>
+    <div class="card">
+      <h2>Última sincronización masiva</h2>
+      <div class="value" id="lastSync" style="font-size:1rem;">-</div>
+      <div class="detail">Fecha de modificación de la base de datos</div>
+    </div>
+    <div class="card">
+      <h2>Cuota de verificación en vivo</h2>
+      <div class="value" id="quotaValue">-</div>
+      <div class="detail" id="quotaDetail">Límite propio para no arriesgar el bloqueo de nuestra IP en SUNAT</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button id="testBtn">Probar API en vivo ahora</button>
+    <div id="testResult"></div>
+  </div>
+
+  <script>
+    async function loadHealth() {
+      const res = await fetch('/api/admin/health');
+      if (res.status === 401) { window.location.href = '/admin/login'; return; }
+      const data = await res.json();
+
+      const badge = document.getElementById('liveStatusBadge');
+      const detail = document.getElementById('liveStatusDetail');
+      const outcome = data.liveApi.lastOutcome || 'unknown';
+      badge.className = 'badge ' + outcome;
+      badge.textContent = {
+        ok: 'Funcionando',
+        blocked: 'Bloqueado por SUNAT',
+        rate_limited_self: 'Límite propio alcanzado',
+        error: 'Error (revisar)',
+        not_found: 'Última consulta: no encontrado',
+        unknown: 'Sin datos aún'
+      }[outcome] || outcome;
+
+      detail.textContent = data.liveApi.lastCheckedAt
+        ? `Último chequeo: ${new Date(data.liveApi.lastCheckedAt).toLocaleString('es-PE')} — ${data.liveApi.lastMessage || ''}`
+        : 'Todavía no se ha hecho ninguna consulta en vivo.';
+
+      document.getElementById('dbCount').textContent = data.dbCount.toLocaleString('es-PE');
+      document.getElementById('lastSync').textContent = data.lastSyncAt
+        ? new Date(data.lastSyncAt).toLocaleString('es-PE')
+        : 'Desconocido';
+
+      const q = data.quota;
+      document.getElementById('quotaValue').textContent = `${q.remaining} / ${q.max}`;
+      document.getElementById('quotaDetail').textContent = q.remaining > 0
+        ? `Disponibles en esta ventana de ${q.windowMinutes} min`
+        : `Agotada - se libera en ${q.retryAfterSeconds}s`;
+    }
+
+    document.getElementById('testBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('testBtn');
+      const resultBox = document.getElementById('testResult');
+      btn.disabled = true;
+      btn.textContent = 'Probando (puede tardar ~10s)...';
+      resultBox.textContent = '';
+      try {
+        const res = await fetch('/api/admin/test-live', { method: 'POST' });
+        const data = await res.json();
+        resultBox.textContent = (data.ok ? '✓ ' : '✗ ') + data.message;
+        resultBox.style.color = data.ok ? '#6ee7b7' : '#fca5a5';
+      } catch (err) {
+        resultBox.textContent = 'Error al ejecutar la prueba: ' + err.message;
+        resultBox.style.color = '#fca5a5';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Probar API en vivo ahora';
+        loadHealth();
+      }
+    });
+
+    loadHealth();
+  </script>
+</body>
+</html>
