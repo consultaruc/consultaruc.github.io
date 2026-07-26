@@ -51,6 +51,13 @@ app.use(
         // Best Practices audit) without actually stopping Cloudflare - the
         // block happens in the browser, after the edge already added the tag.
         scriptSrc: ["'self'", "'unsafe-inline'", 'https://static.cloudflareinsights.com'],
+        // helmet defaults script-src-attr to 'none', which blocks inline event
+        // handlers. The async font links use onload="this.media='all'" to swap
+        // a non-blocking print stylesheet to all - blocked, that swap never
+        // runs and the page keeps system fonts forever. Attribute handlers are
+        // a far narrower surface than full inline <script>, which is already
+        // allowed above.
+        scriptSrcAttr: ["'unsafe-inline'"],
         // Google Fonts must be allowed explicitly: the stylesheet comes from
         // fonts.googleapis.com and the actual font files from fonts.gstatic.com.
         // Without these two entries the CSP silently blocks both and every page
@@ -566,7 +573,7 @@ function renderRucPage(req, ruc, record) {
   <meta name="description" content="${escapeHtml(description)}">
   <link rel="canonical" href="${escapeHtml(canonical)}">
   ${isIndexable ? '' : '<meta name="robots" content="noindex,follow">'}
-  <link rel="stylesheet" href="/style.css?v=310c5089">
+  <link rel="stylesheet" href="/style.css?v=3b63c983">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -919,7 +926,7 @@ function renderRucNotFound(req, ruc) {
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <title>RUC no encontrado | Consulta RUC Perú</title>
   <meta name="robots" content="noindex,follow">
-  <link rel="stylesheet" href="/style.css?v=310c5089">
+  <link rel="stylesheet" href="/style.css?v=3b63c983">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="light-theme">
