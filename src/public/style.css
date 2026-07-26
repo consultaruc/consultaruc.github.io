@@ -995,7 +995,7 @@ body:not(.light-theme) .dc-seg { background: rgba(255,255,255,.08); color: var(-
 .rc-dom .icon { width: 14px; height: 14px; color: var(--geo-orange); flex: 0 0 auto; }
 .rc-act { align-self: flex-start; margin: 0.7rem 0 0; font-size: 0.72rem; font-weight: 600; color: #0A6F66; background: rgba(13,148,136,.10); border: 1px solid rgba(13,148,136,.20); border-radius: 7px; padding: 0.2rem 0.55rem; }
 .rc-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.85rem; padding-top: 0.7rem; border-top: 1px solid var(--border-color); }
-.rc-ref { font-family: var(--mono); font-size: 0.64rem; color: var(--text-muted); opacity: .8; }
+.rc-ref { font-family: var(--mono); font-size: 0.64rem; color: var(--text-muted); }
 .rc-ver { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.78rem; font-weight: 700; color: var(--geo-orange-text); white-space: nowrap; }
 .rc-ver .icon { width: 14px; height: 14px; transition: transform .15s ease; }
 .rubro-card:hover .rc-ver .icon { transform: translateX(3px); }
@@ -1070,7 +1070,7 @@ body:not(.light-theme) .rate-box input { border-color: rgba(255,255,255,.18); }
 .bulk-hero { padding-bottom: 2.25rem; }
 .bulk-badge {
   display: inline-flex; align-items: center; gap: 0.4rem;
-  background: rgba(37,99,235,.10); color: var(--accent-blue);
+  background: rgba(37,99,235,.10); color: #1D4FD8;
   border: 1px solid rgba(37,99,235,.18); border-radius: 999px;
   padding: 0.35rem 0.95rem; font-size: 0.78rem; font-weight: 600; margin-bottom: 1.1rem;
 }
