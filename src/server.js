@@ -711,7 +711,7 @@ ${renderNav('ficha-ruc')}
     </div>
   </footer>
 
-  <script src="/site.js?v=9d6a6049"></script>
+  <script src="/site.js?v=c8df8645"></script>
 </body>
 </html>`;
 }
@@ -935,7 +935,7 @@ function renderRucNotFound(req, ruc) {
     <p>El RUC ${escapeHtml(ruc)} no figura en los registros públicos de SUNAT.</p>
     <p><a href="/">Volver al buscador</a></p>
   </main>
-  <script src="/site.js?v=9d6a6049"></script>
+  <script src="/site.js?v=c8df8645"></script>
 </body>
 </html>`;
 }

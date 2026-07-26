@@ -155,18 +155,17 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.art-section').forEach(function (s) { obs.observe(s); });
 
     // Reading-progress bar at the top of the TOC: fills as the article is read.
+    //
+    // The markup now ships in the HTML instead of being created here. Injecting
+    // two elements after first paint pushed the whole table of contents down and
+    // was measured as a 0.328 layout shift on mobile (CLS 0.339 overall, the
+    // single biggest drag on the performance score). Reserving the space in the
+    // document costs nothing and makes the shift impossible.
     var content = document.querySelector('.art-body') || document.querySelector('.art-main');
-    var title = toc.querySelector('.art-toc-title');
-    if (content && title && !toc.querySelector('.art-toc-progress')) {
-      var label = document.createElement('div');
-      label.className = 'art-toc-progress-label';
-      label.innerHTML = '<span>Progreso de lectura</span><span class="art-toc-pct">0%</span>';
-      var bar = document.createElement('div');
-      bar.className = 'art-toc-progress';
-      bar.innerHTML = '<span class="art-toc-progress-fill"></span>';
-      title.insertAdjacentElement('afterend', label);
-      label.insertAdjacentElement('afterend', bar);
-      var fill = bar.firstChild;
+    var bar = toc.querySelector('.art-toc-progress');
+    var label = toc.querySelector('.art-toc-progress-label');
+    if (content && bar && label) {
+      var fill = bar.querySelector('.art-toc-progress-fill');
       var pctEl = label.querySelector('.art-toc-pct');
       var ticking = false;
       function updateProgress() {
