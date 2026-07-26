@@ -147,7 +147,7 @@
       <span class="rp-avatar">${esc(avatar)}</span>
       <div class="rp-hero-id">
         <span class="rp-hero-eyebrow">Razón social</span>
-        <h3 class="rp-hero-name">${esc(razon || '—')}</h3>
+        ${o.heading === false ? '<h2' : '<h3'} class="rp-hero-name">${esc(razon || '—')}${o.heading === false ? '</h2>' : '</h3>'}
         ${comercial ? `<span class="rp-hero-comercial">Nombre comercial: <b>${esc(comercial)}</b></span>` : ''}
         <div class="rp-hero-badges">
           ${estado ? `<span class="rp-badge ${estadoTone}"><span class="rp-badge-dot"></span>${esc(estado)}</span>` : ''}
@@ -171,10 +171,10 @@
   </div>
 
   <div class="rp-tabs" role="tablist">
-    <button type="button" class="rp-tab active" data-tab="general">Resumen</button>
-    <button type="button" class="rp-tab" data-tab="ubicacion">Ubicación</button>
-    <button type="button" class="rp-tab" data-tab="actividad">Actividad</button>
-    <button type="button" class="rp-tab" data-tab="comprobantes">Comprobantes</button>
+    <button type="button" role="tab" aria-selected="true" class="rp-tab active" data-tab="general">Resumen</button>
+    <button type="button" role="tab" aria-selected="false" class="rp-tab" data-tab="ubicacion">Ubicación</button>
+    <button type="button" role="tab" aria-selected="false" class="rp-tab" data-tab="actividad">Actividad</button>
+    <button type="button" role="tab" aria-selected="false" class="rp-tab" data-tab="comprobantes">Comprobantes</button>
   </div>
 
   <div class="rp-panels">
