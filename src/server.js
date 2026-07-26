@@ -573,7 +573,7 @@ function renderRucPage(req, ruc, record) {
   <meta name="description" content="${escapeHtml(description)}">
   <link rel="canonical" href="${escapeHtml(canonical)}">
   ${isIndexable ? '' : '<meta name="robots" content="noindex,follow">'}
-  <link rel="stylesheet" href="/style.css?v=d3184174">
+  <link rel="stylesheet" href="/style.css?v=90dcac4a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -648,6 +648,7 @@ ${renderNav('ficha-ruc')}
 
   <footer class="site-footer">
     <div class="footer-main">
+      <h2 class="sr-only">Enlaces del pie de página</h2>
       <div class="footer-grid">
         <div class="footer-brand">
           <a href="/" class="footer-logo">
@@ -926,7 +927,7 @@ function renderRucNotFound(req, ruc) {
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <title>RUC no encontrado | Consulta RUC Perú</title>
   <meta name="robots" content="noindex,follow">
-  <link rel="stylesheet" href="/style.css?v=d3184174">
+  <link rel="stylesheet" href="/style.css?v=90dcac4a">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="light-theme">

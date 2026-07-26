@@ -2994,3 +2994,12 @@ h2.rate-hist-title, .rate-hist-title { display: flex; align-items: center; gap: 
 .art-video figcaption { display: flex; align-items: center; justify-content: center; gap: 0.4rem; margin-top: 0.65rem; font-size: 0.82rem; color: var(--text-muted); text-align: center; }
 .art-video figcaption .icon { width: 14px; height: 14px; color: var(--geo-orange); }
 @media (max-width: 640px) { .art-video-el { border-radius: 0; } }
+
+/* Visually hidden but exposed to screen readers. Used for the footer's section
+   heading: the columns are h3, and on pages whose body has no h2 (the FAQ, whose
+   questions are <summary> elements) that h3 followed the h1 directly and tripped
+   the heading-order audit. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
