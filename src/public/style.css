@@ -91,7 +91,7 @@ body.light-theme .spinner { border-color: var(--overlay-strong); border-top-colo
 }
 
 h1, h2, h3, .logo-title, .result-heading, .geo-hero h1, .hero-section h1,
-.sidebar-card h4, .sidebar-card h2, .content-page h1, .content-page h2 {
+.sidebar-card h4, .sidebar-card h3, .sidebar-card h2, .content-page h1, .content-page h2 {
   font-family: 'Sora', 'Inter', system-ui, sans-serif;
   letter-spacing: -0.02em;
 }
@@ -261,7 +261,7 @@ body {
   padding: 1.25rem;
 }
 
-.sidebar-card h4, .sidebar-card h2 {
+.sidebar-card h4, .sidebar-card h3, .sidebar-card h2 {
   font-size: 0.95rem;
   margin-bottom: 0.9rem;
   display: flex;
@@ -1230,7 +1230,7 @@ body:not(.light-theme) .bulk-textarea { border-color: rgba(255,255,255,.18); }
 .footer-social svg { width: 18px; height: 18px; display: block; }
 
 /* link columns */
-.footer-col h4 {
+.footer-col h4, .footer-col h3 {
   color: #fff; font-family: var(--font-head, 'Sora', sans-serif);
   font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
   margin: 0.2rem 0 0.9rem;
@@ -1299,6 +1299,13 @@ body:not(.light-theme) .bulk-textarea { border-color: rgba(255,255,255,.18); }
   --geo-orange: #F97316;
   --geo-green: #15803D;
   --geo-line: #DDE4EE;
+  /* Text-only variants of the brand colours. The brand orange (#F97316) is
+     only 2.56:1 on a light panel and the green 4.34:1 - both fail WCAG AA for
+     text. Shapes (buttons, icons, the accent bar) keep the brand hues above;
+     these darker tones are for small text set ON a light background, where
+     the contrast rule actually applies. */
+  --geo-orange-text: #B45309;
+  --geo-green-text: #146C34;
 }
 
 /* Header: logo + centered live stat + toggle (already navy). Refine stat. */
@@ -1559,7 +1566,7 @@ body:not(.light-theme) .result-map { color: #334660; }
 /* wrapper spans produced by the emoji→icon replacement */
 .field-label .ic .icon { width: 15px; height: 15px; }
 .field-label { gap: 0.45rem; }
-.sidebar-card h4 .ic .icon, .sidebar-card h2 .ic .icon { width: 17px; height: 17px; }
+.sidebar-card h4 .ic .icon, .sidebar-card h3 .ic .icon, .sidebar-card h2 .ic .icon { width: 17px; height: 17px; }
 .sidebar-link-item .ic .icon { width: 16px; height: 16px; color: var(--accent-blue); }
 .header-stat-icon .icon { width: 20px; height: 20px; }
 .search-icon .icon { width: 18px; height: 18px; }
@@ -2136,7 +2143,7 @@ body:not(.light-theme) .rp-tag { background: rgba(255,255,255,.06); color: var(-
 .rp-col-map .rp-field { padding-right: 106px; }
 
 .geo-result .sidebar-card { padding: 0.9rem 1rem; }
-.geo-result .sidebar-card h4, .geo-result .sidebar-card h2 { font-size: 0.85rem; margin-bottom: 0.6rem; }
+.geo-result .sidebar-card h4, .geo-result .sidebar-card h3, .geo-result .sidebar-card h2 { font-size: 0.85rem; margin-bottom: 0.6rem; }
 .geo-result .sidebar-link-item { font-size: 0.79rem; padding: 0.45rem 0; }
 .geo-result .sidebar-history-item { font-size: 0.79rem; }
 
@@ -2341,11 +2348,11 @@ html { scroll-behavior: smooth; }
   background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
   padding: 1rem 1.05rem; box-shadow: 0 1px 3px rgba(16,35,63,.05);
 }
-.aside-card h4 {
+.aside-card h4, .aside-card h3 {
   display: flex; align-items: center; gap: 0.45rem; margin: 0 0 0.75rem;
   font-size: 0.82rem; font-weight: 700; letter-spacing: .2px; color: var(--text-main);
 }
-.aside-card h4 .icon { width: 15px; height: 15px; color: var(--accent-blue); }
+.aside-card h4, .aside-card h3 .icon { width: 15px; height: 15px; color: var(--accent-blue); }
 
 /* mini quick-search */
 .aside-search { background: linear-gradient(180deg, var(--geo-navy) 0%, #1b2c4d 100%); border-color: transparent; }
@@ -2562,7 +2569,7 @@ body:not(.light-theme) .content-page a:hover { color: #9DBBFF; }
 .art-byline-name strong { font-size: 0.92rem; color: var(--text-main); font-weight: 700; }
 .art-byline-badge {
   display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.64rem; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .3px; color: var(--geo-green, #16A34A);
+  text-transform: uppercase; letter-spacing: .3px; color: var(--geo-green-text, #146C34);
   background: color-mix(in srgb, var(--geo-green, #16A34A) 12%, transparent); padding: 2px 8px; border-radius: 999px;
 }
 .art-byline-badge .icon { width: 12px; height: 12px; }
@@ -2599,7 +2606,7 @@ body:not(.light-theme) .content-page a:hover { color: #9DBBFF; }
 .art-formula-part { font-family: var(--mono); font-weight: 700; padding: 0.5rem 0.9rem; border-radius: 8px; font-size: 0.9rem; }
 .art-formula-part.tipo { background: rgba(37,99,235,.12); color: #1d4ed8; }
 .art-formula-part.body { background: var(--overlay-soft); color: var(--text-main); }
-.art-formula-part.check { background: rgba(234,88,12,.12); color: #c2410c; }
+.art-formula-part.check { background: rgba(234,88,12,.12); color: #B03A0A; }
 .art-formula-op { font-weight: 800; color: var(--text-muted); }
 
 /* RUC structure diagram */
@@ -2620,8 +2627,8 @@ body:not(.light-theme) .art-callout { background: rgba(251,146,60,.08); }
 .art-table th { background: var(--overlay-soft); font-size: 0.78rem; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); }
 
 .art-badge { display: inline-block; font-size: 0.68rem; font-weight: 700; letter-spacing: .3px; padding: 2px 7px; border-radius: 5px; white-space: nowrap; }
-.art-badge.ok { background: rgba(22,163,74,.13); color: #15803d; }
-.art-badge.warn { background: rgba(217,119,6,.14); color: #b45309; }
+.art-badge.ok { background: rgba(22,163,74,.13); color: #146C34; }
+.art-badge.warn { background: rgba(217,119,6,.14); color: #A34D08; }
 .art-badge.bad { background: rgba(220,38,38,.13); color: #b91c1c; }
 
 /* related cards */
@@ -2942,7 +2949,7 @@ body.drawer-open { overflow: hidden; }
 
 /* hint under the real-time verification toggle */
 .lt-hint { display: flex; align-items: center; justify-content: center; gap: 0.4rem; max-width: 680px; margin: 0.5rem auto 0; font-size: 0.78rem; color: var(--text-muted); text-align: center; line-height: 1.45; }
-.lt-hint strong { color: var(--geo-orange); font-weight: 700; }
+.lt-hint strong { color: var(--geo-orange-text); font-weight: 700; }
 .lt-hint .icon { width: 14px; height: 14px; color: var(--geo-orange); flex: 0 0 auto; }
 
 /* --- In-article explainer video (click-to-play, fits the article column) --- */

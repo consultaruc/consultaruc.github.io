@@ -566,7 +566,7 @@ function renderRucPage(req, ruc, record) {
   <meta name="description" content="${escapeHtml(description)}">
   <link rel="canonical" href="${escapeHtml(canonical)}">
   ${isIndexable ? '' : '<meta name="robots" content="noindex,follow">'}
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.css?v=310c5089">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -663,14 +663,14 @@ ${renderNav('ficha-ruc')}
           </div>
         </div>
         <div class="footer-col">
-          <h4>Consultas</h4>
+          <h3>Consultas</h3>
           <a href="/">Consulta por RUC</a>
           <a href="/razon-social/">Por razón social</a>
           <a href="/verificar-ruc-multiple/">Búsqueda masiva</a>
           <a href="/ficha-ruc/">Ficha RUC</a>
         </div>
         <div class="footer-col">
-          <h4>Herramientas</h4>
+          <h3>Herramientas</h3>
           <a href="/calculadora-tributaria/">Calculadora de régimen</a>
           <a href="/tipo-de-cambio-sunat/">Tipo de cambio SUNAT</a>
           <a href="/sello-verificado/">Sello de verificación</a>
@@ -679,7 +679,7 @@ ${renderNav('ficha-ruc')}
           <a href="/consulta-rnp/">Consulta RNP</a>
         </div>
         <div class="footer-col">
-          <h4>Guías y recursos</h4>
+          <h3>Guías y recursos</h3>
           <a href="/#f1">¿Qué es el RUC?</a>
           <a href="/faq/">Preguntas frecuentes</a>
           <a href="/clave-sol/">Clave SOL</a>
@@ -688,7 +688,7 @@ ${renderNav('ficha-ruc')}
           <a href="/empresas-populares/">Empresas populares</a>
         </div>
         <div class="footer-col">
-          <h4>Institucional</h4>
+          <h3>Institucional</h3>
           <a href="/sobre-nosotros/">Sobre nosotros</a>
           <a href="/contacto/">Contacto</a>
           <a href="/politica-de-privacidad/">Política de privacidad</a>
@@ -704,7 +704,7 @@ ${renderNav('ficha-ruc')}
     </div>
   </footer>
 
-  <script src="/site.js"></script>
+  <script src="/site.js?v=9d6a6049"></script>
 </body>
 </html>`;
 }
@@ -919,7 +919,7 @@ function renderRucNotFound(req, ruc) {
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <title>RUC no encontrado | Consulta RUC Perú</title>
   <meta name="robots" content="noindex,follow">
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.css?v=310c5089">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="light-theme">
@@ -928,7 +928,7 @@ function renderRucNotFound(req, ruc) {
     <p>El RUC ${escapeHtml(ruc)} no figura en los registros públicos de SUNAT.</p>
     <p><a href="/">Volver al buscador</a></p>
   </main>
-  <script src="/site.js"></script>
+  <script src="/site.js?v=9d6a6049"></script>
 </body>
 </html>`;
 }

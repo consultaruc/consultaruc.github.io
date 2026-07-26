@@ -45,6 +45,13 @@ jobs:
           done
           echo "Sintaxis OK"
 
+      # style.css y app.js conservan su nombre entre despliegues, así que con
+      # Cache-Control largo el navegador (y Cloudflare) seguían sirviendo la
+      # copia vieja durante horas. Sellar la URL con el hash del contenido
+      # invalida al instante sin acortar la caché.
+      - name: Sellar assets con el hash de su contenido
+        run: node scripts/stamp-assets.js
+
       - name: Configurar clave SSH
         run: |
           mkdir -p ~/.ssh
