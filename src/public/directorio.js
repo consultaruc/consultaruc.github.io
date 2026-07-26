@@ -71,6 +71,17 @@
     var body = document.getElementById('rubroBody');
     if (!body) return;
 
+    // The sector directory is now pre-rendered into the page's HTML: SECTORS is
+    // a hardcoded list, so building it client-side bought nothing and cost a
+    // 0.675 layout shift (36 cards appearing after first paint). It also means
+    // crawlers see the listings without executing JS. Skip the rebuild when the
+    // markup is already there; the scroll-spy and the rest of the wiring below
+    // still run against it.
+    if (!body.querySelector('.rubro-section')) {
+      renderSectors(navEl, body);
+    }
+
+    function renderSectors(navEl, body) {
     navEl.innerHTML = SECTORS.map(function (s, i) {
       return '<a href="#' + s.id + '"' + (i === 0 ? ' class="active"' : '') + '>' + esc(s.name.split(/[ ,]/)[0]) + '</a>';
     }).join('');
@@ -81,6 +92,7 @@
         '<h2>' + esc(s.name) + '</h2><span class="rubro-count">' + s.items.length + ' empresas</span></div>' +
         '<div class="rubro-grid">' + s.items.map(card).join('') + '</div></section>';
     }).join('');
+    }
 
     if (window.applyIcons) window.applyIcons(body), window.applyIcons(navEl);
 

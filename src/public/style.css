@@ -784,6 +784,11 @@ body.light-theme .source-badge-live { background: rgba(37, 99, 235, 0.1); color:
 .pop-head h2 { font-family: 'Sora', sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--geo-navy); letter-spacing: -0.02em; margin: 0 0 0.45rem; }
 .pop-head p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.55; max-width: 660px; margin: 0; }
 .pop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+/* Filled from /api/recent after load, so reserve one card's height while empty -
+   otherwise the section below jumps up by that much on every visit. Collapses
+   to nothing when the API returns no rows (the script leaves it empty then). */
+#dirRecentGrid:empty { min-height: 178px; }
+@media (min-width: 900px) { #dirRecentGrid:empty { min-height: 168px; } }
 .pop-card { position: relative; display: flex; flex-direction: column; gap: 0.7rem; padding: 1.25rem 1.35rem 1.15rem; background: var(--card-bg); border: 1px solid var(--border-color); border-left: 3px solid var(--geo-orange); border-radius: 14px; text-decoration: none; box-shadow: 0 1px 3px rgba(16,35,63,.05); transition: transform .18s, box-shadow .18s; }
 .pop-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(16,35,63,.12); }
 .pop-card-top { display: flex; align-items: center; gap: 0.75rem; }
@@ -1007,7 +1012,7 @@ body:not(.light-theme) .dc-seg { background: rgba(255,255,255,.08); color: var(-
 .rubro-cta-inner strong { color: #fff; }
 .rubro-cta-btn {
   display: inline-flex; align-items: center; gap: 0.4rem; flex: 0 0 auto;
-  background: var(--geo-orange); color: #fff; text-decoration: none; border-radius: 10px;
+  background: #C2410C; color: #fff; text-decoration: none; border-radius: 10px;
   padding: 0.65rem 1.3rem; font-weight: 700; font-size: 0.9rem; transition: background .18s, transform .15s;
 }
 .rubro-cta-btn:hover { background: #d94e0f; transform: translateY(-1px); }
@@ -2900,14 +2905,23 @@ body.drawer-open { overflow: hidden; }
   border: 1px solid var(--border-color); border-radius: 18px; padding: 1.6rem 1.7rem;
   box-shadow: 0 6px 26px -14px rgba(16,35,63,.35);
 }
-.rate-loader { text-align: center; padding: 2.5rem 0; color: var(--text-muted); }
+/* The whole rate card is display:none until /api/tipo-cambio answers, so the
+   loader must stand in for its full height - otherwise the card pops in and
+   pushes the article down (CLS 0.359 on mobile). These are the mounted heights
+   of the two states. min-height, so a taller render just grows. */
+.rate-card { min-height: 640px; }
+@media (min-width: 768px) { .rate-card { min-height: 520px; } }
+.rate-card:has(#rateContent[style*="block"]) { min-height: 0; }
+.rate-loader { text-align: center; padding: 2.5rem 0; color: var(--text-muted); min-height: 600px; display: flex; align-items: center; justify-content: center; }
+/* The history table fills in 30 rows from empty; reserve their space. */
+#historyBody:empty { display: block; min-height: 1080px; }
 .rate-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.3rem; flex-wrap: wrap; }
 .rate-pair { display: flex; align-items: center; gap: 0.8rem; }
 .rate-pair-ic { width: 46px; height: 46px; border-radius: 13px; background: linear-gradient(180deg,#223a63,var(--geo-navy)); color: #fff; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
 .rate-pair-ic .icon { width: 24px; height: 24px; }
 .rate-pair strong { display: block; font-family: 'Sora',sans-serif; font-size: 1.05rem; color: var(--text-main); }
 .rate-pair span { font-size: 0.76rem; color: var(--text-muted); }
-.rate-date-badge { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--mono); font-size: 0.82rem; font-weight: 600; color: var(--geo-orange); background: color-mix(in srgb, var(--geo-orange) 10%, transparent); padding: 0.4rem 0.85rem; border-radius: 999px; white-space: nowrap; }
+.rate-date-badge { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--mono); font-size: 0.82rem; font-weight: 600; color: var(--geo-orange-text); background: color-mix(in srgb, var(--geo-orange) 10%, transparent); padding: 0.4rem 0.85rem; border-radius: 999px; white-space: nowrap; }
 .rate-date-badge .icon { width: 14px; height: 14px; }
 
 .rate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
@@ -2929,7 +2943,7 @@ body.drawer-open { overflow: hidden; }
 
 .rate-date-note { display: flex; align-items: center; justify-content: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); margin: 1rem 0 0; }
 .rate-date-note .icon { width: 14px; height: 14px; color: var(--geo-green,#16A34A); }
-.rate-hist-title { display: flex; align-items: center; gap: 0.45rem; font-size: 0.95rem; margin: 1.6rem 0 0.7rem; color: var(--text-main); }
+h2.rate-hist-title, .rate-hist-title { display: flex; align-items: center; gap: 0.45rem; font-size: 0.95rem; margin: 1.6rem 0 0.7rem; color: var(--text-main); }
 .rate-hist-title .icon { width: 16px; height: 16px; color: var(--geo-orange); }
 .rate-hist-wrap { overflow-x: auto; }
 .rate-history-table { width: 100%; border-collapse: collapse; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
@@ -2955,7 +2969,7 @@ body.drawer-open { overflow: hidden; }
   .rate-history-table tr td:last-child { border-bottom: none; }
   .rate-history-table td::before { content: attr(data-label); font-family: 'Inter',sans-serif; font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); }
   .rate-history-table td[data-label="Compra"] { color: var(--accent-blue); font-weight: 700; }
-  .rate-history-table td[data-label="Venta"] { color: var(--geo-orange); font-weight: 700; }
+  .rate-history-table td[data-label="Venta"] { color: var(--geo-orange-text); font-weight: 700; }
 }
 
 /* --- Directory "Consultas recientes" section --- */
