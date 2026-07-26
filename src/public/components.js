@@ -179,7 +179,7 @@
 
   <div class="rp-panels">
     <div class="rp-panel active" data-panel="general">
-      <h4 class="rp-section-title">Datos generales</h4>
+      ${o.heading === false ? '<h3' : '<h4'} class="rp-section-title">Datos generales${o.heading === false ? '</h3>' : '</h4>'}
       <div class="rp-cards">
         ${fieldHtml('Tipo de Contribuyente', data.tipoContribuyente || data.tipo_contribuyente, { always: true })}
         ${fieldHtml('Fecha de Inscripción', data.fechaInscripcion || data.fecha_inscripcion, { mono: true })}
@@ -189,7 +189,7 @@
     </div>
 
     <div class="rp-panel" data-panel="ubicacion">
-      <h4 class="rp-section-title">Ubicación</h4>
+      ${o.heading === false ? '<h3' : '<h4'} class="rp-section-title">Ubicación${o.heading === false ? '</h3>' : '</h4>'}
       <div class="rp-cards rp-cards-ubi">
         <div class="rp-ubi-fields">
           ${fieldHtml('Domicilio Fiscal', data.domicilioFiscal || data.domicilio_fiscal, { always: true })}
@@ -203,7 +203,7 @@
     </div>
 
     <div class="rp-panel" data-panel="actividad">
-      <h4 class="rp-section-title">Actividad económica</h4>
+      ${o.heading === false ? '<h3' : '<h4'} class="rp-section-title">Actividad económica${o.heading === false ? '</h3>' : '</h4>'}
       <div class="rp-cards">
         ${acts.length ? `<div class="rp-field rp-field-wide"><span class="rp-label">Actividad Económica Principal</span><div class="rp-val rp-val-hl">${esc(acts[0])}</div></div>` : ''}
         ${fieldHtml('Sistema de Emisión de Comprobantes', data.sistemaEmision || data.sistema_emision)}
@@ -212,7 +212,7 @@
     </div>
 
     <div class="rp-panel" data-panel="comprobantes">
-      <h4 class="rp-section-title">Comprobantes y sistemas de emisión</h4>
+      ${o.heading === false ? '<h3' : '<h4'} class="rp-section-title">Comprobantes y sistemas de emisión${o.heading === false ? '</h3>' : '</h4>'}
       <div class="rp-cards">
         ${fieldHtml('Emisor Electrónico Desde', data.emisorElectronicoDesde || data.emisor_electronico_desde, { mono: true })}
         ${fieldHtml('Afiliado al PLE Desde', data.pleDesde || data.ple_desde, { mono: true })}

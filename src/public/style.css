@@ -960,7 +960,8 @@ body:not(.light-theme) .rubro-nav { background: var(--bg-dark, #0f1729); }
 .rubro-icon .icon { width: 20px; height: 20px; }
 .rubro-head h2 { font-size: 1.35rem; font-weight: 800; margin: 0; letter-spacing: -.01em; }
 .rubro-count {
-  font-size: 0.72rem; font-weight: 700; color: var(--accent-blue); font-family: var(--mono);
+  /* #2563EB measured 4.12:1 on its own tinted pill background. */
+  font-size: 0.72rem; font-weight: 700; color: #1D4FD8; font-family: var(--mono);
   background: rgba(37,99,235,.10); border: 1px solid rgba(37,99,235,.18); border-radius: 999px; padding: 0.18rem 0.6rem;
 }
 
@@ -988,11 +989,11 @@ body:not(.light-theme) .dc-seg { background: rgba(255,255,255,.08); color: var(-
 .dc-seg-mid { letter-spacing: 1px; }
 .rc-pills { display: flex; gap: 0.35rem; margin: 0.7rem 0 0; }
 .dc-pill { font-family: var(--mono); font-size: 0.62rem; font-weight: 700; padding: 0.16rem 0.5rem; border-radius: 999px; letter-spacing: .3px; }
-.dc-pill.dc-active { background: rgba(22,163,74,.14); color: #15803D; }
+.dc-pill.dc-active { background: rgba(22,163,74,.14); color: #136030; }
 .dc-pill.dc-habido { background: rgba(37,99,235,.14); color: #1D4ED8; }
 .rc-dom { display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: var(--text-muted); margin: 0.7rem 0 0; }
 .rc-dom .icon { width: 14px; height: 14px; color: var(--geo-orange); flex: 0 0 auto; }
-.rc-act { align-self: flex-start; margin: 0.7rem 0 0; font-size: 0.72rem; font-weight: 600; color: #0D9488; background: rgba(13,148,136,.10); border: 1px solid rgba(13,148,136,.20); border-radius: 7px; padding: 0.2rem 0.55rem; }
+.rc-act { align-self: flex-start; margin: 0.7rem 0 0; font-size: 0.72rem; font-weight: 600; color: #0A6F66; background: rgba(13,148,136,.10); border: 1px solid rgba(13,148,136,.20); border-radius: 7px; padding: 0.2rem 0.55rem; }
 .rc-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.85rem; padding-top: 0.7rem; border-top: 1px solid var(--border-color); }
 .rc-ref { font-family: var(--mono); font-size: 0.64rem; color: var(--text-muted); opacity: .8; }
 .rc-ver { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.78rem; font-weight: 700; color: var(--geo-orange-text); white-space: nowrap; }
@@ -1304,7 +1305,7 @@ body:not(.light-theme) .bulk-textarea { border-color: rgba(255,255,255,.18); }
      text. Shapes (buttons, icons, the accent bar) keep the brand hues above;
      these darker tones are for small text set ON a light background, where
      the contrast rule actually applies. */
-  --geo-orange-text: #B45309;
+  --geo-orange-text: #8F4307;
   --geo-green-text: #146C34;
 }
 
