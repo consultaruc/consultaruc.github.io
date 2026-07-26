@@ -45,7 +45,12 @@ app.use(
         // nonce-based CSP is a further hardening step, but 'unsafe-inline'
         // here still blocks any externally-injected/foreign-origin script,
         // which is the main XSS vector this guards against.
-        scriptSrc: ["'self'", "'unsafe-inline'"],
+        // Cloudflare sits in front of this site and injects its Web Analytics
+        // beacon into every response. The CSP was blocking it, which logged a
+        // console error on every page load (and cost points in Lighthouse's
+        // Best Practices audit) without actually stopping Cloudflare - the
+        // block happens in the browser, after the edge already added the tag.
+        scriptSrc: ["'self'", "'unsafe-inline'", 'https://static.cloudflareinsights.com'],
         // Google Fonts must be allowed explicitly: the stylesheet comes from
         // fonts.googleapis.com and the actual font files from fonts.gstatic.com.
         // Without these two entries the CSP silently blocks both and every page
@@ -53,7 +58,8 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
         imgSrc: ["'self'", 'data:'],
-        connectSrc: ["'self'"],
+        // Where the beacon POSTs its measurements.
+        connectSrc: ["'self'", 'https://cloudflareinsights.com'],
         objectSrc: ["'none'"],
         frameAncestors: ["'none'"]
       }
@@ -181,7 +187,32 @@ app.use((req, res, next) => {
 });
 
 const publicDir = path.join(__dirname, 'public');
-app.use(express.static(publicDir));
+/**
+ * Static assets with cache headers.
+ *
+ * Without these Express sends no Cache-Control at all, so browsers revalidate
+ * every image, stylesheet and script on each navigation (Lighthouse measured
+ * ~104 KiB re-fetched per page view).
+ *
+ * Images/fonts/video get a year: they are content, and a changed image gets a
+ * new filename in practice. CSS/JS get a day and must-revalidate, because
+ * style.css and app.js keep their names across deploys - a long TTL there
+ * would leave visitors on stale code after a release. HTML is never cached:
+ * every page embeds the live record count and the per-session API token.
+ */
+app.use(
+  express.static(publicDir, {
+    setHeaders(res, filePath) {
+      if (/\.(?:png|jpe?g|webp|gif|svg|ico|mp4|woff2?)$/i.test(filePath)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      } else if (/\.(?:css|js)$/i.test(filePath)) {
+        res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate');
+      } else if (/\.html?$/i.test(filePath)) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+    }
+  })
+);
 
 // Seed a handful of curated demo companies so the search works out of the box
 // even before the full SUNAT dump has been ingested.

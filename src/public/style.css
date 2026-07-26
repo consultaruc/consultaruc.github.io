@@ -19,7 +19,11 @@ body.light-theme {
   --card-bg: #FFFFFF;
   --border-color: #E2E8F0;
   --text-main: #0F172A;
-  --text-muted: #64748B;
+  /* Was #64748B, which measured 4.34:1 against the light panel background
+     (#F1F5F9) - just under the 4.5:1 WCAG AA minimum for body text, and the
+     one thing keeping the accessibility audit off 100. This shade keeps the
+     same muted grey-blue look but clears AA on white, off-white and panels. */
+  --text-muted: #5C6B7F;
   --accent-blue: #2563EB;
   --accent-hover: #1D4ED8;
   --accent-amber: #F97316;
@@ -80,7 +84,7 @@ body.light-theme .spinner { border-color: var(--overlay-strong); border-top-colo
 }
 
 h1, h2, h3, .logo-title, .result-heading, .geo-hero h1, .hero-section h1,
-.sidebar-card h4, .content-page h1, .content-page h2 {
+.sidebar-card h4, .sidebar-card h2, .content-page h1, .content-page h2 {
   font-family: 'Sora', 'Inter', system-ui, sans-serif;
   letter-spacing: -0.02em;
 }
@@ -250,7 +254,7 @@ body {
   padding: 1.25rem;
 }
 
-.sidebar-card h4 {
+.sidebar-card h4, .sidebar-card h2 {
   font-size: 0.95rem;
   margin-bottom: 0.9rem;
   display: flex;
@@ -1548,7 +1552,7 @@ body:not(.light-theme) .result-map { color: #334660; }
 /* wrapper spans produced by the emoji→icon replacement */
 .field-label .ic .icon { width: 15px; height: 15px; }
 .field-label { gap: 0.45rem; }
-.sidebar-card h4 .ic .icon { width: 17px; height: 17px; }
+.sidebar-card h4 .ic .icon, .sidebar-card h2 .ic .icon { width: 17px; height: 17px; }
 .sidebar-link-item .ic .icon { width: 16px; height: 16px; color: var(--accent-blue); }
 .header-stat-icon .icon { width: 20px; height: 20px; }
 .search-icon .icon { width: 18px; height: 18px; }
@@ -2125,7 +2129,7 @@ body:not(.light-theme) .rp-tag { background: rgba(255,255,255,.06); color: var(-
 .rp-col-map .rp-field { padding-right: 106px; }
 
 .geo-result .sidebar-card { padding: 0.9rem 1rem; }
-.geo-result .sidebar-card h4 { font-size: 0.85rem; margin-bottom: 0.6rem; }
+.geo-result .sidebar-card h4, .geo-result .sidebar-card h2 { font-size: 0.85rem; margin-bottom: 0.6rem; }
 .geo-result .sidebar-link-item { font-size: 0.79rem; padding: 0.45rem 0; }
 .geo-result .sidebar-history-item { font-size: 0.79rem; }
 
