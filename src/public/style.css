@@ -1312,6 +1312,23 @@ body:not(.light-theme) .bulk-textarea { border-color: rgba(255,255,255,.18); }
 .header-stat-text strong { font-family: var(--mono); letter-spacing: -0.5px; }
 
 /* Hero with faint Peru map behind it */
+/* The search bar is mounted by site.js into [data-component="search-bar"],
+   so until JS runs that slot is 0px tall and everything below it sits too high.
+   When it mounts, the whole page jumps - measured as a 0.298 layout shift, the
+   single largest contributor to CLS on mobile.
+
+   Reserving the mounted height keeps the page still. The three variants differ:
+   the default has the tab strip, the tabs="false" one (ficha-ruc) does not.
+   min-height (not height) so a taller-than-expected render still just grows. */
+[data-component="search-bar"] { min-height: 430px; }
+[data-component="search-bar"][data-tabs="false"] { min-height: 380px; }
+@media (min-width: 768px) {
+  [data-component="search-bar"] { min-height: 360px; }
+  [data-component="search-bar"][data-tabs="false"] { min-height: 315px; }
+}
+/* Once mounted the real content dictates the height. */
+[data-component="search-bar"]:has(form) { min-height: 0; }
+
 .geo-hero {
   position: relative;
   max-width: var(--container);
@@ -2314,6 +2331,10 @@ body:not(.light-theme) .lt-track { background: rgba(255,255,255,.18); }
 .lt-status {
   display: flex; align-items: center; gap: 0.4rem;
   font-size: 0.74rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;
+  /* Starts as "Comprobando…" and is replaced once /api/live-quota answers
+     ("Disponible ahora", "Espera Ns…"). The width change reflowed the toggle
+     row and showed up as a layout shift, so reserve the widest state up front. */
+  min-width: 9.5rem;
 }
 .lt-dot { width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; flex: 0 0 auto; }
 .lt-status.ok  { color: #15803D; }
