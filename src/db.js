@@ -176,39 +176,18 @@ function getEnrichedRucs(limit = 45000) {
   return stmtEnrichedRucs.all(limit).map((r) => r.ruc);
 }
 
-// Fallback pool for the sitemap once the enriched set is exhausted: active
-// contributors that at least have a real domicilio fiscal, so the page carries
-// enough of its own data to stand on.
-//
-// Deliberately NO ORDER BY - about 5% of rows match, so SQLite can stop as
-// soon as it has `limit` of them. Adding a sort would force it to rank all
-// 18M rows first (the same trap that made the sitemap take 16s).
-// Partial index over just this ~880k-row subset. Without it the scan starts at
-// the 10… (persona natural) rows, which almost never carry an address, so
-// SQLite walks millions of non-matching rows before it finds enough - measured
-// at 13s. With it the lookup is immediate.
-db.exec(
-  "CREATE INDEX IF NOT EXISTS idx_ruc_sitemap ON ruc(ruc) " +
-    "WHERE estado = 'ACTIVO' AND direccion IS NOT NULL AND tipo_contribuyente IS NULL"
-);
-
-const stmtSitemapFallback = db.prepare(
-  "SELECT ruc FROM ruc WHERE estado = 'ACTIVO' AND direccion IS NOT NULL AND tipo_contribuyente IS NULL LIMIT ?"
-);
-
 /**
  * URLs to actively submit in the sitemap, best-first.
  *
- * The cap is the pacing lever: a brand-new domain that submits millions of
- * URLs looks like a content farm and burns crawl budget it hasn't earned yet.
- * Start small, raise it as indexing proves healthy. Pages outside this list
- * are still indexable - they're just left for Google to find naturally.
+ * No filler pool: unenriched RUCs are thin (padrón-only) and padding the
+ * sitemap with thousands of them just to hit a count looks like a content
+ * farm and burns crawl budget it hasn't earned yet. Only RUCs someone has
+ * actually searched (and that SUNAT's live ficha confirmed) go in - the set
+ * grows on its own as real traffic enriches more of them. Pages outside this
+ * list are still indexable - they're just left for Google to find naturally.
  */
 function getSitemapRucs(limit) {
-  const enriched = getEnrichedRucs(limit);
-  if (enriched.length >= limit) return enriched;
-  const rest = stmtSitemapFallback.all(limit - enriched.length).map((r) => r.ruc);
-  return enriched.concat(rest);
+  return getEnrichedRucs(limit);
 }
 
 function getEnrichStats() {
