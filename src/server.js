@@ -14,8 +14,7 @@ const {
   getLatestTipoCambio,
   getRecentTipoCambio,
   enqueueEnrichment,
-  getEnrichStats,
-  getSitemapRucs
+  getEnrichStats
 } = require('./db');
 const enrichmentWorker = require('./enrichmentWorker');
 const { downloadAndProcessDump } = require('./bulkDownloader');
@@ -225,27 +224,6 @@ app.use(
 // even before the full SUNAT dump has been ingested.
 if (countRecords() === 0) {
   seed();
-}
-
-// --- Recent lookups: an in-memory ring buffer of the companies people just
-// consulted. Surfaced in the directory ("Consultas recientes") and available
-// via /api/recent. Not persisted (resets on restart), deduped by RUC.
-const RECENT_MAX = 24;
-const recentLookups = [];
-function recordLookup(record) {
-  if (!record || !record.ruc || !record.razonSocial) return;
-  const dept = deriveDept(record.departamento, record.domicilioFiscal, record.ubigeo);
-  const item = {
-    ruc: record.ruc,
-    razonSocial: record.razonSocial,
-    estado: record.estado || '',
-    condicion: record.condicion || '',
-    dept: dept ? titleCase(dept) : ''
-  };
-  const i = recentLookups.findIndex((r) => r.ruc === item.ruc);
-  if (i >= 0) recentLookups.splice(i, 1);
-  recentLookups.unshift(item);
-  if (recentLookups.length > RECENT_MAX) recentLookups.pop();
 }
 
 /**
@@ -727,14 +705,6 @@ ${renderNav('ficha-ruc')}
  * worker fills records in. Everything else stays discoverable through
  * internal links (and is served with noindex,follow until it's enriched).
  */
-// PACING LEVER. A brand-new domain submitting millions of URLs reads as a
-// content farm and burns crawl budget it hasn't earned. Start small, raise it
-// once Search Console shows indexing is healthy (1k → 10k → 50k; past 50k the
-// sitemap must be split into a sitemap-index, that's the per-file limit).
-// Pages NOT listed here are still indexable - they're simply left for Google
-// to discover naturally instead of being pushed at it.
-const SITEMAP_MAX_RUCS = Number(process.env.SITEMAP_MAX_RUCS || 1000);
-
 const STATIC_PAGES = [
   '', 'ficha-ruc', 'razon-social', 'verificar-ruc-multiple', 'sello-verificado',
   'tipo-de-cambio-sunat', 'calculadora-tributaria', 'empresas-populares', 'faq',
@@ -876,10 +846,6 @@ app.get('/sitemap.xml', (req, res) => {
     return `  <url><loc>${loc}</loc><lastmod>${today}</lastmod><changefreq>${cf}</changefreq><priority>${pr}</priority>${img}</url>`;
   });
 
-  for (const ruc of getSitemapRucs(SITEMAP_MAX_RUCS)) {
-    urls.push(`  <url><loc>${origin}/ruc/${ruc}</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>`);
-  }
-
   res.type('application/xml').send(
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n' +
@@ -911,7 +877,6 @@ app.get('/ruc/:ruc', apiLimiter, (req, res) => {
   // thin page, queue it so the next visitor (and Googlebot) gets the full one.
   if (!record.tipoContribuyente) enqueueEnrichment(ruc);
 
-  recordLookup(record);
   res.type('html').send(renderRucPage(req, ruc, record));
 });
 
@@ -977,7 +942,6 @@ app.get('/api/ruc/:query', apiLimiter, apiGuard, async (req, res) => {
       if (liveData) {
         upsertRucRecord(liveData);
         const record = getByRuc(query);
-        recordLookup(record);
         return res.json({ success: true, found: true, source: 'live', data: record, quota });
       }
 
@@ -986,7 +950,6 @@ app.get('/api/ruc/:query', apiLimiter, apiGuard, async (req, res) => {
       // show whether real-time verification can be used right now.
       const cached = getByRuc(query);
       if (cached) {
-        recordLookup(cached);
         return res.json({ success: true, found: true, source: 'index', data: cached, quota });
       }
 
@@ -1011,7 +974,6 @@ app.get('/api/ruc/:query', apiLimiter, apiGuard, async (req, res) => {
     // Detail fields missing - queue it so the next visitor gets the full
     // record instantly (see enrichmentWorker.js).
     if (!record.tipoContribuyente) enqueueEnrichment(query);
-    recordLookup(record);
     return res.json({ success: true, found: true, source: 'index', data: record });
   }
 
@@ -1129,10 +1091,6 @@ app.get('/api/live-quota', apiLimiter, apiGuard, (req, res) => {
  * once a day, so there is no reason to pay SUNAT's WAF/rate-limit cost
  * on every pageview the way an individual RUC lookup would.
  */
-app.get('/api/recent', apiLimiter, apiGuard, (req, res) => {
-  res.json({ success: true, data: recentLookups.slice(0, 12) });
-});
-
 app.get('/api/tipo-cambio', apiLimiter, apiGuard, (req, res) => {
   const latest = getLatestTipoCambio();
   if (!latest) {

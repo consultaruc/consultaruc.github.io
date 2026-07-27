@@ -156,39 +156,6 @@ function markEnrichmentFailed(ruc, error) {
   stmtEnrichFailed.run(String(error || '').slice(0, 300), ruc);
 }
 
-// Only RUCs that carry the full ficha (tipo_contribuyente only ever comes from
-// the detailed source, never from the reduced padrón) are worth putting in the
-// sitemap - thin pages would drag the domain's quality signal down.
-//
-// PARTIAL index: without it this query full-scans all 18M rows and sorts them,
-// which measured at ~16s per sitemap request. Enriched rows are a tiny subset,
-// so indexing only those keeps the index small and the query near-instant.
-// Built once (costs one scan), then persisted in the DB file.
-db.exec(
-  'CREATE INDEX IF NOT EXISTS idx_ruc_enriched ON ruc(updated_at DESC) WHERE tipo_contribuyente IS NOT NULL'
-);
-
-const stmtEnrichedRucs = db.prepare(
-  'SELECT ruc FROM ruc WHERE tipo_contribuyente IS NOT NULL ORDER BY updated_at DESC LIMIT ?'
-);
-
-function getEnrichedRucs(limit = 45000) {
-  return stmtEnrichedRucs.all(limit).map((r) => r.ruc);
-}
-
-/**
- * URLs to actively submit in the sitemap, best-first.
- *
- * No filler pool: unenriched RUCs are thin (padrón-only) and padding the
- * sitemap with thousands of them just to hit a count looks like a content
- * farm and burns crawl budget it hasn't earned yet. Only RUCs someone has
- * actually searched (and that SUNAT's live ficha confirmed) go in - the set
- * grows on its own as real traffic enriches more of them. Pages outside this
- * list are still indexable - they're just left for Google to find naturally.
- */
-function getSitemapRucs(limit) {
-  return getEnrichedRucs(limit);
-}
 
 function getEnrichStats() {
   const r = stmtEnrichStats.get() || {};
@@ -430,7 +397,7 @@ function clearAll() {
 
 // Detail fields that ONLY ever come from SUNAT's live ficha - the reduced
 // padrón has none of them. tipo_contribuyente is the marker for "this row was
-// enriched" (see getEnrichedRucs).
+// enriched".
 const ENRICHED_COLS = [
   'tipo_contribuyente', 'nombre_comercial', 'fecha_inscripcion',
   'fecha_inicio_actividades', 'actividad_economica', 'comercio_exterior',
@@ -520,7 +487,5 @@ module.exports = {
   nextEnrichment,
   markEnrichmentDone,
   markEnrichmentFailed,
-  getEnrichStats,
-  getEnrichedRucs,
-  getSitemapRucs
+  getEnrichStats
 };

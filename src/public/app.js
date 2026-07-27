@@ -119,8 +119,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const topBtn = document.getElementById('asideTop');
   if (topBtn) topBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-  // Support linking directly to a search result from other pages, e.g.
-  // /empresas-populares/ links to /?ruc=20100047218 to auto-run a search.
+  // Support linking directly to a search result, e.g. /?ruc=20100047218
+  // auto-runs a search.
   if (hasSearch) {
     const params = new URLSearchParams(window.location.search);
     const linkedRuc = params.get('ruc');

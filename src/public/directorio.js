@@ -110,35 +110,3 @@
     body.querySelectorAll('.rubro-section').forEach(function (s) { obs.observe(s); });
   });
 })();
-
-// --- "Consultas recientes": populate from the live /api/recent ring buffer.
-(function () {
-  var grid = document.getElementById('dirRecentGrid');
-  var sec = document.getElementById('dirRecent');
-  if (!grid || !sec) return;
-  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
-  var PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>';
-  var cap = function (s) { s = String(s || '').toLowerCase(); return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; };
-  var name = function (s) { return String(s || '').replace(/\b\w[\wÁÉÍÓÚÑñáéíóú]*/g, function (w) { return w.length > 3 ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : w.toLowerCase(); }).replace(/^./, function (c) { return c.toUpperCase(); }); };
-  var pillClass = function (v) { v = (v || '').toUpperCase(); if (v === 'ACTIVO' || v === 'HABIDO') return 'ok'; if (v.indexOf('BAJA') === 0) return 'bad'; return 'warn'; };
-  function card(c) {
-    var seg = [c.ruc.slice(0, 2), c.ruc.slice(2, 10), c.ruc.slice(10)];
-    var initials = (c.razonSocial || '').replace(/[^A-Za-zÁÉÍÓÚÑ ]/g, '').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase() || 'RUC';
-    var pills = '';
-    if (c.estado) pills += '<span class="pop-pill ' + pillClass(c.estado) + '">' + esc(cap(c.estado)) + '</span>';
-    if (c.condicion) pills += '<span class="pop-pill ' + pillClass(c.condicion) + '">' + esc(cap(c.condicion)) + '</span>';
-    return '<a class="pop-card" href="/ruc/' + esc(c.ruc) + '">' +
-      '<div class="pop-card-top"><span class="pop-avatar" aria-hidden="true">' + esc(initials) + '</span>' +
-      '<div class="pop-id"><strong>' + esc(name(c.razonSocial)) + '</strong>' + (c.dept ? '<span class="pop-sector">' + esc(c.dept) + '</span>' : '') + '</div></div>' +
-      '<div class="pop-ruc" aria-label="RUC ' + esc(c.ruc) + '"><span class="seg">' + seg[0] + '</span><span class="seg">' + seg[1] + '</span><span class="seg">' + seg[2] + '</span></div>' +
-      (c.dept ? '<div class="pop-loc">' + PIN + '<span>' + esc(c.dept) + '</span></div>' : '') +
-      '<div class="pop-pills">' + pills + '</div>' +
-      '<span class="pop-cta">Ver ficha RUC <span>&rarr;</span></span></a>';
-  }
-  fetch('/api/recent').then(function (r) { return r.json(); }).then(function (j) {
-    if (!j || !j.success || !j.data || !j.data.length) return;
-    grid.innerHTML = j.data.map(card).join('');
-    sec.hidden = false;
-    if (window.applyIcons) window.applyIcons(sec);
-  }).catch(function () { /* silent */ });
-})();
