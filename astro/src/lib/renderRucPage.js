@@ -305,7 +305,7 @@ export function renderRucPage(ruc, record) {
   <meta name="description" content="${escapeHtml(description)}">
   <link rel="canonical" href="${escapeHtml(canonical)}">
   ${isIndexable ? '' : '<meta name="robots" content="noindex,follow">'}
-  <link rel="stylesheet" href="/style.css?v=90dcac4a">
+  <link rel="stylesheet" href="/style.css?v=688852fa">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -444,7 +444,7 @@ ${renderNav('ficha-ruc')}
     </div>
   </footer>
 
-  <script src="/site.js?v=c8df8645"></script>
+  <script src="/site.js?v=0e55d2a1"></script>
 </body>
 </html>`;
 }
@@ -461,7 +461,7 @@ export function renderRucNotFound(ruc) {
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <title>RUC no encontrado | Consulta RUC Perú</title>
   <meta name="robots" content="noindex,follow">
-  <link rel="stylesheet" href="/style.css?v=90dcac4a">
+  <link rel="stylesheet" href="/style.css?v=688852fa">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="light-theme">
@@ -470,7 +470,7 @@ export function renderRucNotFound(ruc) {
     <p>El RUC ${escapeHtml(ruc)} no figura en los registros públicos de SUNAT.</p>
     <p><a href="/">Volver al buscador</a></p>
   </main>
-  <script src="/site.js?v=c8df8645"></script>
+  <script src="/site.js?v=0e55d2a1"></script>
 </body>
 </html>`;
 }
