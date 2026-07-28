@@ -4,8 +4,11 @@ name: Deploy a cPanel
 # cPanel por SSH, instala dependencias allí y reinicia la app con PM2.
 #
 # Este proyecto NO es un sitio estático: /ruc/:ruc, /badge/:ruc, todo /api/*
-# y sitemap/robots/llms/ai.txt se generan en el servidor (ver src/server.js).
-# Por eso se despliega la app completa y se ejecuta con Node en cPanel.
+# y sitemap/robots/llms/ai.txt se generan en el servidor. La app vive en
+# astro/ (Astro SSR, adapter @astrojs/node en modo standalone - reemplaza
+# por completo al Express de antes) y se compila aquí en CI (`astro build`);
+# lo que se sube al servidor es astro/dist/ + lo que la app lee de disco en
+# cada request en vez de importarlo como módulo (astro/src/adminAssets/).
 #
 # Detalles del entorno y la puesta en marcha: docs/DEPLOY.md
 on:
@@ -21,9 +24,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Node del sistema en el servidor es la 16; la app necesita >=22.5 por
-  # `node:sqlite`, y sólo 24+ trae SQLite compilado CON FTS5 (búsqueda por
-  # razón social). Se instaló a mano y ~/opt/node apunta a esa versión.
+  # Node del sistema en el servidor es la 16; la app necesita 24+ (tanto para
+  # `node:sqlite` con FTS5 - búsqueda por razón social - como para el propio
+  # Astro/Vite). Se instaló a mano y ~/opt/node apunta a esa versión.
   REMOTE_NODE_BIN: /home/consultarucpe/opt/node/bin
 
 jobs:
@@ -36,21 +39,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Comprobación mínima antes de tocar producción: si el código no parsea,
-      # no tiene sentido subirlo. (Es lo que pide CONTRIBUTING.md.)
-      - name: Verificar sintaxis de los módulos del back
-        run: |
-          for f in src/*.js src/public/components.js ecosystem.config.js; do
-            node --check "$f"
-          done
-          echo "Sintaxis OK"
+      # La app (astro/) necesita Node 24+ - tanto para `node:sqlite` con FTS5
+      # (db.js abre la base y crea las tablas al importarse, incluso durante
+      # el build) como para Astro/Vite en sí. ubuntu-latest no trae esta
+      # versión por defecto.
+      - name: Configurar Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # Comprobación mínima antes de tocar producción: si ecosystem.config.js
+      # no parsea, no tiene sentido subir nada. (Es lo que pide CONTRIBUTING.md.)
+      - name: Verificar sintaxis de ecosystem.config.js
+        run: node --check ecosystem.config.js
 
       # style.css y app.js conservan su nombre entre despliegues, así que con
       # Cache-Control largo el navegador (y Cloudflare) seguían sirviendo la
       # copia vieja durante horas. Sellar la URL con el hash del contenido
-      # invalida al instante sin acortar la caché.
+      # invalida al instante sin acortar la caché. Corre ANTES del build para
+      # que el HTML compilado ya incluya los ?v= correctos.
       - name: Sellar assets con el hash de su contenido
-        run: node scripts/stamp-assets.js
+        run: node scripts/stamp-assets-astro.js
+
+      - name: Instalar dependencias de la app
+        working-directory: astro
+        run: npm ci --no-audit --no-fund
+
+      # `astro build` compila y type-checks todo (páginas, endpoints,
+      # middleware) - un fallo aquí es la señal de "no despliegues esto",
+      # igual que el antiguo `node --check` pero mucho más estricto.
+      - name: Compilar la app (astro build)
+        working-directory: astro
+        run: npm run build
 
       - name: Configurar clave SSH
         run: |
@@ -107,7 +127,11 @@ jobs:
           # navegadores (~500MB) suele exceder la cuota de un shared host.
           export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
-          npm ci --omit=dev --no-audit --no-fund
+          # La app en sí (dependencias + build ya compilado en astro/dist/)
+          # vive en astro/ - cwd de PM2 se queda en la raíz (ver
+          # ecosystem.config.js) para que data/ siga siendo el mismo de
+          # siempre, no uno nuevo dentro de astro/.
+          (cd astro && npm ci --omit=dev --no-audit --no-fund)
 
           # data/ está excluido del rsync: la base SQLite y las credenciales
           # admin sobreviven a cada despliegue. Sólo se asegura que exista.

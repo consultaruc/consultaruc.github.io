@@ -1,0 +1,641 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title={"Consulta RUC Gratis - SUNAT Perú | Nombre, Estado y Ficha"}
+  description={"Consulta el RUC de empresas y personas en Perú, gratis y al instante: razón social, estado (activo/habido), domicilio fiscal y actividad. Datos SUNAT."}
+  canonical={"https://consultaruc-pe.com/"}
+  activePage="index"
+  bodyClass="light-theme"
+>
+  <Fragment slot="head-top">
+    <meta name="google-site-verification" content="tEFvoebB1X7oyIxQMS7RF4bte25sRAFvV0IWtQY00f4" />
+  </Fragment>
+
+  <Fragment slot="head">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Consulta RUC Perú">
+  <meta property="og:locale" content="es_PE">
+  <meta property="og:title" content="Consulta RUC Perú — Verifica cualquier empresa gratis y al instante">
+  <meta property="og:description" content="Busca por RUC o nombre y obtén razón social, estado, domicilio fiscal, actividad y comprobantes. 18.3M registros · 100% gratis · datos públicos de la SUNAT.">
+  <meta property="og:url" content="https://consultaruc-pe.com/">
+  <meta property="og:image" content="https://consultaruc-pe.com/img/og-home.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Consulta RUC Perú — Verifica cualquier empresa gratis y al instante">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Consulta RUC Perú — Verifica cualquier empresa gratis y al instante">
+  <meta name="twitter:description" content="Busca por RUC o nombre y obtén razón social, estado, domicilio fiscal, actividad y comprobantes. 18.3M registros · 100% gratis · datos públicos de la SUNAT.">
+  <meta name="twitter:image" content="https://consultaruc-pe.com/img/og-home.png">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Inicio","item":"https://consultaruc-pe.com/"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Consulta RUC Perú","url":"https://consultaruc-pe.com","inLanguage":"es-PE","description":"Consulta el RUC de empresas y personas en Perú, gratis y al instante: razón social, estado (activo/habido), domicilio fiscal y actividad. Datos SUNAT.","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://consultaruc-pe.com/ruc/{search_term_string}"},"query-input":"required name=search_term_string"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Consulta RUC Perú","url":"https://consultaruc-pe.com","logo":"https://consultaruc-pe.com/icon-512.png","sameAs":["https://x.com/ConsultaRUC9","https://www.linkedin.com/in/consulta-ruc-503b3b424/","https://www.youtube.com/channel/UCqy0tTaXJaLxoE91EE8yJfQ","https://medium.com/@consultaruc80","https://www.pinterest.com/consultaruc9/_profile/","https://linktr.ee/consultaruc"]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoObject","name":"¿Qué es el RUC y cómo consultarlo? — Consulta RUC Perú","description":"Video explicativo de 10 segundos: qué es el RUC (número de identificación tributaria ante la SUNAT) y cómo verificar gratis cualquier empresa en Consulta RUC Perú.","thumbnailUrl":["https://consultaruc-pe.com/media/ruc-explainer-poster.jpg"],"uploadDate":"2026-07-26","duration":"PT10S","contentUrl":"https://consultaruc-pe.com/media/ruc-explainer.mp4","publisher":{"@type":"Organization","name":"Consulta RUC Perú","url":"https://consultaruc-pe.com","logo":{"@type":"ImageObject","url":"https://consultaruc-pe.com/icon-512.png"}},"inLanguage":"es-PE"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"¿La consulta RUC es gratis?","acceptedAnswer":{"@type":"Answer","text":"Sí, es completamente gratuita y no requiere registro. La información básica del RUC es pública. Desconfía de cualquier sitio que te cobre por una consulta de RUC."}},{"@type":"Question","name":"¿Necesito una cuenta o Clave SOL para consultar un RUC?","acceptedAnswer":{"@type":"Answer","text":"No. La consulta pública de RUC no requiere autenticación. La Clave SOL solo es necesaria para operaciones privadas del contribuyente, como declarar impuestos o emitir comprobantes."}},{"@type":"Question","name":"¿Cómo sé mi propio número de RUC?","acceptedAnswer":{"@type":"Answer","text":"Si eres persona natural con negocio, tu RUC empieza por 10, seguido de tu DNI y un dígito verificador. Puedes usar la búsqueda por DNI para encontrarlo. Si eres empresa, puedes buscar por tu razón social."}},{"@type":"Question","name":"¿Qué significa que un RUC esté \"activo y habido\"?","acceptedAnswer":{"@type":"Answer","text":"\"Activo\" significa que el contribuyente está operativo. \"Habido\" significa que la SUNAT verificó su domicilio fiscal. La combinación de ambos es el estado ideal de una empresa formal en regla."}},{"@type":"Question","name":"¿Puedo consultar el RUC de cualquier empresa del Perú?","acceptedAnswer":{"@type":"Answer","text":"Sí. Cualquier RUC registrado ante la SUNAT puede consultarse, ya que su información básica es de carácter público, sin importar el tamaño o el sector de la empresa."}},{"@type":"Question","name":"¿Por qué mi RUC no aparece en la búsqueda?","acceptedAnswer":{"@type":"Answer","text":"Puede tratarse de un error al escribir el número, de un RUC muy reciente que aún no figura en el padrón, o de que el registro no existe. Prueba buscando por razón social para verificar."}},{"@type":"Question","name":"¿Con qué frecuencia se actualiza la información?","acceptedAnswer":{"@type":"Answer","text":"Los registros se actualizan periódicamente desde las fuentes oficiales de la SUNAT. Para el dato más reciente posible, puedes activar la verificación en tiempo real, de disponibilidad limitada."}},{"@type":"Question","name":"¿Puedo consultar varios RUC a la vez?","acceptedAnswer":{"@type":"Answer","text":"Sí, con la búsqueda masiva puedes verificar decenas o cientos de RUC de una sola vez y exportar los resultados. Es ideal para contadores y gestorías."}},{"@type":"Question","name":"¿La información de esta consulta tiene validez legal?","acceptedAnswer":{"@type":"Answer","text":"Es de referencia. Para trámites legales, comerciales o bancarios oficiales, debes verificar directamente en el portal de la SUNAT, que es la fuente oficial."}},{"@type":"Question","name":"¿Cómo consulto el RUC por el nombre si no recuerdo el exacto?","acceptedAnswer":{"@type":"Answer","text":"Escribe una parte distintiva del nombre en la búsqueda por razón social. No necesitas el nombre completo ni respetar mayúsculas o tildes; el sistema encuentra coincidencias parciales."}},{"@type":"Question","name":"¿Cuál es la diferencia entre \"ficha RUC\" y \"consulta RUC\"?","acceptedAnswer":{"@type":"Answer","text":"Ambos términos se refieren a la misma información pública. \"Consulta RUC\" enfatiza la acción de buscar; \"ficha RUC\" enfatiza el documento o reporte completo, que puedes descargar e imprimir."}},{"@type":"Question","name":"¿Un RUC que empieza por 10 es de una persona o una empresa?","acceptedAnswer":{"@type":"Answer","text":"De una persona natural con negocio. Los RUC de empresas (personas jurídicas) empiezan por 20. El prefijo te dice de inmediato con qué tipo de contribuyente tratas."}}]}</script>
+  
+  </Fragment>
+
+  <main>
+    <!-- HERO with faint Peru map -->
+    <section class="geo-hero">
+      <div class="geo-hero-map"></div>
+      <div class="geo-hero-map-dot"></div>
+
+      <h1>Consulta RUC en Línea Gratis</h1>
+      <p class="geo-sub">Ingrese el RUC (11 dígitos) o Nombre/Razón Social para consultar el estado, domicilio fiscal y actividad económica.</p>
+
+      <div data-component="search-bar"></div>
+    </section>
+
+    <!-- LOADING SPINNER -->
+    <div id="loader" class="loader-container" style="display: none;">
+      <div class="spinner"></div>
+      <p>Consultando registros...</p>
+    </div>
+
+    <!-- RESULT -->
+    <section id="resultContainer" class="geo-result" style="display:none;">
+    <div class="geo-result-layout">
+      <div id="resultMount"></div>
+      <aside class="sidebar-col">
+        <div class="sidebar-card">
+          <h2><span class="ic" data-icon="clock"></span> Historial de Consultas Recientes</h2>
+          <div id="historyList"><p class="sidebar-empty">Tus búsquedas recientes aparecerán aquí.</p></div>
+        </div>
+        <div class="sidebar-card">
+          <h2><span class="ic" data-icon="wrench"></span> Recursos Útiles</h2>
+          <a href="/calculadora-tributaria/" class="sidebar-link-item"><span class="ic" data-icon="calculator"></span> Calculadora de Régimen Tributario</a>
+          <a href="/tipo-de-cambio-sunat/" class="sidebar-link-item"><span class="ic" data-icon="banknote"></span> Tipo de Cambio SUNAT Hoy</a>
+          <a href="/verificar-ruc-multiple/" class="sidebar-link-item"><span class="ic" data-icon="list-checks"></span> Verificar RUC en Lote (CSV)</a>
+          <a href="/sello-verificado/" class="sidebar-link-item"><span class="ic" data-icon="shield-check"></span> Sello de Verificación Embebible</a>
+          <a href="/comercio-exterior-ruc/" class="sidebar-link-item"><span class="ic" data-icon="globe"></span> Comercio Exterior en el RUC</a>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+    <!-- Bulk verification results (Búsqueda Masiva tab) render here -->
+    <section id="bulkResults" class="geo-result" style="display:none;"></section>
+
+    <!-- NOT-FOUND card gets injected here by app.js -->
+
+    <div style="max-width:var(--container);margin:0 auto;padding:0 1.5rem;">
+
+  <div class="home-article">
+    <!-- TABLE OF CONTENTS -->
+    <aside class="art-toc" id="artToc">
+      <p class="art-toc-title">Contenido de esta guía</p>
+      <div class="art-toc-progress-label"><span>Progreso de lectura</span><span class="art-toc-pct">0%</span></div>
+      <div class="art-toc-progress"><span class="art-toc-progress-fill"></span></div>
+      <nav>
+        <a href="#s1">1. ¿Qué es el RUC y para qué sirve?</a>
+        <a href="#s2">2. Qué es y cómo funciona</a>
+        <a href="#s3">3. Cómo consultar un RUC paso a paso</a>
+        <a href="#s4">4. Consultar por DNI</a>
+        <a href="#s5">5. Consultar RUC por nombre o razón social</a>
+        <a href="#s6">6. Estructura del número de RUC</a>
+        <a href="#s7">7. Tipos de RUC: 10, 15, 17 y 20</a>
+        <a href="#s8">8. Estados del RUC</a>
+        <a href="#s9">9. Condición de domicilio: Habido / No Habido</a>
+        <a href="#s10">10. Qué datos muestra la consulta RUC</a>
+        <a href="#s11">11. ¿Para qué necesitas consultar un RUC?</a>
+        <a href="#s12">12. Cómo verificar si una empresa es formal</a>
+        <a href="#s13">13. Consulta RUC masiva</a>
+        <a href="#s14">14. Problemas comunes y soluciones</a>
+        <a href="#s15">15. Marco legal del RUC</a>
+        <a href="#s16">16. RUC vs DNI vs partida registral</a>
+        <a href="#s17">17. Inscribirse en el RUC</a>
+        <a href="#s18">18. Actualizar los datos del RUC</a>
+        <a href="#s19">19. Suspender o dar de baja un RUC</a>
+        <a href="#s20">20. Actividades y código CIIU</a>
+        <a href="#s21">21. Sanciones y riesgos</a>
+        <a href="#s22">22. RUC para extranjeros</a>
+        <a href="#s23">23. El RUC en tus comprobantes</a>
+        <a href="#s24">24. Consultar de forma segura</a>
+        <a href="#s25">25. Historia del RUC</a>
+        <a href="#s26">26. Consultar desde el celular</a>
+        <a href="#s27">27. El RUC y la formalización</a>
+        <a href="#s28">28. Glosario de términos</a>
+        <a href="#s29">29. Otras consultas SUNAT</a>
+        <a href="#s30">30. Preguntas frecuentes</a>
+      </nav>
+    </aside>
+
+    <div class="art-main">
+      <div class="art-byline">
+        <div class="art-byline-av">CR</div>
+        <div class="art-byline-main">
+          <p class="art-byline-name"><strong>Equipo Editorial de Consulta RUC Perú</strong><span class="art-byline-badge"><span class="ic" data-icon="badge-check"></span> Revisado</span></p>
+          <div class="art-byline-meta">
+            <span><span class="ic" data-icon="calendar"></span> Actualizado: julio de 2026</span>
+            <span><span class="ic" data-icon="clock"></span> <span class="js-readtime">—</span> min de lectura</span>
+            <span><span class="ic" data-icon="shield-check"></span> Fuente: SUNAT</span>
+          </div>
+        </div>
+        <div class="art-byline-actions">
+          <button type="button" class="art-byline-btn js-share" title="Copiar enlace" aria-label="Copiar enlace de la página"><span class="ic" data-icon="send"></span></button>
+        </div>
+      </div>
+      <div class="art-body">
+      <p class="art-lead">La <strong>consulta RUC</strong> es uno de los trámites de verificación más frecuentes en el Perú: la hacen contadores antes de emitir una factura, empresas antes de contratar a un proveedor y ciudadanos que quieren confirmar si un negocio es formal. En esta guía completa te explicamos qué es el RUC y cómo hacer una <strong>consulta RUC</strong> gratis (por número, por DNI o por razón social), qué significa cada dato del resultado y cómo usar esa información para tomar decisiones seguras.</p>
+
+      <section class="art-section" id="s1">
+        <figure class="art-figure art-figure-portada"><img src="/img/consulta-ruc-16-que-es.webp" alt="Imagen de portada del artículo que muestra en grande un número de RUC peruano segmentado en sus tres partes (tipo, correlativo y dígito verificador) junto al mapa del Perú, presentando el RUC como la identidad tributaria para facturar, formalizar y verificar." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <h2>1. ¿Qué es el RUC y para qué sirve?</h2>
+        <p>El <strong>RUC (Registro Único de Contribuyentes)</strong> es el número de identificación tributaria que la <strong>SUNAT</strong> (Superintendencia Nacional de Aduanas y de Administración Tributaria) asigna a toda persona o entidad que realiza actividades económicas en el Perú. Está compuesto por <strong>11 dígitos</strong> y es único e intransferible: acompaña al contribuyente durante toda su vida económica, de la misma forma en que el DNI identifica a una persona natural ante el Estado.</p>
+        <p>Cualquier persona natural o jurídica que genere rentas de tercera categoría, preste servicios de forma independiente, importe o exporte, o realice cualquier actividad gravada con tributos, está obligada a inscribirse en el RUC. Sin este número no es posible emitir comprobantes de pago válidos (facturas, boletas o recibos por honorarios), declarar impuestos ni operar formalmente.</p>
+        <p>La gran ventaja del RUC para el resto de la ciudadanía es que la información básica asociada a él es <strong>pública</strong>. Esto significa que cualquiera puede consultar el estado, la razón social, el domicilio fiscal y la condición de un RUC sin necesidad de autorización, clave ni pago alguno. Esa transparencia es precisamente lo que permite que existan herramientas de consulta como esta.</p>
+        <p>En términos prácticos, el RUC cumple tres funciones esenciales:</p>
+        <ul>
+          <li><strong>Identifica</strong> de forma inequívoca a un contribuyente ante la administración tributaria.</li>
+          <li><strong>Habilita</strong> a emitir comprobantes de pago y a cumplir obligaciones tributarias.</li>
+          <li><strong>Da transparencia</strong> al permitir que terceros verifiquen la formalidad y el estado de una empresa o persona.</li>
+        </ul>
+        <p>Es importante no confundir el RUC con otros registros. El RUC es tributario y lo administra la SUNAT; no es lo mismo que la partida registral de una empresa (que administra la SUNARP) ni que el DNI de una persona (que administra el RENIEC). Más adelante, en la sección 16, explicamos estas diferencias en detalle.</p>
+
+        <figure class="art-figure art-video">
+          <video class="art-video-el" poster="/media/ruc-explainer-poster.jpg" controls playsinline preload="none" width="1280" height="720"
+                 aria-label="Video: ¿Qué es el RUC y cómo consultarlo gratis en Consulta RUC Perú?">
+            <source src="/media/ruc-explainer.mp4" type="video/mp4">
+            Tu navegador no soporta la reproducción de video.
+          </video>
+          <figcaption><span class="ic" data-icon="zap"></span> ¿Qué es el RUC y cómo verificarlo? — explicado en 10 segundos.</figcaption>
+        </figure>
+      </section>
+
+      <section class="art-section" id="s2">
+        <h2>2. ¿Qué es la consulta RUC?</h2>
+        <p>La <strong>consulta de RUC</strong> es el proceso mediante el cual se obtiene la información pública que la SUNAT tiene registrada sobre un contribuyente a partir de su número de RUC, su nombre o su razón social. El resultado de una consulta muestra, como mínimo, la <strong>razón social o nombre</strong>, el <strong>estado del contribuyente</strong> (por ejemplo, activo), la <strong>condición de domicilio</strong> (habido o no habido) y el <strong>domicilio fiscal</strong> declarado.</p>
+        <p>Esta consulta es completamente <strong>gratuita</strong> y no requiere registro. Se trata de información de carácter público, lo que la distingue de las operaciones privadas del contribuyente (como declarar impuestos o emitir comprobantes), que sí exigen autenticarse con una Clave SOL personal.</p>
+        <p>Existen tres maneras de realizar una consulta de RUC, y todas están disponibles en el buscador que encuentras al inicio de esta página:</p>
+        <ul>
+          <li><strong>Por número de RUC:</strong> si ya conoces los 11 dígitos, es la forma más directa y precisa.</li>
+          <li><strong>Por DNI:</strong> útil cuando la persona es una persona natural con negocio y solo conoces su documento de identidad.</li>
+          <li><strong>Por nombre o razón social:</strong> ideal cuando no recuerdas el número pero sí el nombre de la empresa.</li>
+        </ul>
+        <p>En las siguientes secciones explicamos cada método paso a paso, junto con los detalles técnicos que casi ninguna guía menciona, como el cálculo del dígito verificador o el significado exacto de cada estado.</p>
+      </section>
+
+      <section class="art-section" id="s3">
+        <h2>3. Cómo consultar un RUC paso a paso</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-01-pasos.webp" alt="Infografía de 4 pasos para consultar un RUC en SUNAT: elegir el modo de búsqueda, ingresar el número o nombre, pulsar consultar y revisar el resultado con estado activo y habido." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Consultar un RUC toma apenas unos segundos. A continuación te mostramos el procedimiento completo usando nuestro buscador gratuito, que consulta los registros oficiales de la SUNAT.</p>
+
+        <div class="art-infographic">
+          <div class="art-step"><span class="art-step-n">1</span><div><strong>Elige el modo de búsqueda</strong><br>Selecciona la pestaña "Por RUC", "Por Razón Social" o "Búsqueda Masiva" según la información que tengas.</div></div>
+          <div class="art-step"><span class="art-step-n">2</span><div><strong>Ingresa el dato</strong><br>Escribe los 11 dígitos del RUC, el nombre de la empresa o pega una lista de RUC.</div></div>
+          <div class="art-step"><span class="art-step-n">3</span><div><strong>Pulsa "Consultar Registros"</strong><br>El sistema busca la coincidencia en la base de datos oficial de forma instantánea.</div></div>
+          <div class="art-step"><span class="art-step-n">4</span><div><strong>Revisa el resultado</strong><br>Verás la razón social, el estado, la condición, el domicilio fiscal y la actividad económica.</div></div>
+        </div>
+
+        <p>El resultado aparece de inmediato porque la búsqueda se realiza sobre una base de datos que reúne <strong>más de 18 millones de registros</strong> de RUC del padrón de la SUNAT. Esto incluye tanto contribuyentes activos como aquellos que fueron dados de baja, lo que te permite verificar incluso historiales antiguos.</p>
+        <p>Si necesitas la información más actualizada posible —por ejemplo, para un trámite en el que un cambio de las últimas horas es relevante— puedes activar la opción de <strong>verificación en tiempo real</strong>, que consulta directamente el portal de la SUNAT en ese momento. Ten en cuenta que esta opción tiene una disponibilidad limitada, ya que se realiza en vivo contra los servidores oficiales.</p>
+        <p>Un consejo práctico: al escribir el número de RUC, hazlo sin espacios ni guiones. Nuestro buscador separa automáticamente el número en sus tres bloques (tipo, correlativo y dígito verificador) para que sea más fácil de leer y comprobar.</p>
+      </section>
+
+      <section class="art-section" id="s4">
+        <h2>4. Consulta RUC por DNI</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-02-dni.webp" alt="Infografía que explica cómo se forma el RUC de una persona natural: el prefijo 10, más los 8 dígitos del DNI, más un dígito verificador calculado con módulo 11." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Una de las dudas más frecuentes es <strong>cómo saber el RUC de una persona a partir de su DNI</strong>. Esto solo aplica a <strong>personas naturales con negocio</strong>, es decir, individuos que realizan actividad económica bajo su propia identidad (profesionales independientes, comerciantes, freelancers, etc.).</p>
+        <p>La razón por la que es posible es que el RUC de una persona natural <strong>se construye a partir de su DNI</strong>. La estructura es sencilla:</p>
+        <div class="art-formula">
+          <span class="art-formula-part tipo">10</span>
+          <span class="art-formula-op">+</span>
+          <span class="art-formula-part body">DNI (8 dígitos)</span>
+          <span class="art-formula-op">+</span>
+          <span class="art-formula-part check">1 dígito verificador</span>
+        </div>
+        <p>Es decir, se antepone el prefijo <strong>10</strong> a los 8 dígitos del DNI y se añade un dígito verificador al final. Por ejemplo, una persona con DNI 45678901 tendría un RUC que empieza por <strong>10 45678901</strong> seguido de un dígito de control.</p>
+        <p>Ese último dígito no es arbitrario: se calcula mediante un <strong>algoritmo de verificación</strong> (módulo 11) que la SUNAT utiliza para detectar números mal escritos. El cálculo toma los diez primeros dígitos, los multiplica por una serie de factores fijos (5, 4, 3, 2, 7, 6, 5, 4, 3, 2), suma los resultados y aplica una operación de módulo para obtener el dígito final. Nuestro buscador realiza este cálculo por ti: solo necesitas ingresar el DNI en la pestaña correspondiente y el sistema compone y consulta el RUC completo.</p>
+        <div class="art-callout">
+          <strong>Importante:</strong> este método <em>no</em> funciona para consultar el DNI de cualquier ciudadano, sino únicamente el RUC de personas que ya están inscritas como personas naturales con negocio. Si una persona nunca se inscribió en el RUC, no existirá ningún registro asociado a su DNI, por más que el número teórico se pueda calcular.
+        </div>
+      </section>
+
+      <section class="art-section" id="s5">
+        <h2>5. Consultar RUC por nombre o razón social</h2>
+        <p>Cuando no conoces el número de RUC pero sí el nombre de la empresa, puedes buscar directamente por <strong>razón social</strong>. Esta es la forma más habitual de consulta cuando, por ejemplo, recibes una cotización de un proveedor y quieres verificar sus datos, o cuando quieres encontrar el RUC de una empresa conocida.</p>
+        <p>Para hacerlo, selecciona la pestaña <strong>"Por Razón Social"</strong> del buscador y escribe el nombre completo o parcial de la empresa. No es necesario que recuerdes el nombre exacto ni que respetes mayúsculas o tildes: el sistema encuentra coincidencias aunque escribas solo una parte del nombre.</p>
+        <p>Algunos consejos para obtener mejores resultados al buscar por nombre:</p>
+        <ul>
+          <li><strong>Usa palabras distintivas.</strong> Si buscas "Banco de Crédito", esas tres palabras bastan; no hace falta escribir la razón social completa con siglas y sufijos.</li>
+          <li><strong>Evita términos demasiado genéricos.</strong> Palabras como "servicios" o "comercial" aparecen en miles de razones sociales y devolverán muchos resultados.</li>
+          <li><strong>Refina si hay muchas coincidencias.</strong> Agrega una segunda palabra del nombre para acotar la lista.</li>
+        </ul>
+        <p>La búsqueda por razón social es especialmente valiosa porque muchas empresas operan con un <strong>nombre comercial</strong> distinto de su razón social legal. Al consultar, podrás ver ambos y confirmar que estás tratando con la entidad correcta. Si quieres profundizar en este tipo de búsqueda, dispones de una página dedicada a <a href="/razon-social/">buscar empresas por razón social</a>.</p>
+      </section>
+
+      <section class="art-section" id="s6">
+        <h2>6. Estructura del número de RUC</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-03-estructura.webp" alt="Diagrama de la estructura de un número de RUC de 11 dígitos: 2 dígitos de tipo de contribuyente, 8 dígitos correlativos y 1 dígito verificador, con líneas que señalan cada bloque." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Entender cómo está formado un número de RUC ayuda a leer los resultados con más criterio y a detectar errores. Los 11 dígitos se dividen en <strong>tres bloques</strong> con significados distintos:</p>
+
+        <div class="art-ruc-diagram">
+          <div class="art-ruc-block">
+            <span class="art-ruc-digits">20</span>
+            <span class="art-ruc-caption">Tipo de contribuyente<br><small>2 dígitos</small></span>
+          </div>
+          <div class="art-ruc-block wide">
+            <span class="art-ruc-digits">10004721</span>
+            <span class="art-ruc-caption">Número correlativo<br><small>8 dígitos</small></span>
+          </div>
+          <div class="art-ruc-block">
+            <span class="art-ruc-digits">8</span>
+            <span class="art-ruc-caption">Dígito verificador<br><small>1 dígito</small></span>
+          </div>
+        </div>
+
+        <p><strong>Los dos primeros dígitos</strong> indican el tipo de contribuyente: si empieza por 10 es una persona natural, si empieza por 20 es una persona jurídica, y existen otros prefijos para casos especiales que veremos en la siguiente sección.</p>
+        <p><strong>Los ocho dígitos centrales</strong> son el número correlativo. En el caso de las personas naturales, como vimos, coinciden con el DNI. En el caso de las personas jurídicas, es un número secuencial asignado por la SUNAT.</p>
+        <p><strong>El último dígito</strong> es el verificador o de control. Su única función es matemática: permite comprobar que el resto del número está bien escrito. Gracias a él, un simple error de tipeo (dos dígitos intercambiados, por ejemplo) produce un dígito verificador que no cuadra, y el sistema puede advertirlo antes de realizar una consulta inútil.</p>
+        <p>Esta estructura estandarizada es la que hace posible validar un RUC <em>antes</em> incluso de consultarlo: si el dígito verificador no corresponde, el número no puede ser válido, sin importar a quién se atribuya.</p>
+      </section>
+
+      <section class="art-section" id="s7">
+        <h2>7. Tipos de RUC: 10, 15, 17 y 20</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-04-tipos.webp" alt="Comparación de los tipos de RUC según su prefijo: 10 persona natural, 15 sucesión, 17 no domiciliada y 20 persona jurídica, con ejemplos de números de RUC." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Los dos primeros dígitos del RUC revelan de inmediato con qué tipo de contribuyente estás tratando. Estos son los prefijos más comunes y su significado:</p>
+
+        <div class="art-table-wrap">
+          <table class="art-table">
+            <thead><tr><th>Prefijo</th><th>Tipo de contribuyente</th><th>Descripción</th></tr></thead>
+            <tbody>
+              <tr><td><strong>10</strong></td><td>Persona natural</td><td>Individuo con negocio o actividad independiente. El correlativo coincide con su DNI.</td></tr>
+              <tr><td><strong>15</strong></td><td>Persona natural / sucesión</td><td>Casos particulares vinculados a personas naturales y sucesiones indivisas.</td></tr>
+              <tr><td><strong>17</strong></td><td>Persona natural no domiciliada</td><td>Personas naturales sin domicilio en el país que generan rentas gravadas.</td></tr>
+              <tr><td><strong>20</strong></td><td>Persona jurídica</td><td>Empresas y sociedades (S.A., S.A.C., S.R.L., E.I.R.L.), asociaciones y otras entidades.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>La distinción más importante para el día a día es la que existe entre el <strong>10</strong> (persona natural) y el <strong>20</strong> (persona jurídica). Cuando trabajas con un RUC que empieza por 20, sabes que estás ante una empresa formalmente constituida; cuando empieza por 10, estás ante una persona que factura bajo su propia identidad.</p>
+        <p>Esta diferencia tiene consecuencias prácticas: el tipo de comprobantes que puede emitir, el régimen tributario al que puede acogerse y las obligaciones formales varían según se trate de una persona natural o jurídica. Por eso, saber leer el prefijo del RUC te da información útil de un solo vistazo, antes incluso de revisar el resto de los datos.</p>
+      </section>
+
+      <section class="art-section" id="s8">
+        <h2>8. Estados del RUC: Activo, Suspensión y Baja</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-05-estados.webp" alt="Infografía de los estados del RUC: Activo en verde, Suspensión temporal en ámbar y Baja de oficio o definitiva en rojo, con la indicación de confirmar que el estado sea Activo." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>El <strong>estado del contribuyente</strong> es probablemente el dato más importante de toda la consulta, porque indica si el RUC está operativo o no. Un RUC puede encontrarse en distintos estados a lo largo de su vida:</p>
+
+        <div class="art-table-wrap">
+          <table class="art-table">
+            <thead><tr><th>Estado</th><th>¿Qué significa?</th></tr></thead>
+            <tbody>
+              <tr><td><span class="art-badge ok">ACTIVO</span></td><td>El contribuyente está operativo y realiza actividades formales. Es el estado esperado de una empresa en funcionamiento.</td></tr>
+              <tr><td><span class="art-badge warn">SUSPENSIÓN TEMPORAL</span></td><td>El contribuyente comunicó que dejó de operar temporalmente. No realiza actividades por ahora, pero el RUC no ha sido dado de baja.</td></tr>
+              <tr><td><span class="art-badge bad">BAJA DE OFICIO</span></td><td>La SUNAT dio de baja el RUC por iniciativa propia, generalmente por incumplimientos o inactividad prolongada.</td></tr>
+              <tr><td><span class="art-badge bad">BAJA DEFINITIVA / PROVISIONAL</span></td><td>El contribuyente solicitó la baja (por cierre del negocio) o esta se encuentra en trámite.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Para la mayoría de las verificaciones, lo que buscas confirmar es que el estado sea <strong>ACTIVO</strong>. Si vas a contratar a un proveedor, recibir una factura o cerrar un acuerdo comercial, un RUC en estado de baja o suspensión es una señal de alerta: significa que la contraparte no está operando formalmente en ese momento.</p>
+        <p>Conviene aclarar que un estado distinto de "activo" no siempre implica un problema grave. Una suspensión temporal puede corresponder a un negocio estacional que pausó su actividad. Lo relevante es que <em>sepas</em> en qué estado se encuentra antes de tomar una decisión, y la consulta de RUC existe justamente para eso.</p>
+      </section>
+
+      <section class="art-section" id="s9">
+        <h2>9. Condición de domicilio: Habido / No Habido</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-06-habido.webp" alt="Comparación entre la condición Habido, con la dirección verificada por SUNAT en verde, y No Habido, con dirección no confirmada en ámbar, como señal de alerta." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Junto al estado, la consulta muestra la <strong>condición de domicilio fiscal</strong>, que puede ser <strong>HABIDO</strong> o <strong>NO HABIDO</strong>. Este dato responde a una pregunta concreta: ¿la SUNAT pudo verificar que el contribuyente realmente se ubica en la dirección que declaró?</p>
+        <ul>
+          <li><span class="art-badge ok">HABIDO</span> La SUNAT confirmó el domicilio fiscal declarado. Es la condición normal y esperada.</li>
+          <li><span class="art-badge warn">NO HABIDO</span> La SUNAT no logró ubicar al contribuyente en la dirección declarada tras varios intentos de notificación. Es una señal de alerta.</li>
+        </ul>
+        <p>La condición de "no habido" tiene consecuencias reales. Un contribuyente en esta situación puede enfrentar restricciones, y las facturas que emita pueden generar problemas para quien las recibe, ya que la SUNAT puede cuestionar la fehaciencia de las operaciones con empresas no habidas. Por eso, al verificar un proveedor, no basta con que el RUC esté activo: idealmente debe estar además <strong>habido</strong>.</p>
+        <p>Existe también una condición intermedia, "no hallado", que ocurre cuando la SUNAT no encontró al contribuyente pero aún no lo declaró formalmente como no habido. En cualquiera de estos casos, el mensaje práctico es el mismo: conviene tener cautela y pedir información adicional antes de operar.</p>
+      </section>
+      <section class="art-section" id="s10">
+        <h2>10. Qué datos muestra la consulta de RUC</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-07-anatomia.webp" alt="Anatomía del resultado de una consulta RUC: una ficha con razón social, estado activo, condición habido, domicilio fiscal, actividad económica y fecha de inscripción, con notas que explican cada campo." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Una consulta completa de RUC devuelve mucho más que el nombre y el estado. Estos son los campos que puedes encontrar en el resultado y qué significa cada uno:</p>
+        <ul>
+          <li><strong>Número de RUC:</strong> los 11 dígitos identificadores.</li>
+          <li><strong>Razón social o nombre:</strong> la denominación legal del contribuyente.</li>
+          <li><strong>Nombre comercial:</strong> el nombre con el que opera de cara al público, si es distinto de la razón social.</li>
+          <li><strong>Tipo de contribuyente:</strong> persona natural, sociedad anónima, E.I.R.L., etc.</li>
+          <li><strong>Estado y condición:</strong> activo/baja y habido/no habido, explicados en las secciones anteriores.</li>
+          <li><strong>Domicilio fiscal:</strong> la dirección declarada ante la SUNAT.</li>
+          <li><strong>Actividad económica:</strong> el giro del negocio según el código CIIU (por ejemplo, "4711 - Venta al por menor en comercios no especializados").</li>
+          <li><strong>Fecha de inscripción y de inicio de actividades:</strong> desde cuándo existe el RUC y desde cuándo opera.</li>
+          <li><strong>Sistema de emisión y comprobantes autorizados:</strong> qué documentos puede emitir (factura, boleta, guía de remisión, etc.).</li>
+        </ul>
+        <p>No todos los RUC muestran todos los campos. Las personas naturales suelen tener menos información detallada que las grandes empresas. Además, algunos datos —como la lista completa de comprobantes electrónicos o los padrones especiales a los que pertenece el contribuyente— solo aparecen en la ficha detallada. Si necesitas el reporte completo con todos los campos, puedes obtenerlo y descargarlo desde nuestra página de <a href="/ficha-ruc/">ficha RUC</a>.</p>
+        <p>Toda esta información en conjunto forma una radiografía tributaria del contribuyente: te dice quién es, dónde está, qué hace, desde cuándo y si está en regla. Saber interpretarla es lo que convierte una simple búsqueda en una verdadera herramienta de decisión.</p>
+      </section>
+
+      <section class="art-section" id="s11">
+        <h2>11. ¿Para qué necesitas consultar un RUC?</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-09-usos.webp" alt="Infografía radial que muestra para qué sirve consultar un RUC: facturar con datos correctos, evaluar proveedores, comprar con confianza, trámites financieros y contratar servicios, todo desde una misma consulta." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>La consulta de RUC no es un trámite abstracto: resuelve necesidades muy concretas del día a día comercial y administrativo en el Perú. Estos son los casos de uso más habituales:</p>
+        <ul>
+          <li><strong>Verificar un proveedor antes de contratarlo.</strong> Antes de pagar por adelantado o firmar un contrato, confirmar que el proveedor tiene un RUC activo y habido reduce el riesgo de fraude o de trabajar con una empresa informal.</li>
+          <li><strong>Validar una factura recibida.</strong> Cuando recibes un comprobante, verificar el RUC del emisor te ayuda a asegurarte de que la operación podrá sustentarse ante la SUNAT y de que el crédito fiscal es válido.</li>
+          <li><strong>Emitir comprobantes a un cliente.</strong> Para facturar a una empresa necesitas su RUC y sus datos correctos; la consulta te permite confirmarlos.</li>
+          <li><strong>Participar en licitaciones o registrarte como proveedor.</strong> Muchos procesos exigen que tu RUC esté activo y habido como condición previa.</li>
+          <li><strong>Realizar due diligence básico.</strong> Al evaluar una posible alianza, inversión o cliente importante, la consulta de RUC es el primer filtro de formalidad.</li>
+        </ul>
+        <p>En todos estos escenarios, la consulta cumple la misma función: <strong>reducir la incertidumbre</strong>. En un entorno donde una parte importante de la economía sigue siendo informal, poder verificar en segundos si una contraparte es formal y está al día es una ventaja considerable, tanto para empresas como para ciudadanos.</p>
+      </section>
+
+      <section class="art-section" id="s12">
+        <h2>12. Cómo verificar si una empresa es formal y confiable</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-08-checklist.webp" alt="Checklist de 5 comprobaciones para verificar si una empresa es formal: que el RUC exista y coincida, que esté Activo, que sea Habido, que la actividad económica tenga sentido y que el domicilio fiscal sea coherente." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Consultar el RUC es el primer paso, pero saber <em>interpretar</em> el resultado es lo que realmente te protege. Para evaluar si una empresa es formal y confiable, revisa esta lista de comprobación:</p>
+        <ul>
+          <li><strong>¿El RUC existe y coincide con el nombre?</strong> Si el número que te dieron no arroja resultados o corresponde a otra empresa, es una señal de alarma inmediata.</li>
+          <li><strong>¿El estado es ACTIVO?</strong> Un RUC en baja o suspensión significa que la empresa no opera formalmente en este momento.</li>
+          <li><strong>¿La condición es HABIDO?</strong> Un "no habido" indica que la SUNAT no pudo confirmar su domicilio, lo que aumenta el riesgo.</li>
+          <li><strong>¿La actividad económica tiene sentido?</strong> Si una empresa que te ofrece servicios de construcción figura con una actividad económica completamente distinta, conviene preguntar.</li>
+          <li><strong>¿El domicilio fiscal es coherente?</strong> Un domicilio que no corresponde con la ubicación o el tamaño esperado del negocio merece una segunda mirada.</li>
+        </ul>
+        <p>Ninguna de estas señales, por sí sola, prueba que una empresa sea fraudulenta; y cumplir con todas tampoco garantiza al 100% la buena fe de la contraparte. Pero, en conjunto, ofrecen una imagen rápida y bastante confiable del nivel de formalidad. Combinada con otras verificaciones (referencias, contratos claros, medios de pago trazables), la consulta de RUC es una herramienta de prevención muy poderosa y, sobre todo, gratuita.</p>
+      </section>
+
+      <section class="art-section" id="s13">
+        <h2>13. Consulta RUC masiva (búsqueda en lote)</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-10-masiva.webp" alt="Infografía de la consulta RUC masiva: una lista en CSV o Excel entra a un motor de verificación y sale como una tabla de resultados con estados en verde, ámbar y rojo, lista para exportar." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Cuando necesitas verificar no uno, sino decenas o cientos de RUC a la vez, revisarlos manualmente uno por uno es inviable. Para eso existe la <strong>consulta masiva</strong>, pensada especialmente para contadores, gestorías y áreas de administración que trabajan con carteras grandes de proveedores o clientes.</p>
+        <p>Con la búsqueda masiva puedes pegar una lista de RUC o subir un archivo, y obtener de golpe el estado y la condición de todos ellos en una tabla que además puedes exportar. Esto permite, por ejemplo, revisar periódicamente si algún proveedor pasó a estar "no habido" o si algún cliente fue dado de baja, sin tener que consultarlos individualmente.</p>
+        <p>Puedes usar esta función desde la pestaña <strong>"Búsqueda Masiva"</strong> del buscador superior o desde nuestra página dedicada a la <a href="/verificar-ruc-multiple/">verificación múltiple de RUC</a>, donde encontrarás las instrucciones detalladas y las opciones de carga de archivos.</p>
+      </section>
+
+      <section class="art-section" id="s14">
+        <h2>14. Problemas comunes al consultar un RUC y sus soluciones</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-18-problemas.webp" alt="Infografía de problemas y soluciones al consultar un RUC: RUC que no aparece, condición no habido, empresas con nombres parecidos y portal bloqueado, cada uno con su solución rápida al lado." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Estas son las dificultades más frecuentes que encuentran los usuarios al consultar un RUC, con su explicación y solución:</p>
+        <ul>
+          <li><strong>"El RUC no aparece."</strong> Puede deberse a un error de tipeo (revisa los 11 dígitos), a que el RUC es muy reciente y aún no figura en el padrón, o a que simplemente no existe. Prueba buscando por razón social para descartar un error en el número.</li>
+          <li><strong>"Encuentro varias empresas con el mismo nombre."</strong> Es normal: muchos negocios comparten palabras en su razón social. Agrega términos más específicos del nombre para acotar la búsqueda.</li>
+          <li><strong>"El RUC aparece como no habido y necesito facturar con esa empresa."</strong> Antes de operar, conviene solicitarle que regularice su condición ante la SUNAT, ya que las operaciones con contribuyentes no habidos pueden ser observadas.</li>
+          <li><strong>"El número que calculé a partir del DNI no da resultados."</strong> Recuerda que calcular el RUC teórico no garantiza que exista: solo aparecerá si la persona se inscribió efectivamente como persona natural con negocio.</li>
+          <li><strong>"La información parece desactualizada."</strong> Los registros públicos pueden tener un pequeño desfase respecto al portal en vivo de la SUNAT. Para el dato más reciente, usa la opción de verificación en tiempo real.</li>
+        </ul>
+        <p>En la mayoría de los casos, el problema se resuelve simplemente cambiando el método de búsqueda o revisando el número ingresado. Cuando el resultado revela una situación irregular del contribuyente (baja, no habido), no es un error de la consulta: es información valiosa que te está advirtiendo a tiempo.</p>
+      </section>
+
+      <section class="art-section" id="s15">
+        <h2>15. Marco legal del RUC y transparencia</h2>
+        <p>La existencia del RUC y el carácter público de su información no son casuales: responden a un marco legal diseñado para dar orden y transparencia a la economía peruana. El RUC está regulado por la normativa tributaria que faculta a la SUNAT a administrar el registro de contribuyentes y a mantener actualizada su información.</p>
+        <p>El principio que hace posible las consultas públicas es el de <strong>transparencia de la información tributaria básica</strong>. Datos como la razón social, el estado, la condición y el domicilio fiscal se consideran de interés público, precisamente porque permiten que el mercado funcione con menos asimetría de información: cualquiera puede verificar con quién está tratando.</p>
+        <p>Esto convive con la <strong>protección de los datos privados</strong>. La información sensible del contribuyente —sus declaraciones, su información financiera, sus claves— está protegida y solo es accesible mediante autenticación con Clave SOL. La consulta pública de RUC se limita, por diseño, a los datos de identificación y estado, nunca a la información reservada.</p>
+        <p>Por eso una herramienta de consulta de RUC es plenamente legítima: se apoya en información que la propia normativa define como pública. Este portal ofrece esa información con fines de referencia; para trámites con validez legal, la fuente oficial siempre será la SUNAT.</p>
+      </section>
+
+      <section class="art-section" id="s16">
+        <h2>16. RUC vs DNI vs partida registral vs RUS</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-11-comparativa.webp" alt="Cuadro comparativo entre RUC, DNI, partida registral y RUS: qué es cada uno, quién lo emite (SUNAT, RENIEC, SUNARP), su formato y para qué sirve, mostrando que no deben confundirse." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Es habitual confundir el RUC con otros números y registros. Aclarar las diferencias evita errores frecuentes:</p>
+        <div class="art-table-wrap">
+          <table class="art-table">
+            <thead><tr><th>Registro</th><th>Qué identifica</th><th>Quién lo administra</th></tr></thead>
+            <tbody>
+              <tr><td><strong>RUC</strong></td><td>Al contribuyente ante el fisco (11 dígitos)</td><td>SUNAT</td></tr>
+              <tr><td><strong>DNI</strong></td><td>A la persona natural como ciudadano (8 dígitos)</td><td>RENIEC</td></tr>
+              <tr><td><strong>Partida registral</strong></td><td>A la empresa como persona jurídica inscrita</td><td>SUNARP</td></tr>
+              <tr><td><strong>RUS</strong></td><td>Un régimen tributario simplificado, no un número</td><td>SUNAT</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>El <strong>DNI</strong> identifica a la persona como ciudadano; el <strong>RUC</strong> la identifica como contribuyente. Una misma persona natural con negocio tiene ambos, y —como vimos— su RUC se construye a partir de su DNI.</p>
+        <p>La <strong>partida registral</strong> es un concepto distinto: es la inscripción de una empresa en los Registros Públicos (SUNARP), que acredita su existencia legal como persona jurídica, sus representantes y sus poderes. Una empresa tiene tanto RUC (tributario) como partida registral (societaria); son complementarios.</p>
+        <p>Finalmente, el <strong>Nuevo RUS</strong> (Régimen Único Simplificado) no es un número de identificación, sino un <em>régimen tributario</em> al que pueden acogerse ciertos contribuyentes pequeños. Un contribuyente del RUS igualmente tiene su número de RUC; lo que cambia es cómo tributa. Si te interesa comparar regímenes, tenemos una <a href="/calculadora-tributaria/">calculadora de régimen tributario</a> que estima cuánto pagarías en cada uno.</p>
+      </section>
+
+      <section class="art-section" id="s17">
+        <h2>17. Cómo inscribirse en el RUC por primera vez</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-12-inscripcion.webp" alt="Hoja de ruta de 5 hitos para inscribirse en el RUC por primera vez: reunir requisitos, elegir régimen, inscribirse en SUNAT, obtener la Clave SOL y empezar a emitir comprobantes con RUC activo." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Antes de poder ser consultado, todo contribuyente debe <strong>inscribirse en el RUC</strong>. Este es el primer trámite tributario de cualquier persona o empresa que va a iniciar una actividad económica en el Perú, y comprender cómo funciona ayuda a interpretar mejor los datos de una consulta, como la fecha de inscripción.</p>
+        <p>La inscripción la realiza la SUNAT y, según el tipo de contribuyente, los requisitos varían. En términos generales, una <strong>persona natural con negocio</strong> necesita su documento de identidad y declarar la actividad económica que va a realizar y el domicilio fiscal donde operará. Una <strong>persona jurídica</strong> (empresa) requiere, además, la documentación que acredite su constitución, como la partida registral emitida por la SUNARP y la identificación de su representante legal.</p>
+        <p>Al inscribirse, el contribuyente define datos que después aparecerán en cualquier consulta pública: su razón social o nombre, su domicilio fiscal, su actividad económica principal según el código CIIU y el régimen tributario al que se acoge. Por eso, una inscripción bien hecha, con datos correctos y una dirección real, es la base de un RUC "habido" y sin problemas a futuro.</p>
+        <p>Un punto importante es la <strong>elección del régimen tributario</strong> en el momento de la inscripción. El contribuyente puede optar, según su tamaño y actividad, por el Nuevo RUS, el Régimen Especial, el Régimen MYPE Tributario o el Régimen General. Esta decisión determina cuánto y cómo tributará, y puede modificarse posteriormente siguiendo las reglas de la SUNAT. Si quieres estimar cuánto pagarías en cada régimen, puedes usar nuestra <a href="/calculadora-tributaria/">calculadora de régimen tributario</a>.</p>
+        <p>Como los procedimientos y requisitos exactos pueden actualizarse, siempre conviene confirmar los pasos vigentes directamente en los canales oficiales de la SUNAT al momento de realizar el trámite. Lo relevante para efectos de esta guía es entender que la inscripción es el origen de toda la información que luego se puede consultar públicamente.</p>
+      </section>
+
+      <section class="art-section" id="s18">
+        <h2>18. Cómo actualizar o modificar los datos del RUC</h2>
+        <p>La información del RUC no es estática. A lo largo de la vida de un negocio, es normal que cambien el domicilio fiscal, la actividad económica, el nombre comercial, los representantes legales o incluso la razón social. Mantener estos datos <strong>actualizados</strong> es una obligación del contribuyente y, además, es lo que hace que una consulta de RUC refleje la realidad.</p>
+        <p>Cuando consultas un RUC y ves un domicilio fiscal o una actividad económica, estás viendo exactamente lo que el contribuyente declaró y actualizó por última vez ante la SUNAT. Si una empresa se mudó pero no actualizó su domicilio, la consulta mostrará la dirección antigua, y eso puede derivar en problemas de notificación e incluso en la condición de "no habido".</p>
+        <p>Entre los cambios más frecuentes que un contribuyente debe comunicar están:</p>
+        <ul>
+          <li><strong>Cambio de domicilio fiscal:</strong> cuando el negocio se traslada a otra dirección.</li>
+          <li><strong>Alta o baja de actividades económicas:</strong> cuando la empresa empieza o deja de realizar un giro.</li>
+          <li><strong>Cambio de nombre comercial:</strong> cuando el negocio opera bajo una nueva marca.</li>
+          <li><strong>Cambio de representante legal:</strong> en el caso de las personas jurídicas.</li>
+          <li><strong>Cambio de régimen tributario:</strong> al crecer o reducir la actividad.</li>
+        </ul>
+        <p>La actualización de datos suele realizarse a través de SUNAT Operaciones en Línea, para lo cual el contribuyente necesita su Clave SOL. Aquí conviene recordar la diferencia clave: <strong>consultar</strong> un RUC es público y no requiere clave, pero <strong>modificar</strong> los datos de tu propio RUC es una operación privada que sí exige autenticarte. Si quieres saber más sobre esa contraseña, tenemos una guía dedicada a la <a href="/clave-sol/">Clave SOL</a>.</p>
+        <p>Para quien realiza una consulta, la lección es útil: los datos que ves son tan actuales como la última actualización del contribuyente. Por eso, para operaciones importantes, conviene complementar la consulta con información directa de la contraparte.</p>
+      </section>
+
+      <section class="art-section" id="s19">
+        <h2>19. Cómo suspender o dar de baja un RUC</h2>
+        <p>Así como un RUC nace con la inscripción, también puede pausarse o cerrarse. Entender la diferencia entre <strong>suspensión</strong> y <strong>baja</strong> es clave para interpretar correctamente el estado que muestra una consulta.</p>
+        <p>La <strong>suspensión temporal de actividades</strong> es una comunicación que hace el contribuyente cuando dejará de operar por un tiempo, pero no quiere cerrar definitivamente su RUC. Es habitual en negocios estacionales o en personas que pausan su actividad independiente. Durante la suspensión, el RUC sigue existiendo y puede reactivarse cuando el contribuyente vuelva a operar. En una consulta, aparecerá con el estado "suspensión temporal".</p>
+        <p>La <strong>baja del RUC</strong>, en cambio, implica el cese de actividades. Puede ser solicitada por el propio contribuyente cuando cierra su negocio (baja a solicitud), o puede ser aplicada por la SUNAT por iniciativa propia cuando detecta inactividad prolongada o incumplimientos (baja de oficio). Un RUC dado de baja no está operativo, y así lo reflejará la consulta.</p>
+        <p>Esta distinción importa mucho al verificar a una contraparte:</p>
+        <ul>
+          <li>Un RUC en <strong>suspensión temporal</strong> puede reactivarse; la empresa podría volver a operar pronto.</li>
+          <li>Un RUC en <strong>baja</strong> indica un cese; conviene tener especial cautela antes de realizar cualquier operación.</li>
+        </ul>
+        <p>Para el contribuyente, tanto la suspensión como la baja son trámites que se gestionan ante la SUNAT y que quedan registrados de inmediato, actualizando el estado que cualquiera puede consultar. Para quien consulta, ver estos estados es justamente la señal que necesita para no operar con una empresa que ya no está activa.</p>
+      </section>
+
+      <section class="art-section" id="s20">
+        <h2>20. Actividades económicas y el código CIIU en el RUC</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-19-ciiu.webp" alt="Infografía que explica el código CIIU de un RUC: cómo sus dígitos van de una gran categoría a la actividad específica y cómo aparece la actividad económica principal y secundaria dentro de la ficha RUC." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Uno de los datos más informativos de una consulta de RUC es la <strong>actividad económica</strong>, que aparece acompañada de un código <strong>CIIU</strong>. Entender qué es este código te permite leer con más profundidad a qué se dedica realmente un contribuyente.</p>
+        <p>El CIIU (Clasificación Industrial Internacional Uniforme) es un estándar internacional que asigna un código numérico a cada tipo de actividad económica. Por ejemplo, el código <strong>4711</strong> corresponde a la "venta al por menor en comercios no especializados con predominio de alimentos, bebidas o tabaco", es decir, un supermercado o bodega; mientras que el <strong>4100</strong> corresponde a la "construcción de edificios". Gracias a esta clasificación, la actividad de cualquier empresa se puede identificar de forma estandarizada.</p>
+        <p>En la ficha del RUC, un contribuyente puede tener una <strong>actividad principal</strong> y varias <strong>actividades secundarias</strong>. La principal es la que genera la mayor parte de sus ingresos; las secundarias reflejan otros giros que también realiza. Por eso, cuando consultas una empresa, puedes ver algo como "Principal - 4711" seguido de "Secundaria 1 - 4719" y "Secundaria 2 - 6810".</p>
+        <p>Esta información es muy valiosa al verificar a un proveedor. Si una empresa te ofrece servicios de consultoría informática pero su RUC muestra como actividad económica exclusiva el comercio de alimentos, tienes una señal para preguntar y aclarar. No significa necesariamente que haya un problema —una empresa puede diversificarse—, pero la coherencia entre lo que ofrece y lo que declara es un buen indicador de formalidad.</p>
+        <p>En resumen, el código CIIU convierte una simple etiqueta de "actividad económica" en un dato preciso y comparable, y saber leerlo te da una capa adicional de información sobre con quién estás tratando.</p>
+      </section>
+
+      <section class="art-section" id="s21">
+        <h2>21. Sanciones y riesgos de no tener RUC o tener datos incorrectos</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-13-sanciones.webp" alt="Infografía de riesgo con un medidor de verde a rojo y cuatro niveles de consecuencias por un RUC mal gestionado: datos desactualizados, condición no habido, multas y, en casos graves, baja de oficio." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Consultar el RUC no solo sirve para verificar a terceros; también recuerda por qué es tan importante mantener el propio RUC en regla. Operar sin RUC o con datos incorrectos expone al contribuyente a <strong>sanciones</strong> y a consecuencias prácticas que conviene conocer.</p>
+        <p>Realizar actividades económicas sin estar inscrito en el RUC es una infracción tributaria. La SUNAT puede aplicar multas e incluso el comiso de mercadería en ciertos casos, además de que, sin RUC, no es posible emitir comprobantes de pago válidos, lo que cierra la puerta a operar con empresas formales que exigen factura.</p>
+        <p>Tener el RUC pero con <strong>datos incorrectos o desactualizados</strong> también genera riesgos. El más común es caer en la condición de <strong>"no habido"</strong>: si la SUNAT no logra ubicar al contribuyente en el domicilio declarado, además de dañar su reputación ante quienes lo consulten, puede acarrear restricciones y observaciones a las operaciones. Las facturas emitidas por un no habido pueden ser cuestionadas, perjudicando tanto al emisor como a quien las recibe.</p>
+        <p>Otros riesgos de mantener información desactualizada incluyen no recibir notificaciones importantes de la SUNAT (que se envían al domicilio o buzón registrado), problemas para participar como proveedor del Estado y dificultades para acceder a créditos o licitaciones que exigen un RUC activo y habido.</p>
+        <p>La conclusión es directa: mantener el RUC activo, habido y con datos correctos no es solo una obligación legal, sino una ventaja comercial. Un RUC en regla transmite confianza, y esa confianza es exactamente lo que la otra parte comprueba cuando te consulta. Por eso, revisar periódicamente cómo aparece tu propio RUC en una consulta es una buena práctica de higiene tributaria.</p>
+      </section>
+
+      <section class="art-section" id="s22">
+        <h2>22. El RUC para extranjeros y personas no domiciliadas</h2>
+        <p>El RUC no es exclusivo de los ciudadanos peruanos ni de las empresas constituidas en el país. Los <strong>extranjeros</strong> y las <strong>personas o entidades no domiciliadas</strong> que generan rentas gravadas en el Perú también pueden o deben contar con un RUC, y esto se refleja en ciertos prefijos y en el tipo de contribuyente.</p>
+        <p>Un extranjero residente que realiza actividad económica en el Perú se inscribe de manera similar a un ciudadano peruano, utilizando su documento de identidad para extranjeros (como el Carné de Extranjería). Su RUC funcionará igual que el de cualquier persona natural con negocio y podrá ser consultado públicamente de la misma forma.</p>
+        <p>El caso de las <strong>personas no domiciliadas</strong> es distinto. Se trata de personas o empresas que no tienen domicilio en el país pero que obtienen rentas de fuente peruana, por ejemplo, servicios prestados desde el exterior o inversiones en el Perú. Para ciertos supuestos, la normativa contempla la asignación de un RUC —con prefijos como el 17 para personas naturales no domiciliadas—, de modo que sus obligaciones tributarias puedan gestionarse correctamente.</p>
+        <p>Para quien realiza una consulta, encontrar un RUC con estas características aporta contexto: indica que se está tratando con un contribuyente extranjero o no domiciliado, lo que puede tener implicaciones en la forma de facturar, en las retenciones aplicables y en los convenios para evitar la doble imposición. No cambia la mecánica de la consulta —la información pública se obtiene igual—, pero sí enriquece la interpretación del resultado.</p>
+        <p>En un país cada vez más integrado al comercio internacional, entender que el sistema del RUC también abarca a extranjeros y no domiciliados ayuda a operar con seguridad en escenarios transfronterizos, donde verificar la formalidad de la contraparte es igual de importante que en el ámbito local.</p>
+      </section>
+
+      <section class="art-section" id="s23">
+        <h2>23. Cómo aparece el RUC en tus comprobantes de pago</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-14-comprobante.webp" alt="Anatomía anotada de una factura electrónica peruana que señala dónde aparece el RUC del emisor y del cliente, la serie del comprobante y cómo verificar ese RUC con una consulta." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>El RUC no vive solo en la base de datos de la SUNAT: aparece de forma visible en todos los <strong>comprobantes de pago</strong>. Saber leerlo en una factura, boleta o recibo por honorarios te permite verificar rápidamente con quién estás operando y detectar inconsistencias.</p>
+        <p>En una <strong>factura</strong>, el RUC del emisor figura de manera destacada, generalmente en la parte superior, junto a la razón social y el domicilio fiscal. Cuando la factura se emite a otra empresa, también aparece el RUC del adquirente (el cliente). Esto significa que una factura contiene, como mínimo, dos RUC que puedes consultar para confirmar que ambos existen y están activos.</p>
+        <p>En una <strong>boleta de venta</strong>, que se emite a consumidores finales, siempre aparece el RUC del emisor, aunque no necesariamente el del comprador. En un <strong>recibo por honorarios electrónico</strong>, figura el RUC del profesional independiente que presta el servicio.</p>
+        <p>Verificar el RUC que aparece en un comprobante es una práctica muy recomendable, especialmente en montos importantes. El procedimiento es sencillo: toma el número de RUC impreso en el documento y consúltalo. Deberías encontrar que corresponde exactamente a la razón social que figura en el comprobante y que el estado es activo. Si el RUC del comprobante no coincide con la empresa, no existe, o está de baja, tienes una señal de alerta clara.</p>
+        <p>Esta verificación cruzada entre el comprobante físico o electrónico y la consulta pública del RUC es una de las formas más efectivas de prevenir el uso de comprobantes falsos o de empresas fantasma. En un solo paso confirmas que el documento que tienes en la mano proviene de un contribuyente real, formal y operativo.</p>
+      </section>
+
+      <section class="art-section" id="s24">
+        <h2>24. Cómo consultar un RUC de forma segura y evitar estafas</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-15-seguridad.webp" alt="Infografía de seguridad dividida en dos mitades con un escudo central: a la izquierda las buenas prácticas para consultar un RUC (gratis, sin Clave SOL, verificar el dominio) y a la derecha las señales de estafa (te piden pagar, tu Clave SOL o datos de tarjeta)." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>La consulta de RUC es información pública y gratuita, pero, como todo servicio popular en internet, atrae también a sitios que buscan aprovecharse de los usuarios. Consultar de forma <strong>segura</strong> es tan importante como consultar correctamente.</p>
+        <p>La primera regla es clara: <strong>nadie debe cobrarte por una consulta de RUC</strong>. La información básica es pública por ley, y cualquier sitio que exija un pago para mostrarte el estado de un RUC está intentando cobrar por algo que es gratuito. Desconfía de páginas que piden tarjeta de crédito o pagos para revelar un simple dato de RUC.</p>
+        <p>La segunda regla es igual de importante: <strong>una consulta de RUC nunca requiere tu Clave SOL</strong>. Como hemos explicado, consultar es una acción pública que no necesita autenticación. Si un sitio te pide tu Clave SOL "para consultar un RUC", es una señal inequívoca de intento de robo de credenciales. Tu Clave SOL solo debe ingresarse en el portal oficial de la SUNAT, jamás en un buscador de terceros.</p>
+        <p>Algunas recomendaciones adicionales para consultar con tranquilidad:</p>
+        <ul>
+          <li><strong>No entregues datos personales innecesarios.</strong> Para consultar un RUC solo se necesita el número, el nombre o el DNI de la persona a verificar; nunca tus contraseñas.</li>
+          <li><strong>Verifica que la información sea coherente.</strong> Una herramienta seria muestra datos consistentes con los oficiales; desconfía de resultados extraños o inventados.</li>
+          <li><strong>Para trámites legales, confirma en la fuente oficial.</strong> Las herramientas de consulta son de referencia; para efectos legales, la palabra final la tiene la SUNAT.</li>
+        </ul>
+        <p>Este portal ofrece la consulta de forma totalmente gratuita, sin pedir registro ni contraseñas, precisamente porque respeta el carácter público de la información. Consultar con estas precauciones te permite aprovechar toda la utilidad de la herramienta sin exponerte a ningún riesgo.</p>
+      </section>
+
+      <section class="art-section" id="s25">
+        <h2>25. Historia y evolución del RUC en el Perú</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-17-historia.webp" alt="Línea de tiempo de la evolución del RUC en el Perú: del registro y la consulta en papel, al padrón centralizado de la SUNAT, luego a la consulta en línea y hoy a la verificación instantánea desde el celular." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>El Registro Único de Contribuyentes tal como lo conocemos hoy es fruto de un largo proceso de modernización de la administración tributaria peruana. Entender de dónde viene ayuda a valorar por qué la consulta pública se ha vuelto tan sencilla y confiable.</p>
+        <p>Durante muchos años, la identificación de los contribuyentes en el Perú fue fragmentada y dependía de registros manuales. La creación de un registro único buscó precisamente unificar en un solo número toda la relación de una persona o empresa con el fisco, eliminando duplicidades y facilitando el control tributario. Con la consolidación de la SUNAT como entidad moderna, el RUC pasó a ser el eje de todo el sistema.</p>
+        <p>El gran salto llegó con la <strong>digitalización</strong>. Lo que antes exigía acudir presencialmente a una oficina para conocer el estado de un contribuyente, hoy se resuelve en segundos desde cualquier dispositivo. La publicación en línea del padrón y la posibilidad de consultar el estado y la condición de cualquier RUC transformaron la transparencia del mercado peruano: verificar a una contraparte dejó de ser un privilegio y se convirtió en un derecho de acceso público.</p>
+        <p>Esta evolución también trajo la <strong>emisión electrónica</strong> de comprobantes, que vinculó aún más el RUC con la operativa diaria de las empresas. Hoy, cada factura electrónica lleva asociado un RUC verificable, cerrando el círculo entre la identificación tributaria y la trazabilidad de las operaciones.</p>
+        <p>La tendencia es clara y continúa: más datos disponibles, más rapidez y más integración. Herramientas de consulta como esta son parte de ese ecosistema, aprovechando la información pública para ponerla al alcance de cualquier ciudadano de forma instantánea y gratuita, algo impensable hace apenas un par de décadas.</p>
+      </section>
+
+      <section class="art-section" id="s26">
+        <h2>26. Consultar el RUC desde el celular y en cualquier momento</h2>
+        <figure class="art-figure"><img src="/img/consulta-ruc-20-movil.webp" alt="Mockup de un celular que muestra la consulta de un RUC desde el navegador móvil, con el buscador y la ficha de resultado (estado activo y habido), junto a los beneficios de hacerlo en segundos, gratis y sin Clave SOL." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Una de las mayores ventajas de la consulta moderna de RUC es que <strong>no depende de horarios ni de una computadora</strong>. Puedes verificar un RUC desde el celular, en plena reunión, antes de aceptar un pago o mientras revisas una cotización, sin instalar nada.</p>
+        <p>Nuestro buscador está diseñado para funcionar igual de bien en un teléfono que en un escritorio. La búsqueda por número, por nombre o por DNI se adapta a la pantalla, y el resultado con el estado, la condición y el domicilio se lee con comodidad en cualquier dispositivo. Esto es especialmente útil para comerciantes, transportistas y profesionales que trabajan fuera de una oficina y necesitan verificar a un cliente o proveedor en el momento.</p>
+        <p>Algunas situaciones cotidianas en las que consultar desde el móvil marca la diferencia:</p>
+        <ul>
+          <li><strong>Antes de aceptar un adelanto o una transferencia</strong>, para confirmar que el RUC del que dice ser tu cliente realmente existe y está activo.</li>
+          <li><strong>Al recibir una factura en el momento</strong>, para cruzar el RUC impreso con la razón social.</li>
+          <li><strong>En una feria, mercado o punto de venta</strong>, cuando necesitas verificar a un proveedor nuevo sin acceso a una computadora.</li>
+        </ul>
+        <p>La consulta instantánea desde el celular convierte la verificación de RUC en un hábito práctico y no en un trámite. Cuanto más fácil es comprobar la formalidad de una contraparte, más se reduce el riesgo de operar con empresas informales o inexistentes. Esa accesibilidad es, en el fondo, una herramienta de protección al alcance de la mano.</p>
+      </section>
+
+      <section class="art-section" id="s27">
+        <h2>27. El RUC en el proceso de formalización de un negocio</h2>
+        <p>El RUC no es solo un número: es el <strong>primer paso hacia la formalidad</strong> de cualquier emprendimiento en el Perú. Para miles de personas que inician un negocio cada año, obtener el RUC es el momento en que su actividad deja de ser informal y pasa a existir oficialmente ante el Estado.</p>
+        <p>La formalización a través del RUC abre una serie de puertas que un negocio informal tiene cerradas. Con un RUC activo, un emprendedor puede <strong>emitir comprobantes de pago</strong>, lo que le permite vender a empresas que exigen factura; puede <strong>acceder a créditos</strong> formales, ya que las entidades financieras evalúan la situación tributaria; y puede <strong>participar como proveedor del Estado</strong>, un mercado enorme reservado a contribuyentes en regla.</p>
+        <p>Además, la formalidad que representa el RUC genera <strong>confianza</strong>. Cuando un cliente potencial consulta el RUC de tu negocio y encuentra un estado activo y una condición de habido, recibe una señal de seriedad que puede ser decisiva para cerrar una venta. En ese sentido, mantener el RUC en regla no es un costo, sino una inversión en reputación comercial.</p>
+        <p>La formalización también implica responsabilidades: declarar y pagar los tributos que correspondan según el régimen elegido, mantener los datos actualizados y cumplir con la emisión de comprobantes. Pero, a cambio, el negocio gana estabilidad, acceso a más mercados y la tranquilidad de operar dentro de la ley.</p>
+        <p>Por eso, entender el RUC como parte de un proceso de formalización —y no como un simple requisito burocrático— cambia la perspectiva. Consultar RUC, tanto el propio como el de terceros, es participar de un ecosistema económico más transparente, donde la formalidad se puede verificar y, por lo tanto, se premia.</p>
+      </section>
+
+      <section class="art-section" id="s28">
+        <h2>28. Glosario de términos clave del RUC</h2>
+        <p>Al consultar un RUC aparecen términos técnicos que conviene tener claros. Este glosario resume los más importantes para que puedas interpretar cualquier resultado con seguridad:</p>
+        <div class="art-table-wrap">
+          <table class="art-table">
+            <thead><tr><th>Término</th><th>Definición</th></tr></thead>
+            <tbody>
+              <tr><td><strong>RUC</strong></td><td>Registro Único de Contribuyentes. El número de 11 dígitos que identifica a un contribuyente ante la SUNAT.</td></tr>
+              <tr><td><strong>Contribuyente</strong></td><td>Persona natural o jurídica obligada a cumplir obligaciones tributarias.</td></tr>
+              <tr><td><strong>Razón social</strong></td><td>La denominación legal completa de una empresa.</td></tr>
+              <tr><td><strong>Nombre comercial</strong></td><td>El nombre con el que un negocio opera de cara al público, si difiere de la razón social.</td></tr>
+              <tr><td><strong>Estado</strong></td><td>Situación operativa del RUC: activo, suspensión temporal o baja.</td></tr>
+              <tr><td><strong>Condición</strong></td><td>Resultado de la verificación del domicilio: habido o no habido.</td></tr>
+              <tr><td><strong>Domicilio fiscal</strong></td><td>La dirección declarada por el contribuyente ante la SUNAT para efectos tributarios.</td></tr>
+              <tr><td><strong>Dígito verificador</strong></td><td>El último dígito del RUC, que permite comprobar que el número es válido.</td></tr>
+              <tr><td><strong>CIIU</strong></td><td>Clasificación Industrial Internacional Uniforme; el código que identifica la actividad económica.</td></tr>
+              <tr><td><strong>Ubigeo</strong></td><td>Código de ubicación geográfica que identifica el departamento, la provincia y el distrito.</td></tr>
+              <tr><td><strong>Clave SOL</strong></td><td>La contraseña personal para operar en línea con la SUNAT. No se necesita para consultar.</td></tr>
+              <tr><td><strong>Comprobante de pago</strong></td><td>Documento que acredita una operación: factura, boleta, recibo por honorarios, etc.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Con estos términos claros, cualquier consulta de RUC deja de tener secretos. Cada campo del resultado tiene un significado preciso, y saber leerlos es lo que convierte una búsqueda rápida en una verdadera herramienta de decisión y verificación.</p>
+      </section>
+
+      <section class="art-section" id="s29">
+        <h2>29. Otras consultas y herramientas SUNAT</h2>
+        <p>La consulta de RUC suele ser el punto de partida de otros trámites tributarios. Estas son algunas herramientas relacionadas que podrían serte útiles:</p>
+        <div class="art-cards">
+          <a href="/tipo-de-cambio-sunat/" class="art-card"><strong>Tipo de cambio SUNAT</strong><span>El valor oficial del dólar para efectos tributarios, actualizado a diario.</span></a>
+          <a href="/clave-sol/" class="art-card"><strong>Clave SOL</strong><span>Qué es y cómo funciona la contraseña para operar en línea con la SUNAT.</span></a>
+          <a href="/ficha-ruc/" class="art-card"><strong>Ficha RUC completa</strong><span>Obtén e imprime el reporte completo con todos los campos del contribuyente.</span></a>
+          <a href="/recibo-por-honorarios/" class="art-card"><strong>Recibo por Honorarios</strong><span>Todo sobre el RHE para trabajadores independientes.</span></a>
+          <a href="/calculadora-tributaria/" class="art-card"><strong>Calculadora tributaria</strong><span>Compara NRUS, RER, MYPE y Régimen General según tus ingresos.</span></a>
+          <a href="/comercio-exterior-ruc/" class="art-card"><strong>Comercio exterior</strong><span>Qué significa la actividad de importación/exportación en el RUC.</span></a>
+        </div>
+        <p>Cada una de estas páginas profundiza en su tema específico. Aquí solo las enlazamos para que puedas continuar tu trámite; el detalle completo lo encontrarás en cada sección.</p>
+      </section>
+
+      <section class="art-section" id="s30">
+        <h2>30. Preguntas frecuentes sobre la consulta de RUC</h2>
+        <div class="art-faq">
+          <details><summary>¿La consulta RUC es gratis?</summary><p>Sí, es completamente gratuita y no requiere registro. La información básica del RUC es pública. Desconfía de cualquier sitio que te cobre por una consulta de RUC.</p></details>
+          <details><summary>¿Necesito una cuenta o Clave SOL para consultar un RUC?</summary><p>No. La consulta pública de RUC no requiere autenticación. La Clave SOL solo es necesaria para operaciones privadas del contribuyente, como declarar impuestos o emitir comprobantes.</p></details>
+          <details><summary>¿Cómo sé mi propio número de RUC?</summary><p>Si eres persona natural con negocio, tu RUC empieza por 10, seguido de tu DNI y un dígito verificador. Puedes usar la búsqueda por DNI para encontrarlo. Si eres empresa, puedes buscar por tu razón social.</p></details>
+          <details><summary>¿Qué significa que un RUC esté "activo y habido"?</summary><p>"Activo" significa que el contribuyente está operativo. "Habido" significa que la SUNAT verificó su domicilio fiscal. La combinación de ambos es el estado ideal de una empresa formal en regla.</p></details>
+          <details><summary>¿Puedo consultar el RUC de cualquier empresa del Perú?</summary><p>Sí. Cualquier RUC registrado ante la SUNAT puede consultarse, ya que su información básica es de carácter público, sin importar el tamaño o el sector de la empresa.</p></details>
+          <details><summary>¿Por qué mi RUC no aparece en la búsqueda?</summary><p>Puede tratarse de un error al escribir el número, de un RUC muy reciente que aún no figura en el padrón, o de que el registro no existe. Prueba buscando por razón social para verificar.</p></details>
+          <details><summary>¿Con qué frecuencia se actualiza la información?</summary><p>Los registros se actualizan periódicamente desde las fuentes oficiales de la SUNAT. Para el dato más reciente posible, puedes activar la verificación en tiempo real, de disponibilidad limitada.</p></details>
+          <details><summary>¿Puedo consultar varios RUC a la vez?</summary><p>Sí, con la búsqueda masiva puedes verificar decenas o cientos de RUC de una sola vez y exportar los resultados. Es ideal para contadores y gestorías.</p></details>
+          <details><summary>¿La información de esta consulta tiene validez legal?</summary><p>Es de referencia. Para trámites legales, comerciales o bancarios oficiales, debes verificar directamente en el portal de la SUNAT, que es la fuente oficial.</p></details>
+          <details><summary>¿Cómo consulto el RUC por el nombre si no recuerdo el exacto?</summary><p>Escribe una parte distintiva del nombre en la búsqueda por razón social. No necesitas el nombre completo ni respetar mayúsculas o tildes; el sistema encuentra coincidencias parciales.</p></details>
+          <details><summary>¿Cuál es la diferencia entre "ficha RUC" y "consulta RUC"?</summary><p>Ambos términos se refieren a la misma información pública. "Consulta RUC" enfatiza la acción de buscar; "ficha RUC" enfatiza el documento o reporte completo, que puedes descargar e imprimir.</p></details>
+          <details><summary>¿Un RUC que empieza por 10 es de una persona o una empresa?</summary><p>De una persona natural con negocio. Los RUC de empresas (personas jurídicas) empiezan por 20. El prefijo te dice de inmediato con qué tipo de contribuyente tratas.</p></details>
+        </div>
+      </section>
+
+      <p class="art-closing">Con esta guía tienes todo lo necesario para consultar cualquier RUC en el Perú con criterio: sabes cómo buscar por número, por DNI o por razón social, cómo está formado el número, qué significan el estado y la condición, cómo se inscribe, actualiza o da de baja un RUC, y cómo usar toda esa información para verificar la formalidad de una empresa antes de contratarla o facturarle. La consulta RUC es una de esas herramientas que parecen sencillas, pero que bien utilizadas te ahorran problemas, previenen fraudes y te dan seguridad en cada operación. Lo mejor de todo es que es pública, gratuita e instantánea: no necesitas registrarte, no necesitas tu Clave SOL y no debes pagar nada por ella. Usa el buscador al inicio de la página para empezar tu consulta ahora mismo y conviértela en un hábito de verificación en tu día a día comercial. Y si necesitas verificar muchos RUC a la vez, recuerda que también puedes hacerlo de forma masiva en segundos.</p>
+    </div>
+    </div>
+
+    <!-- RIGHT STICKY SIDEBAR -->
+    <aside class="art-aside" id="artAside">
+      <div class="art-aside-inner">
+
+        <div class="aside-card aside-search">
+          <h3><span class="ic" data-icon="search"></span> Consulta rápida</h3>
+          <form id="asideQuickForm" class="aside-quick">
+            <input type="text" id="asideQuickInput" inputmode="numeric" maxlength="11"
+              placeholder="Escribe un RUC (11 dígitos)" aria-label="RUC">
+            <button type="submit" aria-label="Consultar"><span class="ic" data-icon="arrow-right"></span></button>
+          </form>
+          <p class="aside-quick-hint">También puedes <a href="/razon-social/">buscar por nombre</a> o <a href="/verificar-ruc-multiple/">verificar una lista</a>.</p>
+        </div>
+
+        <div class="aside-card">
+          <h3><span class="ic" data-icon="clock"></span> Consultas recientes</h3>
+          <div id="artHistoryList"><p class="aside-empty">Tus búsquedas aparecerán aquí.</p></div>
+        </div>
+
+        <div class="aside-card">
+          <h3><span class="ic" data-icon="compass"></span> Guía rápida de estados</h3>
+          <ul class="aside-legend">
+            <li class="lg st-ok"><span class="lg-head"><span class="dotk"></span><strong>Activo</strong></span><span class="lg-desc">El RUC opera con normalidad.</span></li>
+            <li class="lg st-warn"><span class="lg-head"><span class="dotk"></span><strong>Suspensión</strong></span><span class="lg-desc">Actividad pausada temporalmente.</span></li>
+            <li class="lg st-bad"><span class="lg-head"><span class="dotk"></span><strong>Baja</strong></span><span class="lg-desc">RUC dado de baja, no operativo.</span></li>
+            <li class="lg st-ok"><span class="lg-head"><span class="dotk"></span><strong>Habido</strong></span><span class="lg-desc">Domicilio fiscal verificado.</span></li>
+            <li class="lg st-warn"><span class="lg-head"><span class="dotk"></span><strong>No Habido</strong></span><span class="lg-desc">Domicilio no confirmado, precaución.</span></li>
+          </ul>
+        </div>
+
+        <div class="aside-card">
+          <h3><span class="ic" data-icon="wrench"></span> Herramientas</h3>
+          <a href="/ficha-ruc/" class="aside-link"><span class="ic" data-icon="file-text"></span> Descargar ficha RUC</a>
+          <a href="/calculadora-tributaria/" class="aside-link"><span class="ic" data-icon="calculator"></span> Calculadora de régimen</a>
+          <a href="/tipo-de-cambio-sunat/" class="aside-link"><span class="ic" data-icon="banknote"></span> Tipo de cambio SUNAT</a>
+          <a href="/verificar-ruc-multiple/" class="aside-link"><span class="ic" data-icon="list-checks"></span> Verificar RUC en lote</a>
+          <a href="/sello-verificado/" class="aside-link"><span class="ic" data-icon="shield-check"></span> Sello de verificación</a>
+        </div>
+
+        <button type="button" id="asideTop" class="aside-top"><span class="ic" data-icon="arrow-up"></span> Volver arriba</button>
+
+      </div>
+    </aside>
+  </div>
+
+    </div>
+
+  </main>
+
+  <script is:inline slot="scripts" src="/app.js?v=a1e453f8"></script>
+</BaseLayout>

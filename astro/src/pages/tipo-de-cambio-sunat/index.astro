@@ -1,0 +1,364 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title={"Tipo de Cambio SUNAT Hoy: Compra y Venta del Dólar"}
+  description={"Tipo de cambio oficial SUNAT de hoy: precio de compra y venta del dólar. Historial de los últimos días, actualizado automáticamente todos los días hábiles."}
+  canonical={"https://consultaruc-pe.com/tipo-de-cambio-sunat/"}
+  activePage="tipo-de-cambio-sunat"
+  bodyClass="light-theme"
+>
+  <Fragment slot="head">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Consulta RUC Perú">
+  <meta property="og:locale" content="es_PE">
+  <meta property="og:title" content="Tipo de Cambio SUNAT Hoy: Compra y Venta del Dólar">
+  <meta property="og:description" content="Tipo de cambio oficial SUNAT de hoy: precio de compra y venta del dólar. Historial de los últimos días, actualizado automáticamente todos los días hábiles.">
+  <meta property="og:url" content="https://consultaruc-pe.com/tipo-de-cambio-sunat/">
+  <meta property="og:image" content="https://consultaruc-pe.com/img/tc-01-tres-tipos.webp">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="670">
+  <meta property="og:image:alt" content="Tipo de Cambio SUNAT Hoy: Compra y Venta del Dólar">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Tipo de Cambio SUNAT Hoy: Compra y Venta del Dólar">
+  <meta name="twitter:description" content="Tipo de cambio oficial SUNAT de hoy: precio de compra y venta del dólar. Historial de los últimos días, actualizado automáticamente todos los días hábiles.">
+  <meta name="twitter:image" content="https://consultaruc-pe.com/img/tc-01-tres-tipos.webp">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Inicio","item":"https://consultaruc-pe.com/"},{"@type":"ListItem","position":2,"name":"Tipo de Cambio SUNAT","item":"https://consultaruc-pe.com/tipo-de-cambio-sunat/"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Tipo de Cambio SUNAT Hoy: Compra y Venta del Dólar","url":"https://consultaruc-pe.com/tipo-de-cambio-sunat/","description":"Tipo de cambio oficial SUNAT de hoy: precio de compra y venta del dólar. Historial de los últimos días, actualizado automáticamente todos los días hábiles.","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"es-PE","offers":{"@type":"Offer","price":"0","priceCurrency":"PEN"},"publisher":{"@type":"Organization","name":"Consulta RUC Perú","url":"https://consultaruc-pe.com","logo":{"@type":"ImageObject","url":"https://consultaruc-pe.com/icon-512.png"}}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"¿El tipo de cambio SUNAT es el mismo que el de mi banco?","acceptedAnswer":{"@type":"Answer","text":"No. El tipo de cambio SUNAT es la referencia oficial (derivada de la SBS) para fines tributarios. El de tu banco es el que te ofrece para comprar o vender dólares y suele tener un margen distinto."}},{"@type":"Question","name":"¿Uso el tipo de cambio compra o venta?","acceptedAnswer":{"@type":"Answer","text":"Depende del tributo y del tipo de operación. Como guía general, para ingresos suele usarse el de venta y para gastos el de compra, pero existen reglas específicas por tributo. Ante la duda, confírmalo con un contador."}},{"@type":"Question","name":"¿Qué fecha de la cotización debo aplicar?","acceptedAnswer":{"@type":"Answer","text":"La que corresponde a la operación según cada tributo (por ejemplo, la fecha en que nace la obligación del IGV), no la del día en que haces el registro. Usar la fecha equivocada es el error más común."}},{"@type":"Question","name":"¿Qué tipo de cambio uso en días sin publicación (fines de semana)?","acceptedAnswer":{"@type":"Answer","text":"En días no hábiles no hay publicación; las reglas establecen qué valor tomar, en general el último publicado. Conviene confirmar el criterio aplicable a tu caso."}},{"@type":"Question","name":"¿Puedo consultar el tipo de cambio de una fecha pasada?","acceptedAnswer":{"@type":"Answer","text":"Sí. Para operaciones pasadas debes usar el valor vigente en esa fecha, no el actual. La herramienta de esta página te ayuda a tener esa referencia a mano."}},{"@type":"Question","name":"¿La conversión afecta cuánto impuesto pago?","acceptedAnswer":{"@type":"Answer","text":"Sí. Una conversión incorrecta distorsiona la base del IGV y de la renta, y las diferencias de cambio pueden generar ganancias o pérdidas con efecto tributario. Por eso conviene convertir con rigor."}}]}</script>
+  
+  </Fragment>
+
+  <nav class="breadcrumb"><a href="/">Inicio</a> › Tipo de Cambio SUNAT</nav>
+
+  <main class="content-page" style="padding-bottom: 0;">
+    <h1>Tipo de Cambio SUNAT Hoy</h1>
+    <p class="content-updated" id="fechaActualizacion">Cargando fecha...</p>
+    <p>El tipo de cambio oficial que publica la SUNAT corresponde a la cotización de cierre de la <strong>SBS</strong> (Superintendencia de Banca, Seguros y AFP) del día hábil anterior. Es el valor de referencia obligatorio para efectos tributarios en Perú (Impuesto a la Renta, IGV, comprobantes en moneda extranjera).</p>
+  </main>
+
+  <section class="rate-card">
+    <div id="rateLoader" class="rate-loader">Cargando tipo de cambio…</div>
+    <div id="rateContent" style="display:none;">
+      <div class="rate-head">
+        <div class="rate-pair">
+          <span class="rate-pair-ic"><span class="ic" data-icon="banknote"></span></span>
+          <div>
+            <strong>Dólar estadounidense</strong>
+            <span>USD → PEN · Tipo de cambio oficial SUNAT</span>
+          </div>
+        </div>
+        <span class="rate-date-badge"><span class="ic" data-icon="calendar"></span> <span id="rateRefDate">—</span></span>
+      </div>
+
+      <div class="rate-grid">
+        <div class="rate-box rate-compra">
+          <span class="rate-label"><span class="rate-dot"></span> Compra</span>
+          <span class="rate-value"><span class="rate-cur">S/</span> <span id="valCompra">-</span></span>
+          <span class="rate-sub">para tus ingresos en USD</span>
+        </div>
+        <div class="rate-box rate-venta">
+          <span class="rate-label"><span class="rate-dot"></span> Venta</span>
+          <span class="rate-value"><span class="rate-cur">S/</span> <span id="valVenta">-</span></span>
+          <span class="rate-sub">para tus gastos en USD</span>
+        </div>
+      </div>
+      <p class="rate-date-note" id="rateSourceNote"><span class="ic" data-icon="shield-check"></span> Fuente: SUNAT / SBS · sincronizado automáticamente</p>
+
+      <h2 class="rate-hist-title"><span class="ic" data-icon="clock"></span> Historial reciente</h2>
+      <div class="rate-hist-wrap">
+        <table class="rate-history-table">
+          <thead>
+            <tr><th>Fecha</th><th>Compra</th><th>Venta</th></tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="rateError" style="display:none; text-align:center; color: var(--text-muted); padding: 2rem 0;"></div>
+  </section>
+
+  <main class="article-main">
+  <div class="home-article">
+    <aside class="art-toc" id="artToc">
+      <p class="art-toc-title">Contenido de esta guía</p>
+      <div class="art-toc-progress-label"><span>Progreso de lectura</span><span class="art-toc-pct">0%</span></div>
+      <div class="art-toc-progress"><span class="art-toc-progress-fill"></span></div>
+      <nav>
+        <a href="#t1">1. ¿Qué es el tipo de cambio SUNAT?</a>
+        <a href="#t2">2. SUNAT vs bancario vs paralelo</a>
+        <a href="#t3">3. Compra y venta: ¿cuál usar?</a>
+        <a href="#t4">4. El tipo de cambio en tus facturas</a>
+        <a href="#t5">5. Tipo de cambio y el IGV</a>
+        <a href="#t6">6. Tipo de cambio e Impuesto a la Renta</a>
+        <a href="#t7">7. Tipo de cambio contable vs tributario</a>
+        <a href="#t8">8. Cómo se publica (SBS)</a>
+        <a href="#t9">9. Facturas en dólares: cómo convertir</a>
+        <a href="#t10">10. El tipo de cambio de cierre</a>
+        <a href="#t11">11. Diferencia de cambio: ganancia y pérdida</a>
+        <a href="#t12">12. Errores comunes</a>
+        <a href="#t13">13. Tipo de cambio y comercio exterior</a>
+        <a href="#t14">14. Consultar el tipo de cambio histórico</a>
+        <a href="#t15">15. El tipo de cambio y tus operaciones</a>
+        <a href="#t16">16. Tipo de cambio para personas naturales</a>
+        <a href="#t17">17. Buenas prácticas de registro</a>
+        <a href="#t19">18. Pagos internacionales</a>
+        <a href="#t20">19. Efecto en precios y márgenes</a>
+        <a href="#t21">20. Contratos en dólares</a>
+        <a href="#t22">21. Pagos al exterior y retenciones</a>
+        <a href="#t23">22. Herramientas para la cotización</a>
+        <a href="#t24">23. Preguntas antes de operar</a>
+        <a href="#t18">24. Preguntas frecuentes</a>
+      </nav>
+    </aside>
+
+    <div class="art-main">
+      <div class="art-byline">
+        <div class="art-byline-av">CR</div>
+        <div class="art-byline-main">
+          <p class="art-byline-name"><strong>Equipo Editorial de Consulta RUC Perú</strong><span class="art-byline-badge"><span class="ic" data-icon="badge-check"></span> Revisado</span></p>
+          <div class="art-byline-meta">
+            <span><span class="ic" data-icon="calendar"></span> Actualizado: julio de 2026</span>
+            <span><span class="ic" data-icon="clock"></span> <span class="js-readtime">—</span> min de lectura</span>
+            <span><span class="ic" data-icon="shield-check"></span> Fuente: SUNAT</span>
+          </div>
+        </div>
+        <div class="art-byline-actions">
+          <button type="button" class="art-byline-btn js-share" title="Copiar enlace" aria-label="Copiar enlace de la página"><span class="ic" data-icon="send"></span></button>
+        </div>
+      </div>
+      <div class="art-body">
+      <p class="art-lead">Si emites o recibes facturas en dólares, si compras o vendes al exterior, o si simplemente necesitas registrar una operación en moneda extranjera, tarde o temprano te topas con el <strong>tipo de cambio SUNAT</strong>: la referencia oficial que se usa para convertir dólares a soles en tus operaciones tributarias. Usar el tipo de cambio equivocado —o el de la fecha equivocada— puede generar diferencias, observaciones y ajustes contables. En esta guía te explicamos qué es el tipo de cambio SUNAT, en qué se diferencia del bancario, cuándo usar el de compra y cuándo el de venta, cómo aplicarlo a tus facturas, al IGV y a la renta, y cómo evitar los errores más comunes al trabajar con moneda extranjera.</p>
+
+      <section class="art-section" id="t1">
+        <h2>1. ¿Qué es el tipo de cambio SUNAT?</h2>
+        <p>El <strong>tipo de cambio SUNAT</strong> es la referencia oficial que se utiliza para expresar en soles las operaciones realizadas en moneda extranjera, con fines tributarios. Cuando una transacción se pacta en dólares, la contabilidad y los impuestos peruanos se llevan en soles, por lo que hace falta un valor de conversión reconocido y uniforme: ese es, precisamente, el papel de la cotización de referencia.</p>
+        <p>Este tipo de cambio no lo fija la SUNAT de forma arbitraria: se basa en el que publica la Superintendencia de Banca, Seguros y AFP (SBS), que refleja el promedio de las operaciones del mercado. La administración tributaria adopta esa referencia oficial para que todos los contribuyentes conviertan sus operaciones con el mismo criterio, evitando que cada quien use el valor que más le convenga.</p>
+        <p>Entender esto es clave para operar sin errores: el tipo de cambio SUNAT no es el que te da tu banco al comprar dólares, ni el de la casa de cambio de la esquina, sino una referencia oficial publicada para fines tributarios. Usar el valor correcto, correspondiente a la fecha correcta, es lo que asegura que tus facturas, tus declaraciones y tu contabilidad estén bien calculadas y no generen diferencias con lo que espera la administración.</p>
+        <p>Conviene desmitificar la idea de que este es un tema «solo para grandes empresas o expertos en finanzas». Cualquier persona o negocio que reciba un pago en dólares, importe un producto o contrate un servicio del exterior necesita, en algún momento, convertir esa operación a soles con el criterio correcto. A medida que el comercio digital y los servicios internacionales se vuelven cotidianos, entender esta referencia deja de ser un conocimiento especializado y pasa a ser una habilidad básica de la vida formal.</p>
+      </section>
+
+      <section class="art-section" id="t2">
+        <h2>2. Tipo de cambio SUNAT vs bancario vs paralelo</h2>
+        <figure class="art-figure"><img src="/img/tc-01-tres-tipos.webp" alt="Infografía que compara tres tipos de cambio —el oficial SUNAT/SBS para tributos, el bancario y el paralelo— resaltando que el oficial es la referencia para convertir dólares a soles en impuestos." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>En el día a día conviven varios «tipos de cambio» y confundirlos es fuente de errores. El <strong>tipo de cambio SUNAT</strong> —derivado del publicado por la SBS— es la referencia oficial para fines tributarios. El <strong>tipo de cambio bancario</strong> es el que cada banco ofrece a sus clientes para comprar y vender dólares, y suele tener un margen respecto al oficial. El <strong>paralelo o de casas de cambio</strong> es el del mercado informal o de cambistas, que fluctúa libremente.</p>
+        <p>Para tus operaciones comerciales reales —cuánto te cuesta comprar dólares o cuánto recibes al venderlos— usas el bancario o el de la casa de cambio. Pero para expresar esas operaciones en tu contabilidad y en tus impuestos, la referencia es la oficial (SUNAT/SBS). Esta distinción explica por qué el monto que efectivamente pagaste por unos dólares puede no coincidir exactamente con el valor en soles que registras a efectos tributarios.</p>
+        <p>La diferencia entre lo que pagaste en el mercado y el valor oficial de referencia no es un error: es la naturaleza de trabajar con moneda extranjera. Reconocer que existen estos distintos tipos de cambio, y saber cuál corresponde a cada propósito, es el primer paso para llevar tus registros de forma correcta y no mezclar el mundo comercial con el tributario.</p>
+      </section>
+
+      <section class="art-section" id="t3">
+        <h2>3. Tipo de cambio compra y venta: ¿cuál usar?</h2>
+        <figure class="art-figure"><img src="/img/tc-02-compra-venta.webp" alt="Infografía con un medidor dual que muestra el tipo de cambio compra (más bajo) y venta (más alto), con una guía de cuándo se usa cada uno para gastos e ingresos." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>El tipo de cambio de referencia se publica con dos valores: el de <strong>compra</strong> y el de <strong>venta</strong>. El de compra es, en general, más bajo, y el de venta, más alto; la diferencia entre ambos refleja el margen del mercado. Para fines tributarios, la regla clave es saber cuál aplicar según el tipo de operación, porque usar el equivocado altera el monto en soles.</p>
+        <p>Una guía práctica muy extendida es: para las operaciones de venta —los ingresos, lo que cobras— suele usarse el tipo de cambio promedio ponderado venta; para las de compra —los gastos, lo que pagas— el promedio ponderado compra. Existen reglas específicas según el tributo (IGV o renta) y según el momento de la operación, por lo que conviene tener claro el criterio aplicable a cada caso concreto.</p>
+        <p>La consecuencia de equivocarse no es menor: aplicar el valor de compra donde correspondía el de venta —o viceversa— produce montos en soles distintos, que se arrastran a tus declaraciones y pueden generar diferencias observables. Por eso, más allá de memorizar reglas, conviene apoyarse en la referencia oficial correcta para cada fecha y, ante la duda sobre qué valor corresponde a una operación específica, confirmarlo con un contador.</p>
+      </section>
+
+      <section class="art-section" id="t4">
+        <h2>4. Cómo usar el tipo de cambio en tus facturas</h2>
+        <p>Cuando emites una factura en dólares, el comprobante puede expresarse en moneda extranjera, pero a efectos de tus registros y de ciertos tributos necesitas su equivalente en soles. La conversión se hace aplicando la referencia oficial correspondiente a la fecha de la operación, según las reglas del tributo involucrado.</p>
+        <p>El punto más importante —y donde más se equivoca la gente— es la fecha. No se usa el tipo de cambio de cualquier día, sino el que corresponde al momento que la norma establece para cada tributo (por ejemplo, la fecha en que nace la obligación tributaria del IGV). Tomar el valor de una fecha incorrecta, aunque sea por un día, cambia el monto convertido y puede generar inconsistencias entre tu factura, tu registro y tu declaración.</p>
+        <p>Por eso, al facturar en dólares conviene tener a mano la referencia oficial de la fecha exacta de la operación. Registrar junto a cada factura en moneda extranjera el tipo de cambio aplicado y su equivalente en soles evita tener que reconstruirlo después y facilita cualquier revisión. Una buena disciplina al momento de emitir es la mejor defensa contra las diferencias de cambio mal calculadas.</p>
+      </section>
+
+      <section class="art-section" id="t5">
+        <h2>5. Tipo de cambio y el IGV</h2>
+        <p>Para el IGV, la conversión de operaciones en moneda extranjera sigue una regla específica: se utiliza el tipo de cambio publicado correspondiente a la fecha en que nace la obligación tributaria de la operación. Esto significa que no basta con saber el monto en dólares; necesitas identificar el momento tributario correcto y tomar el valor oficial de esa fecha.</p>
+        <p>Esta precisión importa porque el IGV se declara y se paga en soles. Si conviertes mal —por fecha o por usar el valor equivocado—, la base sobre la que calculas el IGV queda distorsionada, y con ella el impuesto. Tanto en las ventas (débito fiscal) como en las compras (crédito fiscal), la conversión correcta es lo que garantiza que el IGV que declaras refleje fielmente tus operaciones.</p>
+        <p>Del lado del crédito fiscal, además, la conversión correcta se suma a otro requisito que ya hemos mencionado en otras guías: que el comprobante provenga de un proveedor válido y en situación regular. Un IGV bien convertido, sustentado en facturas de contribuyentes verificados, es la base de una posición sólida frente a cualquier revisión. La conversión y la verificación van de la mano en el manejo prolijo del IGV.</p>
+      </section>
+
+      <section class="art-section" id="t6">
+        <h2>6. Tipo de cambio e Impuesto a la Renta</h2>
+        <p>En el Impuesto a la Renta, las operaciones en moneda extranjera también se convierten a soles, pero con reglas propias que pueden diferir de las del IGV, tanto en el valor a usar como en el momento de referencia. La renta se determina sobre resultados anuales, y la moneda extranjera introduce un elemento adicional: la variación de la cotización a lo largo del tiempo.</p>
+        <p>Esto da lugar a conceptos como la diferencia de cambio, que puede generar ganancias o pérdidas gravables o deducibles según corresponda. Una cuenta por cobrar en dólares, por ejemplo, vale distinto en soles según cómo se mueva el tipo de cambio entre que se origina y que se cobra; esa variación tiene efectos en el resultado tributario que deben reconocerse correctamente.</p>
+        <p>Por la complejidad de estas reglas, el tratamiento de la moneda extranjera en la renta es uno de los temas donde el acompañamiento contable resulta más valioso. La idea general que conviene retener es que el tipo de cambio no es un detalle: influye directamente en cuánta renta declaras y, por tanto, en cuánto impuesto pagas. Manejarlo con rigor, apoyándote en las referencias oficiales, es parte de una contabilidad seria.</p>
+      </section>
+
+      <section class="art-section" id="t7">
+        <h2>7. Tipo de cambio contable vs tributario</h2>
+        <p>Un punto que genera confusión es que el tipo de cambio que usas para tu contabilidad y el que usas para fines tributarios pueden no ser idénticos en todos los casos. La contabilidad sigue las normas contables para reconocer y valorar las operaciones en moneda extranjera; la tributación sigue las reglas fiscales, que en ciertos momentos y operaciones establecen valores o fechas específicas.</p>
+        <p>En la práctica, esto puede producir pequeñas diferencias entre el resultado contable y el tributario por efecto de la cotización. No se trata de un error, sino de la coexistencia de dos conjuntos de reglas con finalidades distintas. Un contador concilia ambos mundos, de modo que tus estados financieros y tus declaraciones sean coherentes cada uno con su propia normativa.</p>
+        <p>Para el empresario, la lección práctica es no asumir que «un solo tipo de cambio» resuelve todo. Al registrar operaciones en dólares, conviene tener claro para qué propósito se hace la conversión y aplicar la referencia que corresponde. Esta claridad evita mezclar criterios y facilita que, llegado el cierre, contabilidad y tributación cuadren sin sorpresas de última hora.</p>
+      </section>
+
+      <section class="art-section" id="t8">
+        <h2>8. Cómo se publica el tipo de cambio (SBS)</h2>
+        <p>El tipo de cambio de referencia que adopta la SUNAT proviene de la publicación diaria de la SBS, que refleja el promedio ponderado de las operaciones del mercado cambiario. Se publica en días hábiles, con sus valores de compra y venta, y es la fuente que da uniformidad a la conversión de operaciones en moneda extranjera en todo el país.</p>
+        <p>Un aspecto práctico importante es qué ocurre con los días no hábiles —fines de semana y feriados—, en los que no hay publicación. Para operaciones que caen en esas fechas, las reglas establecen qué valor tomar, generalmente el último publicado. Conocer este detalle evita el error de «no encontrar» una cotización para un día sin publicación y aplicar uno incorrecto por desconocimiento.</p>
+        <p>La herramienta de la parte superior de esta página te muestra la referencia oficial de forma cómoda, para que tengas a mano el valor que necesitas sin tener que buscarlo en múltiples fuentes. Aun así, para operaciones sensibles o con implicancias tributarias importantes, conviene confirmar el valor y la fecha exactos con la fuente oficial, ya que la precisión es esencial cuando de conversión de moneda se trata.</p>
+      </section>
+
+      <section class="art-section" id="t9">
+        <h2>9. Facturas en dólares: cómo convertir paso a paso</h2>
+        <figure class="art-figure"><img src="/img/tc-03-factura-dolares.webp" alt="Infografía que muestra la fórmula para convertir una factura en dólares a soles: monto en dólares por el tipo de cambio de la fecha correcta igual al monto en soles, con una alerta sobre usar la fecha adecuada." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Convertir una factura en dólares a soles es, en esencia, una multiplicación, pero el rigor está en los detalles. El proceso básico consiste en identificar el monto en dólares, determinar la fecha tributaria relevante de la operación, tomar el tipo de cambio oficial de esa fecha y con el criterio correcto (compra o venta), y multiplicar para obtener el equivalente en soles.</p>
+        <p>El error más frecuente es saltarse el segundo paso —la fecha— y usar el tipo de cambio del día en que uno hace el registro, en lugar del que corresponde a la operación. Esa diferencia de días, en un mercado que se mueve, produce montos distintos. Por eso, la conversión correcta empieza por preguntarse «¿qué fecha manda para este tributo?» antes de tomar cualquier valor.</p>
+        <p>Una buena práctica es documentar la conversión: anotar, junto a cada factura en moneda extranjera, el tipo de cambio aplicado, su fecha y el equivalente en soles resultante. Ese pequeño registro convierte una conversión que podría cuestionarse en una operación trazable y sustentada. Si más adelante alguien revisa tus cuentas, podrás demostrar exactamente cómo llegaste a cada monto en soles, sin depender de la memoria.</p>
+      </section>
+
+      <section class="art-section" id="t10">
+        <h2>10. El tipo de cambio de cierre</h2>
+        <p>Al cierre de un periodo —típicamente el fin del ejercicio—, los saldos en moneda extranjera deben expresarse en soles usando el tipo de cambio de cierre. Las cuentas por cobrar y por pagar en dólares, por ejemplo, se valoran a la fecha de cierre para reflejar cuánto valen realmente en soles en ese momento, lo que puede diferir de su valor cuando se originaron.</p>
+        <p>Este ajuste de cierre es el que da lugar, en buena medida, a las diferencias de cambio: si el dólar subió, una cuenta por cobrar en dólares vale más soles que antes (una ganancia potencial); si bajó, vale menos (una pérdida). Reconocer correctamente estos efectos al cierre es esencial para que tus resultados reflejen la realidad económica de tus operaciones en moneda extranjera.</p>
+        <p>Para negocios con muchas operaciones en dólares, el tipo de cambio de cierre puede tener un impacto significativo en el resultado del ejercicio. Por eso conviene no dejar este tema para el último momento: llevar ordenados los saldos en moneda extranjera a lo largo del año hace que el ajuste de cierre sea un cálculo limpio y no una carrera contra el tiempo en la que es fácil cometer errores.</p>
+      </section>
+
+      <section class="art-section" id="t11">
+        <h2>11. Diferencia de cambio: ganancia y pérdida</h2>
+        <figure class="art-figure"><img src="/img/tc-04-diferencia-cambio.webp" alt="Infografía que explica la diferencia de cambio: una línea de tiempo entre registrar y cobrar una cuenta en dólares, con una rama verde de ganancia cuando el dólar sube y una roja de pérdida cuando baja." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>La diferencia de cambio es el efecto que produce la variación de la cotización sobre tus operaciones y saldos en moneda extranjera entre dos momentos. Cuando cobras una factura en dólares tiempo después de emitirla, o pagas una deuda en dólares meses después de contraerla, el valor en soles habrá cambiado, y esa variación es la diferencia de cambio.</p>
+        <p>Estas diferencias pueden ser ganancias o pérdidas. Si el dólar se apreció, quien tiene cuentas por cobrar en dólares gana y quien tiene deudas en dólares pierde; si se depreció, ocurre lo contrario. A efectos tributarios, estas ganancias y pérdidas tienen un tratamiento que conviene manejar con cuidado, porque impactan el resultado sobre el que se calcula el impuesto.</p>
+        <p>Para el empresario, la existencia de la diferencia de cambio es una razón más para ser prolijo con el tipo de cambio en cada operación: los valores que registras al inicio son la base sobre la que luego se calcula la diferencia. Un registro inicial descuidado se traduce en diferencias de cambio mal calculadas al final. Rigor desde el primer asiento es la mejor forma de que el cierre no depare sorpresas.</p>
+      </section>
+
+      <section class="art-section" id="t12">
+        <h2>12. Errores comunes con el tipo de cambio</h2>
+        <p>El error número uno es usar la fecha equivocada: tomar el tipo de cambio del día del registro en lugar del que corresponde a la operación según cada tributo. Como el valor cambia a diario, esta confusión produce montos incorrectos que se arrastran a las declaraciones. La solución es identificar siempre la fecha tributaria relevante antes de tomar cualquier valor.</p>
+        <p>El segundo error es confundir compra con venta, aplicando el valor que no corresponde a la operación. El tercero es usar el tipo de cambio bancario o el de la casa de cambio —el que realmente pagaste— donde la norma exige el oficial de referencia, mezclando el mundo comercial con el tributario. Ambos generan diferencias entre lo registrado y lo esperado.</p>
+        <p>Un cuarto error, más sutil, es no prever los días sin publicación y quedarse sin un valor para una fecha no hábil, aplicando entonces cualquier cosa. La solución general a todos estos tropiezos es la misma: apoyarse en la referencia oficial correcta para cada fecha, documentar la conversión y, ante operaciones importantes o dudas, consultar con un contador. La moneda extranjera premia el rigor y castiga la improvisación.</p>
+        <p>Hay también un error de actitud que agrava a todos los demás: tratar la conversión como un trámite mecánico que se hace de memoria o «a ojo». Los montos en dólares que parecen pequeños individualmente se suman a lo largo del año, y una serie de conversiones descuidadas puede terminar en una diferencia relevante al cierre. Tomarse en serio cada conversión, por rutinaria que parezca, es lo que evita que pequeños descuidos se conviertan en un problema grande.</p>
+        <p>Por último, conviene recordar que corregir es más caro que prevenir. Rehacer conversiones mal calculadas, ajustar declaraciones y explicar diferencias ante una revisión consume mucho más tiempo que hacer bien la conversión la primera vez. Invertir unos segundos en tomar el valor y la fecha correctos en cada operación es, a la larga, una de las economías más rentables en el manejo de la moneda extranjera.</p>
+      </section>
+
+      <section class="art-section" id="t13">
+        <h2>13. Tipo de cambio y comercio exterior</h2>
+        <p>Para quienes importan o exportan, el tipo de cambio es un compañero permanente. Las operaciones de comercio exterior se pactan casi siempre en dólares, y cada una debe convertirse a soles para la contabilidad y los tributos, aplicando las reglas de conversión correspondientes. El volumen y la frecuencia de estas operaciones hacen que el manejo correcto de la cotización sea aún más crítico.</p>
+        <p>En la importación, el tipo de cambio influye en el costo en soles de la mercadería y en los tributos aduaneros; en la exportación, en el valor en soles de tus ingresos. Pequeñas diferencias de conversión, multiplicadas por muchas operaciones y montos grandes, pueden tener un impacto considerable en tus resultados. La precisión deja de ser un detalle y se vuelve parte de la rentabilidad del negocio.</p>
+        <p>Por eso, los negocios de comercio exterior suelen tener procesos rigurosos para registrar el tipo de cambio de cada operación y sus diferencias. Combinar ese rigor con la verificación de las contrapartes internacionales y locales —confirmando que los proveedores y clientes con RUC estén en situación regular— es parte de una gestión ordenada. El tipo de cambio y la formalidad de las contrapartes son dos pilares del comercio exterior bien llevado.</p>
+      </section>
+
+      <section class="art-section" id="t14">
+        <h2>14. Consultar el tipo de cambio histórico</h2>
+        <p>Muchas veces no necesitas el tipo de cambio de hoy, sino el de una fecha pasada: para registrar una operación con algo de retraso, para revisar una factura antigua o para calcular una diferencia de cambio. Poder consultar el tipo de cambio histórico —el valor que regía en una fecha determinada— es tan importante como conocer el actual.</p>
+        <p>El valor histórico es el que corresponde aplicar a una operación pasada; usar el de hoy para convertir una operación de hace meses sería un error. Por eso, al reconstruir o revisar operaciones en moneda extranjera, siempre debes remontarte al valor vigente en la fecha correcta, no al actual. La historia de la cotización es, en la práctica, tan operativa como su presente.</p>
+        <p>La herramienta de esta página está pensada para darte esa referencia de forma cómoda. Aun así, para operaciones con implicancias tributarias relevantes, confirmar el valor histórico exacto con la fuente oficial es una precaución sensata. Tener a mano el tipo de cambio correcto de cada fecha es lo que te permite registrar el pasado con la misma precisión con la que registras el presente.</p>
+      </section>
+
+      <section class="art-section" id="t15">
+        <h2>15. El tipo de cambio y tus operaciones con RUC</h2>
+        <p>El tipo de cambio se conecta con el resto de tu vida tributaria a través de tus operaciones formales. Cada factura en dólares que emites o recibes con tu RUC debe convertirse correctamente, y esa conversión alimenta tus registros, tus declaraciones y, en última instancia, la información asociada a tu situación como contribuyente.</p>
+        <p>Cuando trabajas con proveedores o clientes que facturan en dólares, la conversión correcta se suma a la verificación de esas contrapartes. Una operación bien llevada combina dos cuidados: que el comprobante provenga de un RUC válido y en situación regular, y que su conversión a soles use el tipo de cambio correcto. Descuidar cualquiera de los dos abre la puerta a observaciones.</p>
+        <p>Por eso, el manejo de la cotización no es un tema aislado de «finanzas», sino parte integral de operar formalmente. Igual que verificas a tus contrapartes y eliges bien tu régimen, convertir con rigor tus operaciones en moneda extranjera es parte de una gestión tributaria ordenada. Todas estas piezas —RUC, régimen, comprobantes, tipo de cambio— se engranan en un mismo objetivo: una formalidad sin sobresaltos.</p>
+      </section>
+
+      <section class="art-section" id="t16">
+        <h2>16. Tipo de cambio para personas naturales</h2>
+        <p>El tipo de cambio no solo concierne a las empresas. Las personas naturales también se topan con él: al recibir pagos en dólares por servicios, al declarar rentas en moneda extranjera o al realizar operaciones que deban expresarse en soles para fines tributarios. Aunque su situación suele ser más simple, el principio es el mismo: convertir con el valor y la fecha correctos.</p>
+        <p>Un profesional independiente que factura en dólares, por ejemplo, necesita convertir esos ingresos a soles para sus obligaciones, aplicando la referencia oficial correspondiente. Del mismo modo, quien percibe rentas de fuente extranjera o realiza ciertas operaciones en dólares debe reflejarlas en soles con el criterio adecuado, evitando usar simplemente el valor que le dio su banco.</p>
+        <p>Para la persona natural, la recomendación práctica es la misma que para la empresa, a menor escala: tener a mano la referencia oficial, aplicar la fecha correcta y documentar la conversión. Y ante situaciones que impliquen montos importantes o rentas de fuente extranjera, apoyarse en un contador. La sencillez de la mayoría de los casos no debe llevar a descuidar la precisión cuando aparece la moneda extranjera.</p>
+      </section>
+
+      <section class="art-section" id="t17">
+        <h2>17. Buenas prácticas para registrar operaciones en dólares</h2>
+        <p>Trabajar con moneda extranjera se vuelve mucho más simple con algunos hábitos. El primero es documentar siempre: junto a cada operación en dólares, registra el monto original, el tipo de cambio aplicado, su fecha y el equivalente en soles. Ese registro convierte cada conversión en algo trazable y verificable, y te ahorra reconstruir datos bajo presión.</p>
+        <p>El segundo hábito es no postergar. Convertir y registrar las operaciones en dólares cerca del momento en que ocurren, con el valor de la fecha correcta, evita acumular una montaña de conversiones pendientes que luego hay que hacer contra el tiempo y con mayor riesgo de error. La disciplina de registrar al día es especialmente valiosa cuando hay moneda extranjera de por medio.</p>
+        <p>El tercer hábito es apoyarte en fuentes y herramientas confiables para el tipo de cambio, y en un contador para los criterios. Tener a mano una referencia cómoda del valor oficial —como la de esta página— y despejar con un profesional las dudas sobre qué valor y qué fecha aplicar a cada tributo es la combinación que te permite manejar la moneda extranjera con seguridad, sin que se convierta en una fuente de errores y sobresaltos.</p>
+      </section>
+
+      <section class="art-section" id="t19">
+        <h2>18. La cotización del dólar y los pagos internacionales</h2>
+        <p>Cuando envías o recibes dinero del exterior, la cotización de la divisa entra en juego dos veces: en el momento comercial —lo que efectivamente pagas o recibes al cambiar— y en el momento tributario —el valor de referencia con el que registras la operación en soles—. Distinguir ambos es clave para no mezclar lo que costó la transacción con cómo debe reflejarse en tus cuentas.</p>
+        <p>Los pagos internacionales suelen involucrar además comisiones y márgenes de las entidades intermediarias, que forman parte del costo real pero no de la referencia oficial. Por eso, el monto en soles que sale de tu bolsillo puede diferir del que registras a efectos tributarios. Reconocer esa brecha desde el inicio evita confusiones al conciliar tus movimientos bancarios con tu contabilidad.</p>
+        <p>Para negocios que operan seguido con el exterior, conviene tener un criterio consistente: registrar siempre la operación con la referencia oficial de la fecha correcta y llevar por separado el costo comercial de la transacción. Esa separación ordenada hace que, por mucho que fluctúe la divisa, tus registros tributarios se mantengan uniformes y defendibles frente a cualquier revisión.</p>
+      </section>
+
+      <section class="art-section" id="t20">
+        <h2>19. Cómo la cotización afecta tus precios y márgenes</h2>
+        <p>Para cualquier negocio que compra o vende en dólares, la variación de la divisa impacta directamente en la rentabilidad. Si compras insumos en dólares y vendes en soles, una subida del dólar encarece tus costos y comprime tu margen si no ajustas precios; si exportas, una subida puede favorecerte. Entender esta sensibilidad es parte de una gestión financiera consciente.</p>
+        <p>Muchos empresarios fijan sus precios sin considerar cómo una fluctuación de la divisa puede erosionar su margen entre el momento en que cotizan y el momento en que cobran. En operaciones con plazos largos, ese movimiento puede convertir una venta rentable en una apenas equilibrada. Anticipar el efecto de la cotización sobre los márgenes es tan importante como calcular bien el impuesto.</p>
+        <p>La respuesta no está solo en la contabilidad, sino en la estrategia comercial: definir en qué moneda cotizas, con qué vigencia, y cómo trasladas o absorbes las variaciones. Un negocio que entiende su exposición a la divisa toma mejores decisiones de precios y de plazos. La referencia oficial sirve para lo tributario; el manejo del riesgo cambiario, para proteger la utilidad real del negocio.</p>
+      </section>
+
+      <section class="art-section" id="t21">
+        <h2>20. Contratos y cotizaciones pactados en dólares</h2>
+        <p>Cuando un contrato o una cotización se pacta en dólares, conviene dejar claro desde el inicio cómo se manejará la conversión a soles llegado el momento del pago y del registro. La ambigüedad en este punto es fuente de disputas: si no se especifica qué valor y qué fecha se usarán, comprador y vendedor pueden interpretar de forma distinta cuánto corresponde en soles.</p>
+        <p>Una buena práctica contractual es indicar explícitamente el criterio de conversión: qué referencia se tomará y de qué fecha. Esa claridad protege a ambas partes y evita malentendidos cuando la divisa se ha movido entre la firma y el pago. En operaciones de monto importante, este detalle aparentemente menor puede representar diferencias significativas en soles.</p>
+        <p>Desde el punto de vista tributario, además, el registro de la operación seguirá las reglas oficiales de conversión, independientemente de lo pactado comercialmente. Por eso conviene que el criterio del contrato y el tratamiento tributario sean coherentes o, al menos, estén claramente entendidos por tu contador. Alinear lo comercial y lo tributario desde el contrato ahorra ajustes y sorpresas cuando llega el momento de facturar y declarar.</p>
+      </section>
+
+      <section class="art-section" id="t22">
+        <h2>21. Pagos al exterior y retenciones</h2>
+        <p>Los pagos a proveedores del exterior —por servicios, licencias, comisiones u otros conceptos— suelen realizarse en dólares y, en muchos casos, están sujetos a retenciones tributarias. Aquí la conversión correcta a soles es doblemente importante: define tanto el monto del gasto que registras como la base sobre la que se calcula la retención que debes efectuar y pagar.</p>
+        <p>Un error de conversión en estos pagos se propaga: afecta el gasto, la retención y la declaración correspondiente. Por eso, al pagar al exterior conviene tener especialmente claro qué valor de referencia y qué fecha aplican, ya que las reglas para operaciones con no domiciliados pueden tener particularidades. Es uno de los escenarios donde la asesoría contable resulta más valiosa.</p>
+        <p>Para el negocio, sistematizar estos pagos —documentar cada operación con su conversión, su retención y su sustento— es parte de una gestión prolija de las obligaciones con el exterior. Combinado con la verificación de las contrapartes locales que intervienen y con un manejo riguroso de la referencia oficial, este orden evita contingencias en un área donde los errores suelen ser costosos de corregir.</p>
+      </section>
+
+      <section class="art-section" id="t23">
+        <h2>22. Herramientas para no perder de vista la cotización</h2>
+        <p>Trabajar con moneda extranjera se hace mucho más llevadero cuando tienes la referencia oficial siempre a mano. En lugar de buscar el valor en distintas fuentes cada vez que emites una factura o registras una operación, contar con una herramienta que te muestre la cotización de referencia de forma rápida y clara ahorra tiempo y reduce errores.</p>
+        <p>La herramienta de la parte superior de esta página cumple ese papel: te ofrece el valor de referencia de manera cómoda para tus consultas cotidianas. Para las operaciones sensibles conviene, además, confirmar el valor y la fecha exactos con la fuente oficial, pero para el día a día tener la referencia a un clic hace que aplicar la conversión correcta deje de ser una molestia.</p>
+        <p>Más allá de la herramienta puntual, la mejor práctica es integrar la referencia oficial en tu rutina: consultarla en el momento de emitir o registrar, anotar el valor aplicado y no dejar conversiones pendientes. Cuando la cotización correcta está siempre disponible y forma parte natural de tu proceso, el manejo de la moneda extranjera pasa de ser un dolor de cabeza a ser un trámite más, rápido y confiable.</p>
+      </section>
+
+      <section class="art-section" id="t24">
+        <h2>23. Preguntas antes de operar en dólares</h2>
+        <p>Antes de emprender operaciones frecuentes en moneda extranjera, vale la pena responder algunas preguntas que ordenan tu manejo. Primera: ¿en qué moneda pactaré y facturaré, y cómo dejaré claro el criterio de conversión con mis contrapartes? Definirlo de entrada evita disputas y ambigüedades cuando la divisa se mueva.</p>
+        <p>Segunda: ¿tengo claro qué valor y qué fecha de referencia aplican a cada tributo en mis operaciones? Esta claridad es la que previene el error más común, el de la fecha equivocada. Tercera: ¿cómo documentaré cada conversión para que sea trazable? Y cuarta: ¿qué exposición al riesgo cambiario asumo, y cómo la manejaré en mis precios y plazos?</p>
+        <p>Responder estas preguntas —idealmente con el apoyo de un contador— te prepara para operar en dólares con seguridad. No se trata de evitar la moneda extranjera, que hoy es parte natural de muchos negocios, sino de manejarla con criterio: con la referencia correcta, la fecha correcta, el registro correcto y una estrategia clara. Ese dominio convierte una fuente potencial de errores en una operación más que llevas con soltura.</p>
+      </section>
+
+      <section class="art-section" id="t18">
+        <h2>24. Preguntas frecuentes sobre el tipo de cambio SUNAT</h2>
+        <div class="art-faq">
+          <details><summary>¿El tipo de cambio SUNAT es el mismo que el de mi banco?</summary><p>No. El tipo de cambio SUNAT es la referencia oficial (derivada de la SBS) para fines tributarios. El de tu banco es el que te ofrece para comprar o vender dólares y suele tener un margen distinto.</p></details>
+          <details><summary>¿Uso el tipo de cambio compra o venta?</summary><p>Depende del tributo y del tipo de operación. Como guía general, para ingresos suele usarse el de venta y para gastos el de compra, pero existen reglas específicas por tributo. Ante la duda, confírmalo con un contador.</p></details>
+          <details><summary>¿Qué fecha de la cotización debo aplicar?</summary><p>La que corresponde a la operación según cada tributo (por ejemplo, la fecha en que nace la obligación del IGV), no la del día en que haces el registro. Usar la fecha equivocada es el error más común.</p></details>
+          <details><summary>¿Qué tipo de cambio uso en días sin publicación (fines de semana)?</summary><p>En días no hábiles no hay publicación; las reglas establecen qué valor tomar, en general el último publicado. Conviene confirmar el criterio aplicable a tu caso.</p></details>
+          <details><summary>¿Puedo consultar el tipo de cambio de una fecha pasada?</summary><p>Sí. Para operaciones pasadas debes usar el valor vigente en esa fecha, no el actual. La herramienta de esta página te ayuda a tener esa referencia a mano.</p></details>
+          <details><summary>¿La conversión afecta cuánto impuesto pago?</summary><p>Sí. Una conversión incorrecta distorsiona la base del IGV y de la renta, y las diferencias de cambio pueden generar ganancias o pérdidas con efecto tributario. Por eso conviene convertir con rigor.</p></details>
+        </div>
+      </section>
+
+      <p class="art-closing">El tipo de cambio SUNAT parece un detalle técnico, pero manejarlo bien marca la diferencia entre una contabilidad limpia y una llena de diferencias y observaciones. Saber que la referencia oficial no es la de tu banco, aplicar el valor de compra o venta que corresponde, usar siempre la fecha correcta según cada tributo y documentar cada conversión son los hábitos que te permiten trabajar con moneda extranjera sin sobresaltos. Usa la herramienta al inicio de esta página para tener a mano el tipo de cambio que necesitas, apóyate en tu contador para los criterios de cada operación, y convierte el rigor cambiario en una parte natural de tu gestión formal. En un mundo donde cada vez más operaciones se pactan en dólares, dominar el tipo de cambio es dominar una pieza esencial de tu tributación.</p>
+      </div>
+    </div>
+
+    <aside class="art-aside" id="artAside">
+      <div class="art-aside-inner">
+
+        <div class="aside-card aside-search">
+          <h3><span class="ic" data-icon="search"></span> Consulta rápida</h3>
+          <form id="asideQuickForm" class="aside-quick">
+            <input type="text" id="asideQuickInput" inputmode="numeric" maxlength="11"
+              placeholder="Escribe un RUC (11 dígitos)" aria-label="RUC">
+            <button type="submit" aria-label="Consultar"><span class="ic" data-icon="arrow-right"></span></button>
+          </form>
+          <p class="aside-quick-hint">También puedes <a href="/razon-social/">buscar por nombre</a> o <a href="/verificar-ruc-multiple/">verificar una lista</a>.</p>
+        </div>
+
+        <div class="aside-card">
+          <h3><span class="ic" data-icon="clock"></span> Consultas recientes</h3>
+          <div id="artHistoryList"><p class="aside-empty">Tus búsquedas aparecerán aquí.</p></div>
+        </div>
+
+        <div class="aside-card">
+          <h3><span class="ic" data-icon="compass"></span> Guía rápida de estados</h3>
+          <ul class="aside-legend">
+            <li class="lg st-ok"><span class="lg-head"><span class="dotk"></span><strong>Activo</strong></span><span class="lg-desc">El RUC opera con normalidad.</span></li>
+            <li class="lg st-warn"><span class="lg-head"><span class="dotk"></span><strong>Suspensión</strong></span><span class="lg-desc">Actividad pausada temporalmente.</span></li>
+            <li class="lg st-bad"><span class="lg-head"><span class="dotk"></span><strong>Baja</strong></span><span class="lg-desc">RUC dado de baja, no operativo.</span></li>
+            <li class="lg st-ok"><span class="lg-head"><span class="dotk"></span><strong>Habido</strong></span><span class="lg-desc">Domicilio fiscal verificado.</span></li>
+            <li class="lg st-warn"><span class="lg-head"><span class="dotk"></span><strong>No Habido</strong></span><span class="lg-desc">Domicilio no confirmado, precaución.</span></li>
+          </ul>
+        </div>
+
+        <div class="aside-card">
+          <h3><span class="ic" data-icon="wrench"></span> Herramientas</h3>
+          <a href="/ficha-ruc/" class="aside-link"><span class="ic" data-icon="file-text"></span> Descargar ficha RUC</a>
+          <a href="/calculadora-tributaria/" class="aside-link"><span class="ic" data-icon="calculator"></span> Calculadora de régimen</a>
+          <a href="/tipo-de-cambio-sunat/" class="aside-link"><span class="ic" data-icon="banknote"></span> Tipo de cambio SUNAT</a>
+          <a href="/verificar-ruc-multiple/" class="aside-link"><span class="ic" data-icon="list-checks"></span> Verificar RUC en lote</a>
+          <a href="/sello-verificado/" class="aside-link"><span class="ic" data-icon="shield-check"></span> Sello de verificación</a>
+        </div>
+
+        <button type="button" id="asideTop" class="aside-top"><span class="ic" data-icon="arrow-up"></span> Volver arriba</button>
+
+      </div>
+    </aside>
+  </div>
+
+  </main>
+  <script is:inline slot="scripts-before" src="/tipo-cambio.js?v=3fbc8af3"></script>
+
+</BaseLayout>

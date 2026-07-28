@@ -1,0 +1,28 @@
+{
+  "name": "consultaruc-pe",
+  "type": "module",
+  "version": "2.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "description": "Consulta RUC Perú (consultaruc-pe.com) - Astro SSR rebuild, see docs/DEPLOY.md",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "start": "node ./dist/server/entry.mjs",
+    "preview": "astro preview",
+    "astro": "astro",
+    "download-bulk": "node src/lib/bulkDownloader.js",
+    "sync-tipo-cambio": "node src/lib/tipoCambioSync.js"
+  },
+  "dependencies": {
+    "@astrojs/node": "^11.0.2",
+    "adm-zip": "^0.5.12",
+    "astro": "^7.1.4",
+    "axios": "^1.7.2",
+    "bcryptjs": "^3.0.3",
+    "playwright": "^1.62.0"
+  }
+}
