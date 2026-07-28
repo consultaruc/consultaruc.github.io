@@ -226,6 +226,25 @@ jobs:
             *) echo "ERROR: PM2 no está corriendo astro/dist/server/entry.mjs"; exit 1 ;;
           esac
 
+          # Que el proceso esté "online" NO significa que LiteSpeed pueda
+          # hablarle: una vez el adapter escuchó sólo en ::1 (IPv6) por no
+          # tener HOST, y el sitio devolvió 503 con el proceso sano y los logs
+          # limpios. Esto comprueba, desde el propio servidor, que hay algo
+          # escuchando EXACTAMENTE donde el proxy va a buscarlo (IPv4).
+          promoted=0
+          for i in $(seq 1 20); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 "http://127.0.0.1:31500/robots.txt" || echo 000)
+            if [ "$code" = "200" ]; then promoted=1; break; fi
+            sleep 3
+          done
+          if [ "$promoted" != "1" ]; then
+            echo "ERROR: nada responde en http://127.0.0.1:31500 tras promover."
+            echo "Comprueba en qué interfaz escucha el proceso:  ss -ltnp | grep 31500"
+            pm2 logs consultaruc --err --lines 30 --nostream || true
+            exit 1
+          fi
+          echo "OK: el proceso promovido responde en 127.0.0.1:31500 (IPv4)"
+
           echo "Despliegue completado en $DEPLOY_PATH"
           REMOTE
 

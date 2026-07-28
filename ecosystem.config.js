@@ -36,6 +36,14 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 31500,
+        // OBLIGATORIO. Sin HOST, el adapter standalone de @astrojs/node
+        // escucha en "localhost", que en este servidor resuelve a ::1 (IPv6)
+        // y deja el puerto SIN nadie escuchando en IPv4. LiteSpeed hace proxy
+        // a 127.0.0.1:31500 (ver deploy/public_html.htaccess), así que el
+        // sitio devolvía 503 con el proceso "online" y sin un solo error en
+        // los logs. El Express de antes no lo necesitaba porque
+        // `app.listen(PORT)` escucha en 0.0.0.0 por defecto.
+        HOST: '127.0.0.1',
         SITE_URL: 'https://consultaruc-pe.com',
         // astro/src/pages/admin/{login,dashboard}.ts leen estos HTML desde
         // disco en cada request (no son módulos ES que Vite empaquete) -
