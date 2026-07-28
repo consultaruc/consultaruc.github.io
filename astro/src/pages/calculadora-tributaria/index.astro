@@ -1,0 +1,354 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title={"Calculadora de Régimen Tributario 2026: NRUS, RER, MYPE"}
+  description={"Compara NRUS, RER, Régimen MYPE Tributario y Régimen General según tus ingresos anuales. Calculadora orientativa 2026 con la UIT vigente de S/ 5,500."}
+  canonical={"https://consultaruc-pe.com/calculadora-tributaria/"}
+  activePage="calculadora-tributaria"
+  bodyClass="light-theme"
+>
+  <Fragment slot="head">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Consulta RUC Perú">
+  <meta property="og:locale" content="es_PE">
+  <meta property="og:title" content="Calculadora de Régimen Tributario 2026: NRUS, RER, MYPE">
+  <meta property="og:description" content="Compara NRUS, RER, Régimen MYPE Tributario y Régimen General según tus ingresos anuales. Calculadora orientativa 2026 con la UIT vigente de S/ 5,500.">
+  <meta property="og:url" content="https://consultaruc-pe.com/calculadora-tributaria/">
+  <meta property="og:image" content="https://consultaruc-pe.com/img/regimen-01-escalera.webp">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="670">
+  <meta property="og:image:alt" content="Calculadora de Régimen Tributario 2026: NRUS, RER, MYPE">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Calculadora de Régimen Tributario 2026: NRUS, RER, MYPE">
+  <meta name="twitter:description" content="Compara NRUS, RER, Régimen MYPE Tributario y Régimen General según tus ingresos anuales. Calculadora orientativa 2026 con la UIT vigente de S/ 5,500.">
+  <meta name="twitter:image" content="https://consultaruc-pe.com/img/regimen-01-escalera.webp">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Inicio","item":"https://consultaruc-pe.com/"},{"@type":"ListItem","position":2,"name":"Calculadora Tributaria","item":"https://consultaruc-pe.com/calculadora-tributaria/"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Calculadora de Régimen Tributario 2026: NRUS, RER, MYPE","url":"https://consultaruc-pe.com/calculadora-tributaria/","description":"Compara NRUS, RER, Régimen MYPE Tributario y Régimen General según tus ingresos anuales. Calculadora orientativa 2026 con la UIT vigente de S/ 5,500.","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"es-PE","offers":{"@type":"Offer","price":"0","priceCurrency":"PEN"},"publisher":{"@type":"Organization","name":"Consulta RUC Perú","url":"https://consultaruc-pe.com","logo":{"@type":"ImageObject","url":"https://consultaruc-pe.com/icon-512.png"}}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"¿Cuál es el régimen tributario que menos paga?","acceptedAnswer":{"@type":"Answer","text":"No hay uno «más barato» en abstracto: depende de tus ingresos, tus gastos y a quién le vendes. Un negocio con muchos gastos suele pagar menos en regímenes que permiten deducirlos (MYPE o General); uno con pocos gastos, en el RER. La calculadora te ayuda a comparar con tus cifras."}},{"@type":"Question","name":"¿Puedo emitir facturas en el Nuevo RUS?","acceptedAnswer":{"@type":"Answer","text":"No. En el NRUS solo puedes emitir boletas de venta y tickets. Si necesitas facturar a empresas, debes acogerte al RER, al MYPE Tributario o al Régimen General."}},{"@type":"Question","name":"¿Puedo cambiar de régimen tributario?","acceptedAnswer":{"@type":"Answer","text":"Sí. El cambio se gestiona ante la SUNAT y, en muchos casos, es obligatorio al superar los límites de ingresos o cuando tu actividad ya no encaja en el régimen actual. Conviene planificarlo con apoyo contable."}},{"@type":"Question","name":"¿El régimen depende de si soy persona natural o empresa?","acceptedAnswer":{"@type":"Answer","text":"Ambas formas pueden acogerse a los distintos regímenes según sus ingresos y actividad. La forma jurídica y el régimen son decisiones distintas pero relacionadas, que conviene tomar en conjunto."}},{"@type":"Question","name":"¿La calculadora da el monto exacto que pagaré?","acceptedAnswer":{"@type":"Answer","text":"No. Ofrece una estimación orientativa y simplificada del Impuesto a la Renta, útil para comparar regímenes. No reemplaza el cálculo oficial ni la asesoría de un contador para tu caso concreto."}},{"@type":"Question","name":"¿Dónde confirmo los límites y tasas vigentes?","acceptedAnswer":{"@type":"Answer","text":"En la información oficial de la SUNAT, ya que los montos —expresados en soles o en UIT— pueden actualizarse. Ante cualquier duda, consulta con un contador o directamente en el portal de la administración tributaria."}}]}</script>
+  
+  </Fragment>
+
+  <nav class="breadcrumb"><a href="/">Inicio</a> › Calculadora de Régimen Tributario</nav>
+
+  <main class="content-page" style="padding-bottom:0;">
+    <h1>Calculadora de Régimen Tributario 2026</h1>
+    <p class="content-updated">Última actualización: julio de 2026 · UIT 2026 = S/ 5,500 (D.S. 301-2025-EF)</p>
+    <p>Ingresa tus ingresos anuales estimados para comparar de forma orientativa cuánto pagarías de Impuesto a la Renta bajo cada régimen tributario, y cuáles de ellos son aplicables según tus límites de ingresos.</p>
+  </main>
+
+  <section class="rate-card">
+    <div class="rate-box" style="text-align:left; padding: 1.5rem 1.5rem;">
+      <label for="ingresoAnual" style="display:block; margin-bottom:0.4rem; font-weight:600;">Ingresos brutos anuales estimados (S/)</label>
+      <input type="number" id="ingresoAnual" placeholder="Ej: 120000" style="width:100%; padding:0.7rem; border-radius:8px; border:1px solid var(--border-color); background:var(--overlay-input-bg); color:var(--text-main); font-size:1rem; margin-bottom:1rem;">
+
+      <label for="gastoAnual" style="display:block; margin-bottom:0.4rem; font-weight:600;">Gastos deducibles anuales (S/) <span style="font-weight:400; color:var(--text-muted);">- opcional, solo afecta RMT y Régimen General</span></label>
+      <input type="number" id="gastoAnual" placeholder="Ej: 30000 (déjalo vacío si no sabes)" style="width:100%; padding:0.7rem; border-radius:8px; border:1px solid var(--border-color); background:var(--overlay-input-bg); color:var(--text-main); font-size:1rem; margin-bottom:1rem;">
+
+      <button class="cta-search-btn" id="calcBtn" style="width:auto; padding:0.8rem 2rem;">Calcular y Comparar</button>
+    </div>
+
+    <div id="calcResults" style="display:none; margin-top:1.5rem;">
+      <div style="overflow-x:auto;">
+        <table class="rate-history-table" style="text-align:left;">
+          <thead>
+            <tr><th style="text-align:left;">Régimen</th><th>¿Aplica?</th><th>Impuesto anual estimado</th><th>Tasa</th></tr>
+          </thead>
+          <tbody id="calcBody"></tbody>
+        </table>
+      </div>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-top:1rem;"><span class="ic" data-icon="triangle-alert"></span> Esta es una estimación orientativa simplificada, no un cálculo oficial. No considera todas las deducciones, actividades excluidas ni casos particulares. Verifica tu situación exacta con un contador o directamente en <a href="https://www.sunat.gob.pe" target="_blank" rel="noopener">sunat.gob.pe</a>.</p>
+    </div>
+  </section>
+
+  <main class="article-main">
+  <div class="home-article">
+    <aside class="art-toc" id="artToc">
+      <p class="art-toc-title">Contenido de esta guía</p>
+      <div class="art-toc-progress-label"><span>Progreso de lectura</span><span class="art-toc-pct">0%</span></div>
+      <div class="art-toc-progress"><span class="art-toc-progress-fill"></span></div>
+      <nav>
+        <a href="#c1">1. ¿Qué es un régimen tributario?</a>
+        <a href="#c2">2. Los 4 regímenes en el Perú</a>
+        <a href="#c3">3. Cómo usar esta calculadora</a>
+        <a href="#c4">4. Nuevo RUS (NRUS)</a>
+        <a href="#c5">5. Régimen Especial (RER)</a>
+        <a href="#c6">6. Régimen MYPE Tributario</a>
+        <a href="#c7">7. Régimen General</a>
+        <a href="#c8">8. Cómo elegir el régimen adecuado</a>
+        <a href="#c9">9. Límites de ingresos de cada régimen</a>
+        <a href="#c10">10. Tasas de impuesto por régimen</a>
+        <a href="#c11">11. Obligaciones y libros contables</a>
+        <a href="#c12">12. Comprobantes según el régimen</a>
+        <a href="#c13">13. Cómo cambiar de régimen</a>
+        <a href="#c14">14. Errores comunes al elegir</a>
+        <a href="#c15">15. El régimen y el crecimiento del negocio</a>
+        <a href="#c16">16. Persona natural vs jurídica</a>
+        <a href="#c17">17. El régimen tributario y tu RUC</a>
+        <a href="#c19">18. El IGV y el crédito fiscal</a>
+        <a href="#c20">19. Actividades excluidas</a>
+        <a href="#c21">20. Declaraciones mensuales</a>
+        <a href="#c22">21. Cómo te ayuda un contador</a>
+        <a href="#c23">22. Crédito y licitaciones</a>
+        <a href="#c24">23. Lista antes de inscribirte</a>
+        <a href="#c18">24. Preguntas frecuentes</a>
+      </nav>
+    </aside>
+
+    <div class="art-main">
+      <div class="art-byline">
+        <div class="art-byline-av">CR</div>
+        <div class="art-byline-main">
+          <p class="art-byline-name"><strong>Equipo Editorial de Consulta RUC Perú</strong><span class="art-byline-badge"><span class="ic" data-icon="badge-check"></span> Revisado</span></p>
+          <div class="art-byline-meta">
+            <span><span class="ic" data-icon="calendar"></span> Actualizado: julio de 2026</span>
+            <span><span class="ic" data-icon="clock"></span> <span class="js-readtime">—</span> min de lectura</span>
+            <span><span class="ic" data-icon="shield-check"></span> Fuente: SUNAT</span>
+          </div>
+        </div>
+        <div class="art-byline-actions">
+          <button type="button" class="art-byline-btn js-share" title="Copiar enlace" aria-label="Copiar enlace de la página"><span class="ic" data-icon="send"></span></button>
+        </div>
+      </div>
+      <div class="art-body">
+      <p class="art-lead">Elegir bien tu <strong>régimen tributario</strong> es una de las decisiones más importantes al formalizar un negocio en el Perú: define cuánto pagarás de impuestos, qué comprobantes podrás emitir y cuánta contabilidad tendrás que llevar. Un mismo nivel de ingresos puede significar pagar muy poco o bastante más según el régimen en el que estés. En esta guía te explicamos qué es un régimen tributario, cómo funcionan los cuatro que existen —Nuevo RUS, Régimen Especial, MYPE Tributario y Régimen General—, cómo usar la calculadora de arriba para comparar cuánto pagarías en cada uno, y cómo elegir el que mejor se ajusta a tu actividad y a tus planes de crecimiento.</p>
+
+      <section class="art-section" id="c1">
+        <h2>1. ¿Qué es un régimen tributario?</h2>
+        <p>Un <strong>régimen tributario</strong> es el conjunto de reglas que determina cómo un contribuyente calcula y paga sus impuestos, principalmente el Impuesto a la Renta y el IGV. No todos los negocios tributan igual: el Estado peruano ofrece varios regímenes pensados para distintos tamaños y tipos de actividad, desde el pequeño comerciante hasta la gran empresa. El régimen en el que te inscribes define tus obligaciones, tus tasas y la complejidad de tu contabilidad.</p>
+        <p>La lógica detrás de tener varios regímenes es la proporcionalidad: no sería justo ni práctico exigirle a una bodega de barrio la misma contabilidad y las mismas tasas que a una corporación. Por eso, los regímenes más simples ofrecen menos obligaciones y cargas más ligeras para los negocios pequeños, mientras que los más completos, aplicables a empresas de mayor envergadura, implican más deberes formales a cambio de poder deducir gastos y operar sin límites de ingresos.</p>
+        <p>Entender esta estructura es el primer paso para no pagar de más ni de menos. Estar en un régimen que no corresponde a tu realidad puede hacerte tributar más de lo necesario, perder beneficios o, en el otro extremo, incumplir obligaciones por estar en uno demasiado simple para tu volumen. La elección del régimen, por lo tanto, no es un mero trámite: es una decisión con impacto directo en el bolsillo y en la formalidad del negocio.</p>
+      </section>
+
+      <section class="art-section" id="c2">
+        <h2>2. Los 4 regímenes tributarios en el Perú</h2>
+        <figure class="art-figure"><img src="/img/regimen-01-escalera.webp" alt="Infografía en forma de escalera ascendente con los cuatro regímenes tributarios del Perú —Nuevo RUS, RER, MYPE Tributario y Régimen General— ordenados de más simple a más completo según el crecimiento del negocio." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>El sistema peruano contempla cuatro regímenes para las rentas empresariales, ordenados de menor a mayor complejidad. El <strong>Nuevo RUS (NRUS)</strong> es el más simple, pensado para pequeños negocios que venden principalmente a consumidores finales. El <strong>Régimen Especial de Renta (RER)</strong> da un paso más, permitiendo emitir facturas con una carga aún moderada.</p>
+        <p>El <strong>Régimen MYPE Tributario (RMT)</strong> está diseñado para la micro y pequeña empresa, con reglas intermedias que buscan acompañar el crecimiento sin ahogarlo. Y el <strong>Régimen General</strong> es el más completo: sin límite de ingresos, con contabilidad plena y aplicable a cualquier actividad, es el régimen de las empresas medianas y grandes, o de quienes necesitan deducir todos sus gastos.</p>
+        <p>Cada uno tiene sus propios límites de ingresos, tasas, obligaciones y tipos de comprobante. La calculadora de la parte superior de esta página te ayuda justamente a comparar, de forma orientativa, cuánto pagarías de Impuesto a la Renta en cada régimen según tus ingresos estimados, para que la decisión no se base en la intuición sino en números concretos adaptados a tu situación.</p>
+        <p>Conviene verlos como una escalera más que como cajones aislados. La mayoría de los negocios no elige un régimen «para siempre»: entra por el peldaño que corresponde a su tamaño inicial y va subiendo a medida que crece. Comprender los cuatro peldaños de una vez —aunque hoy solo te aplique uno— te permite anticipar el camino y tomar decisiones pensando en dónde estarás mañana, no solo en dónde estás hoy.</p>
+        <p>Un matiz que suele generar confusión: estos cuatro regímenes corresponden a las rentas empresariales, es decir, a la actividad de negocio. Las rentas de otras fuentes —como el trabajo independiente por recibos por honorarios o el alquiler de bienes— siguen sus propias reglas dentro del sistema. Al hablar de «elegir régimen» para un negocio, nos referimos a estos cuatro, que son los que definen cómo tributa tu actividad comercial o de servicios.</p>
+      </section>
+
+      <section class="art-section" id="c3">
+        <h2>3. Cómo usar esta calculadora de régimen tributario</h2>
+        <p>La calculadora de arriba está pensada para darte una comparación rápida y orientativa. Su uso es sencillo y no requiere conocimientos contables:</p>
+        <ul>
+          <li><strong>Ingresa tus ingresos anuales estimados.</strong> Es el total que esperas facturar en el año, antes de gastos.</li>
+          <li><strong>Añade tus gastos deducibles</strong> (opcional). Este dato afecta el cálculo en los regímenes que permiten deducir gastos, como el MYPE Tributario y el General.</li>
+          <li><strong>Calcula y compara.</strong> La herramienta te muestra, para cada régimen, si aplica según tus límites y cuánto pagarías aproximadamente de Impuesto a la Renta.</li>
+        </ul>
+        <p>Es importante leer el resultado con la perspectiva correcta: se trata de una estimación simplificada, no de un cálculo oficial. No considera todas las deducciones posibles, las actividades excluidas de ciertos regímenes ni los casos particulares que puedan aplicarte. Úsala como una brújula para orientar tu decisión y, antes de inscribirte o cambiar de régimen, confirma tu situación exacta con un contador o directamente con la SUNAT.</p>
+      </section>
+
+      <section class="art-section" id="c4">
+        <h2>4. Nuevo RUS (NRUS): el régimen más simple</h2>
+        <p>El Nuevo Régimen Único Simplificado es la puerta de entrada a la formalidad para muchos pequeños negocios. Está pensado para quienes venden principalmente a consumidores finales —bodegas, puestos de mercado, pequeños servicios— y su gran atractivo es la simplicidad: en lugar de calcular impuestos sobre utilidades, se paga una cuota fija mensual según una categoría de ingresos.</p>
+        <p>En el NRUS existen categorías definidas por el monto de ingresos o compras mensuales, cada una con su cuota fija. Esto significa que no llevas contabilidad compleja ni presentas declaraciones anuales de renta: pagas tu cuota mensual y listo. A cambio de esa comodidad, hay una limitación clave: en este régimen solo puedes emitir boletas de venta y tickets, no facturas, por lo que no es adecuado si tus clientes son empresas que necesitan crédito fiscal.</p>
+        <p>El NRUS tiene además un tope de ingresos anuales, por encima del cual ya no es aplicable. Es ideal para empezar y para negocios que se mantienen pequeños y venden al público, pero si tu actividad crece o necesitas facturar a empresas, tarde o temprano tendrás que migrar a un régimen que lo permita. Para muchos emprendedores, sin embargo, es el primer paso perfecto hacia la formalidad.</p>
+      </section>
+
+      <section class="art-section" id="c5">
+        <h2>5. Régimen Especial de Renta (RER)</h2>
+        <p>El Régimen Especial de Renta es el siguiente escalón y resuelve la principal limitación del NRUS: permite emitir facturas. Está dirigido a pequeñas empresas y negocios que ya necesitan operar con clientes empresariales, manteniendo todavía una carga tributaria y contable relativamente ligera.</p>
+        <p>Su característica más conocida es que el Impuesto a la Renta se calcula como un porcentaje fijo de los ingresos netos mensuales, sin considerar los gastos. Esta tasa reducida y de cálculo directo lo hace atractivo para negocios con buenos márgenes, donde tributar sobre los ingresos resulta conveniente. La contabilidad exigida es menor que la del Régimen General, lo que reduce costos administrativos.</p>
+        <p>El RER también tiene un límite de ingresos anuales y excluye ciertas actividades que, por su naturaleza, deben tributar en regímenes más completos. Es una buena opción para pequeños comercios y servicios que facturan a empresas y cuyos márgenes hacen conveniente pagar sobre ingresos; pero si tus gastos son altos en relación con tus ventas, quizá te convenga un régimen donde puedas deducirlos, como veremos a continuación.</p>
+      </section>
+
+      <section class="art-section" id="c6">
+        <h2>6. Régimen MYPE Tributario (RMT)</h2>
+        <p>El Régimen MYPE Tributario fue creado específicamente para acompañar a la micro y pequeña empresa, que es el corazón del tejido empresarial peruano. Su diseño busca un equilibrio: obligaciones más manejables que las del Régimen General, pero con la ventaja de tributar sobre las utilidades reales, es decir, sobre los ingresos menos los gastos deducibles.</p>
+        <p>Esto lo hace especialmente conveniente para negocios con gastos significativos, porque solo pagas Impuesto a la Renta sobre lo que efectivamente ganas. El régimen contempla además una tasa reducida para los primeros tramos de utilidad, lo que alivia la carga de las empresas más pequeñas, y una tasa mayor para las utilidades que superan cierto nivel. Esa progresividad protege al negocio en sus etapas iniciales.</p>
+        <p>El RMT tiene un límite de ingresos anuales bastante amplio, lo que permite a muchas empresas crecer sin necesidad de cambiar de régimen. Para gran parte de las pymes formales, el MYPE Tributario representa el punto óptimo entre simplicidad y beneficios: puedes deducir gastos, emitir todo tipo de comprobantes y llevar una contabilidad exigente pero no abrumadora. Es, para muchos, el régimen natural una vez que el negocio despega.</p>
+      </section>
+
+      <section class="art-section" id="c7">
+        <h2>7. Régimen General</h2>
+        <p>El Régimen General es el más completo del sistema y no tiene límite de ingresos: es el régimen de las empresas medianas y grandes, y de cualquier negocio que, por su actividad o su volumen, no encaje en los anteriores. Tributa sobre la renta neta anual —ingresos menos gastos deducibles— y exige llevar contabilidad completa.</p>
+        <p>Su principal ventaja es la flexibilidad total: puedes deducir todos los gastos vinculados a tu actividad, realizar cualquier operación y emitir todos los comprobantes, sin las restricciones de los regímenes simplificados. A cambio, las obligaciones formales son mayores: más libros contables, más declaraciones y, por lo general, la necesidad de un soporte contable profesional constante.</p>
+        <p>Para una empresa con altos ingresos, gastos importantes y operaciones complejas, el Régimen General no es una carga sino la única opción coherente. Permite reflejar fielmente la realidad económica del negocio y aprovechar todas las deducciones legales. La clave está en que el ahorro por deducir gastos y la posibilidad de crecer sin límites compensen con creces la mayor complejidad administrativa.</p>
+      </section>
+
+      <section class="art-section" id="c8">
+        <h2>8. Cómo elegir el régimen tributario adecuado para tu negocio</h2>
+        <figure class="art-figure"><img src="/img/regimen-02-arbol-decision.webp" alt="Árbol de decisión que ayuda a elegir el régimen tributario según tres preguntas —si vendes a empresas, si tus gastos son altos y cuánto facturas— con ramas que llevan a NRUS, RER, MYPE Tributario o Régimen General." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Elegir régimen no se trata de buscar el que «pague menos» en abstracto, sino el que mejor se ajusta a tu realidad. Hay tres preguntas que guían la decisión: ¿a quién le vendes?, ¿cuánto facturas? y ¿qué tan altos son tus gastos? Las respuestas van descartando opciones hasta dejar la más conveniente.</p>
+        <p>Si vendes solo a consumidores finales y tu negocio es pequeño, el NRUS puede bastarte. Si necesitas facturar a empresas pero tus gastos son bajos frente a tus ventas, el RER, que tributa sobre ingresos, suele ser atractivo. Si tus gastos son significativos y quieres tributar sobre utilidades reales, el MYPE Tributario probablemente sea tu mejor opción. Y si tu volumen es alto o tu actividad lo exige, el Régimen General es el camino.</p>
+        <p>La calculadora de esta página convierte esas preguntas en números: al comparar cuánto pagarías en cada régimen con tus cifras, la decisión deja de ser teórica. Aun así, conviene contrastar el resultado con un contador, porque la elección óptima también depende de factores que una calculadora no captura: tus planes de crecimiento, la naturaleza de tu actividad y tu capacidad de cumplir con las obligaciones de cada régimen.</p>
+        <p>Un buen ejercicio es simular más de un escenario. Prueba la calculadora con tus ingresos actuales y luego con los que esperas tener si el negocio crece como planeas. A veces el régimen ideal para tus cifras de hoy no es el mismo que para las de dentro de un año, y ver ambos resultados juntos te ayuda a decidir si conviene elegir pensando en el presente o adelantarte a tu crecimiento.</p>
+        <p>Recuerda también que la carga tributaria no es el único costo a considerar. Un régimen con impuesto ligeramente mayor pero mucho más simple puede resultar más barato en la práctica una vez que sumas honorarios contables y tiempo dedicado a cumplir obligaciones. La mejor elección equilibra tres cosas: cuánto pagas de impuesto, cuánto te cuesta cumplir y cuánto te habilita para el negocio que quieres construir.</p>
+      </section>
+
+      <section class="art-section" id="c9">
+        <h2>9. Límites de ingresos de cada régimen</h2>
+        <figure class="art-figure"><img src="/img/regimen-03-comparativa.webp" alt="Cuadro comparativo de los cuatro regímenes tributarios —NRUS, RER, MYPE Tributario y General— fila por fila: si emiten factura, sobre qué tributan, sus obligaciones y para quién es cada uno." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>Cada régimen tiene un tope de ingresos anuales que determina hasta dónde puedes usarlo. El NRUS es el de límite más bajo, coherente con su enfoque en negocios pequeños; el RER tiene un tope mayor pero aún acotado; el MYPE Tributario ofrece un límite amplio pensado para acompañar el crecimiento de las pymes; y el Régimen General no tiene límite alguno.</p>
+        <p>Estos límites importan porque, si tus ingresos superan el tope de tu régimen, estás obligado a migrar a uno superior. Por eso, al elegir, no basta con mirar tu facturación actual: conviene anticipar hacia dónde va tu negocio. Inscribirte en un régimen que quedará chico en pocos meses te obligará a un cambio pronto; elegir con visión de futuro te ahorra trámites y ajustes.</p>
+        <p>Los montos exactos de estos límites se expresan en soles o en UIT (Unidad Impositiva Tributaria) y pueden actualizarse con el tiempo, por lo que conviene verificarlos con la información vigente de la SUNAT. La calculadora considera estos topes para indicarte qué regímenes aplican a tu nivel de ingresos, ayudándote a descartar de entrada los que ya no corresponden a tu tamaño.</p>
+      </section>
+
+      <section class="art-section" id="c10">
+        <h2>10. Tasas de impuesto en cada régimen</h2>
+        <p>La forma de calcular el Impuesto a la Renta cambia radicalmente entre regímenes, y ahí está buena parte de la diferencia de lo que terminas pagando. En el NRUS pagas una cuota fija mensual según tu categoría, sin porcentajes ni cálculos: es lo más predecible. En el RER, el impuesto es un porcentaje fijo y reducido de tus ingresos netos mensuales.</p>
+        <p>En el MYPE Tributario y en el Régimen General, en cambio, tributas sobre la utilidad —ingresos menos gastos—, lo que introduce la posibilidad de reducir la base imponible deduciendo gastos legítimos. El MYPE aplica una tasa reducida a los primeros tramos de utilidad y una tasa mayor por encima de cierto nivel; el Régimen General aplica la tasa empresarial sobre toda la renta neta anual.</p>
+        <p>La consecuencia práctica es que el régimen «más barato» depende de tu estructura de costos. Para un negocio con márgenes altos y pocos gastos, tributar sobre ingresos (RER) puede convenir; para uno con gastos elevados, tributar sobre utilidades (MYPE o General) suele resultar mejor, porque esos gastos reducen el impuesto. Comparar con números reales, como hace la calculadora, es la única forma de saber cuál te conviene.</p>
+      </section>
+
+      <section class="art-section" id="c11">
+        <h2>11. Obligaciones y libros contables por régimen</h2>
+        <p>Más allá del impuesto, cada régimen implica un nivel distinto de obligaciones formales, y ese «costo administrativo» debe pesar en tu decisión. El NRUS es el más liviano: sin libros contables complejos ni declaración anual de renta, solo el pago de la cuota mensual. Para un negocio pequeño sin equipo administrativo, esa simplicidad tiene un valor enorme.</p>
+        <p>El RER exige algo más —ciertos registros y declaraciones mensuales—, pero sigue siendo manejable. El MYPE Tributario incrementa las obligaciones a medida que crece la empresa, con libros y declaraciones acordes a su tamaño, mientras que el Régimen General demanda contabilidad completa, con todos los libros y declaraciones que ello implica, casi siempre con apoyo contable profesional permanente.</p>
+        <p>Este factor a veces se subestima, pero es real: un régimen con menor impuesto pero muchas obligaciones puede terminar costándote más en tiempo y honorarios contables que uno ligeramente más caro pero mucho más simple. Al elegir, suma al impuesto estimado el costo de cumplir con las obligaciones del régimen; el verdadero costo total es la suma de ambos, no solo el tributo.</p>
+      </section>
+
+      <section class="art-section" id="c12">
+        <h2>12. Comprobantes que puedes emitir según el régimen</h2>
+        <p>El tipo de comprobante que puedes emitir depende directamente de tu régimen, y esto condiciona a qué clientes puedes atender. En el NRUS solo se emiten boletas de venta y tickets, no facturas; esto lo hace apto para vender a consumidores finales, pero inadecuado si tus clientes son empresas que necesitan factura para sustentar su crédito fiscal.</p>
+        <p>El RER, el MYPE Tributario y el Régimen General sí permiten emitir facturas, además de boletas y los demás comprobantes. Esta capacidad de facturar es, muchas veces, la razón principal por la que un negocio abandona el NRUS: en cuanto necesitas venderle a empresas, requieres un régimen que te permita entregarles factura, aunque tu volumen todavía sea pequeño.</p>
+        <p>Por eso, la pregunta «¿a quién le vendo?» es tan decisiva. Si tu mercado son otras empresas, necesitas facturar desde el inicio y el NRUS queda descartado. Si vendes al público, la boleta basta y puedes aprovechar la simplicidad del NRUS. Entender esta relación entre régimen y comprobantes evita quedar atrapado en un régimen que no te permite atender al cliente que quieres conseguir.</p>
+      </section>
+
+      <section class="art-section" id="c13">
+        <h2>13. Cómo cambiar de régimen tributario</h2>
+        <p>Los negocios evolucionan, y el régimen que fue ideal al inicio puede quedarse corto. Cambiar de régimen es posible y, en muchos casos, obligatorio cuando superas los límites de ingresos o cuando tu actividad ya no encaja en el régimen actual. El cambio se gestiona ante la SUNAT y suele tener momentos y condiciones específicas según el régimen de origen y de destino.</p>
+        <p>Hay cambios que ocurren de forma natural con el crecimiento: del NRUS al RER o al MYPE cuando empiezas a facturar a empresas o superas el tope; del RER o el MYPE al General cuando tu volumen se dispara. Otros cambios son estratégicos: pasar a un régimen que te permita deducir gastos porque tu estructura de costos así lo aconseja, aunque no estés obligado.</p>
+        <p>Antes de cambiar, conviene planificar. Un cambio de régimen altera tus obligaciones contables, tus tasas y tus comprobantes, por lo que hacerlo en el momento adecuado y con acompañamiento contable evita errores. La calculadora te ayuda a anticipar el impacto de estar en uno u otro régimen, de modo que el cambio sea una decisión informada y no una reacción apresurada ante una notificación o un tope superado.</p>
+      </section>
+
+      <section class="art-section" id="c14">
+        <h2>14. Errores comunes al elegir régimen tributario</h2>
+        <p>El error más frecuente es elegir por comodidad inmediata sin pensar en el cliente objetivo: quedarse en el NRUS por simplicidad y luego descubrir que no puedes facturarle a la empresa que quería contratarte. La pregunta sobre a quién vendes debe resolverse antes de elegir, no después.</p>
+        <p>Otro error es fijarse solo en la tasa del impuesto y olvidar los gastos. Un negocio con muchos gastos que elige un régimen donde tributa sobre ingresos puede terminar pagando más que si hubiera optado por uno que permite deducirlos. La comparación correcta no es «qué tasa es más baja», sino «cuánto pago en total considerando mis gastos reales», que es justo lo que la calculadora ayuda a estimar.</p>
+        <p>Un tercer error es no revisar el régimen con el tiempo. Muchos negocios crecen, cambian de clientes o de estructura de costos y siguen en el mismo régimen por inercia, pagando de más o incumpliendo límites sin darse cuenta. Revisar periódicamente si tu régimen sigue siendo el óptimo —al menos una vez al año o ante cambios importantes— es una práctica que evita sorpresas y ahorra dinero.</p>
+      </section>
+
+      <section class="art-section" id="c15">
+        <h2>15. El régimen tributario y el crecimiento de tu negocio</h2>
+        <figure class="art-figure"><img src="/img/regimen-04-crecimiento.webp" alt="Curva de crecimiento ascendente con hitos que muestran cómo el régimen tributario cambia a medida que el negocio crece: de NRUS al empezar, a RER al facturar, luego MYPE Tributario y finalmente Régimen General." width="1200" height="675" loading="lazy" decoding="async"></figure>
+        <p>El régimen no es una etiqueta fija, sino un reflejo de la etapa en la que está tu negocio. Idealmente, acompaña su crecimiento: empiezas simple, con el NRUS o el RER, y a medida que facturas más, incorporas empresas como clientes y tus gastos aumentan, migras hacia el MYPE Tributario y, eventualmente, al Régimen General.</p>
+        <p>Pensar el régimen con esta lógica de trayectoria evita decisiones cortoplacistas. Elegir hoy con un ojo puesto en dónde quieres estar en un año te ahorra cambios innecesarios y te prepara para crecer sin fricciones. Un negocio que planifica su recorrido tributario crece de forma más ordenada que uno que reacciona a cada tope superado con un cambio apresurado.</p>
+        <p>También conviene ver el régimen como parte de la estrategia financiera, no solo como una obligación. La carga tributaria influye en tus precios, tus márgenes y tu caja; entenderla te permite tomar mejores decisiones de negocio. Un empresario que domina las implicancias de su régimen tributario tiene una ventaja sobre el que lo ve como un simple trámite: convierte el conocimiento fiscal en decisiones más rentables.</p>
+        <p>Hay un momento especialmente delicado en esta trayectoria: la transición. Pasar de un régimen a otro suele coincidir con etapas de crecimiento en las que el negocio ya tiene más operaciones y menos margen para errores. Prepararte con antelación —ordenar tu contabilidad, entender las nuevas obligaciones y planificar el cambio con tu contador— hace que esa transición impulse el crecimiento en lugar de convertirse en un freno o en una fuente de sanciones.</p>
+        <p>Finalmente, vale la pena desterrar el mito de que «más formal es siempre más caro». En muchos casos, subir a un régimen que permite deducir gastos, usar crédito fiscal y acceder a mejores clientes y financiamiento termina siendo más rentable que quedarse en el régimen más simple por miedo a la complejidad. La formalidad bien administrada no es solo un deber: es una palanca de crecimiento que, elegida con criterio, devuelve con creces el esfuerzo que exige.</p>
+      </section>
+
+      <section class="art-section" id="c16">
+        <h2>16. Persona natural con negocio vs persona jurídica</h2>
+        <p>Una decisión que suele ir de la mano con la del régimen es la forma jurídica: operar como persona natural con negocio o constituir una persona jurídica (una empresa como S.A.C. o E.I.R.L.). Ambas pueden acogerse a los distintos regímenes, pero la elección tiene implicancias que van más allá de lo tributario.</p>
+        <p>La persona natural con negocio es más simple de iniciar y gestionar, pero responde con su patrimonio personal por las obligaciones del negocio. La persona jurídica implica un proceso de constitución y más formalidad, pero separa el patrimonio de la empresa del de sus dueños, lo que protege al emprendedor y suele transmitir mayor solidez ante clientes, proveedores y bancos.</p>
+        <p>En cuanto al régimen, ambas formas pueden estar en NRUS —con matices—, RER, MYPE o General, según sus ingresos y actividad. La decisión conjunta de forma jurídica y régimen conviene tomarla con asesoría, porque juntas definen tu responsabilidad, tu carga tributaria, tu imagen comercial y tu capacidad de crecer. No son decisiones separadas: se diseñan mejor pensándolas en conjunto desde el inicio del proyecto.</p>
+      </section>
+
+      <section class="art-section" id="c17">
+        <h2>17. El régimen tributario y tu RUC</h2>
+        <p>Tu régimen tributario forma parte de la información asociada a tu RUC. Cuando te inscribes en el Registro Único de Contribuyentes, indicas el régimen al que te acoges, y ese dato define desde el primer día tus obligaciones y los comprobantes que puedes emitir. Consultar un RUC permite, en muchos casos, conocer aspectos de la situación tributaria del contribuyente vinculados a su régimen.</p>
+        <p>Esta conexión tiene una utilidad práctica al verificar a terceros. Saber en qué régimen opera un proveedor te ayuda a anticipar qué comprobantes puede emitirte: si está en un régimen que solo permite boletas, no podrás obtener factura de él. Cruzar la información del RUC con el conocimiento de los regímenes te da una lectura más completa de con quién estás tratando.</p>
+        <p>Para tu propio negocio, mantener coherencia entre tu régimen, tu actividad económica registrada y tus operaciones reales es parte de una buena gestión tributaria. Un régimen bien elegido, correctamente reflejado en tu RUC y coherente con lo que realmente haces, es la base de una formalidad sin sobresaltos. La elección del régimen y la consulta del RUC son, así, dos caras de un mismo esfuerzo por operar de forma ordenada y transparente.</p>
+      </section>
+
+      <section class="art-section" id="c19">
+        <h2>18. El IGV y el crédito fiscal en cada régimen</h2>
+        <p>Además del Impuesto a la Renta, el otro gran tributo que define tu día a día es el IGV (Impuesto General a las Ventas). Aquí hay una diferencia importante entre regímenes: el NRUS no genera crédito fiscal ni obliga a llevar el mecanismo del IGV como los demás, mientras que en el RER, el MYPE Tributario y el Régimen General el IGV forma parte de la operación habitual.</p>
+        <p>El crédito fiscal es el IGV que pagas en tus compras y que puedes descontar del IGV que cobras en tus ventas. Para un negocio que compra insumos o mercadería con factura, este mecanismo es valioso: reduce el IGV que finalmente entregas al fisco. Por eso, los negocios que operan con proveedores formales y facturan a empresas suelen necesitar un régimen que les permita aprovechar el crédito fiscal.</p>
+        <p>Esta lógica refuerza la importancia de verificar a tus proveedores: solo las facturas válidas, de contribuyentes habilitados y en situación regular, sustentan crédito fiscal. Un régimen que te permite usar ese crédito, combinado con la disciplina de comprar a proveedores verificados, optimiza tu carga de IGV. La elección del régimen, una vez más, no se entiende de forma aislada, sino dentro de toda tu operación tributaria.</p>
+      </section>
+
+      <section class="art-section" id="c20">
+        <h2>19. Actividades excluidas de ciertos regímenes</h2>
+        <p>No todos los negocios pueden acogerse a cualquier régimen: algunos regímenes simplificados excluyen determinadas actividades que, por su naturaleza, deben tributar en esquemas más completos. Ciertos rubros —por su nivel de facturación típico, su complejidad o su regulación específica— quedan fuera del NRUS o del RER y deben ir directamente al MYPE Tributario o al Régimen General.</p>
+        <p>Esto significa que, antes de elegir por conveniencia de tasa o simplicidad, debes confirmar que tu actividad esté permitida en el régimen que te interesa. Inscribirte en un régimen que excluye tu actividad genera inconsistencias que la administración puede observar, obligándote a regularizar y a migrar al régimen correcto, a veces con ajustes retroactivos incómodos.</p>
+        <p>La actividad económica que declaras en tu RUC, mediante el código CIIU, es justamente el punto donde se cruzan tu giro y tu régimen. Por eso conviene que ambos sean coherentes desde el inicio: una actividad correctamente registrada y un régimen que la admita evitan problemas futuros. Ante la duda sobre si tu rubro puede estar en un régimen determinado, la consulta con un contador o con la SUNAT es el paso prudente antes de inscribirte.</p>
+      </section>
+
+      <section class="art-section" id="c21">
+        <h2>20. El régimen y tus declaraciones mensuales</h2>
+        <p>El régimen no solo define cuánto pagas, sino con qué frecuencia y complejidad cumples. En el NRUS, la obligación mensual se reduce a pagar la cuota fija correspondiente a tu categoría, sin declaraciones elaboradas. Es el esquema pensado para quien no quiere —ni necesita— dedicar tiempo a trámites tributarios cada mes.</p>
+        <p>En el RER, el MYPE Tributario y el Régimen General, en cambio, existen declaraciones mensuales en las que informas tus ingresos, tu IGV y tus pagos a cuenta del Impuesto a la Renta. Estas declaraciones exigen tener la información ordenada y presentarla dentro de los plazos, bajo el cronograma que la SUNAT establece según el último dígito del RUC. Incumplir estos plazos genera multas evitables.</p>
+        <p>Por eso, al elegir régimen, conviene ser honesto sobre tu capacidad de cumplir con estas obligaciones periódicas. Un régimen con beneficios tributarios pero con declaraciones que no logras presentar a tiempo puede salirte caro en multas y en estrés. Contar con apoyo contable o con herramientas que te ayuden a mantener el orden es parte de sostener el régimen que elijas sin sobresaltos mes a mes.</p>
+      </section>
+
+      <section class="art-section" id="c22">
+        <h2>21. Cómo un contador te ayuda a elegir régimen</h2>
+        <p>La calculadora de esta página te da una excelente primera aproximación, pero la elección definitiva del régimen se beneficia enormemente del criterio de un contador. Un profesional no solo compara tasas: analiza la estructura de tus gastos, la naturaleza de tu actividad, tus planes de crecimiento y tu capacidad operativa para cumplir obligaciones, factores que ninguna calculadora captura por completo.</p>
+        <p>Un buen contador también anticipa escenarios. Puede advertirte que el régimen ideal para hoy te quedará chico en unos meses, o que un cambio de forma jurídica cambiaría por completo la ecuación. Ese acompañamiento estratégico evita que tomes una decisión óptima para el corto plazo pero costosa a mediano, y te prepara para las transiciones que traerá el crecimiento del negocio.</p>
+        <p>Lo ideal es combinar ambas herramientas: usa la calculadora para llegar a la reunión con tu contador ya informado, con una idea clara de tus cifras y de las opciones. Esa preparación hace la asesoría más productiva y te convierte en un participante activo de la decisión, no en un espectador. El conocimiento que ganas con esta guía potencia, no reemplaza, el valor de una buena asesoría contable.</p>
+      </section>
+
+      <section class="art-section" id="c23">
+        <h2>22. Régimen tributario, acceso a crédito y licitaciones</h2>
+        <p>Tu régimen tributario también influye en cómo te ven bancos, grandes clientes y el Estado. Una empresa en un régimen que le permite llevar contabilidad completa y sustentar sólidamente sus estados financieros suele tener más facilidad para acceder a crédito, porque puede demostrar con claridad su situación económica ante una entidad financiera.</p>
+        <p>En las contrataciones con grandes compradores y con el Estado, ciertos requisitos de facturación y de formalidad pueden favorecer o incluso exigir determinados regímenes. Un negocio que solo emite boletas, por estar en el NRUS, difícilmente podrá participar en procesos que requieren factura y respaldo contable. A medida que apuntas a clientes más grandes, el régimen adecuado se vuelve un habilitador, no solo un tema fiscal.</p>
+        <p>Así, la decisión del régimen trasciende el impuesto: se conecta con tus ambiciones comerciales. Si tu meta es crecer, venderle a empresas grandes, acceder a financiamiento o proveer al Estado, conviene elegir —o migrar a tiempo— hacia un régimen que te habilite para ese salto. Pensar el régimen como parte de tu estrategia de crecimiento, y no solo como una obligación anual, es lo que distingue a los negocios que escalan.</p>
+      </section>
+
+      <section class="art-section" id="c24">
+        <h2>23. Lista de verificación antes de inscribirte</h2>
+        <p>Antes de decidir tu régimen e inscribir tu RUC, vale la pena repasar una breve lista de preguntas que ordenan la decisión. Primero: ¿a quién le venderé principalmente, a consumidores finales o a empresas? La respuesta determina si necesitas facturar y descarta o habilita el NRUS. Segundo: ¿cuánto espero facturar al año? Esto define qué regímenes aplican por sus límites.</p>
+        <p>Tercero: ¿qué tan altos serán mis gastos frente a mis ventas? Si son significativos, un régimen que permita deducirlos te conviene. Cuarto: ¿qué capacidad tengo de cumplir con declaraciones y contabilidad, por mí mismo o con un contador? Un régimen sostenible es tan importante como uno barato. Y quinto: ¿hacia dónde quiero llevar el negocio en uno o dos años?</p>
+        <p>Responder estas cinco preguntas, contrastar las opciones con la calculadora y validar la decisión con un contador es un método sencillo pero completo. Te asegura elegir un régimen que se ajuste a tu presente y que acompañe tu futuro, evitando tanto el pago excesivo como los cambios apresurados. Una decisión tomada con este cuidado es una base firme sobre la que construir un negocio formal y ordenado.</p>
+      </section>
+
+      <section class="art-section" id="c18">
+        <h2>24. Preguntas frecuentes sobre el régimen tributario</h2>
+        <div class="art-faq">
+          <details><summary>¿Cuál es el régimen tributario que menos paga?</summary><p>No hay uno «más barato» en abstracto: depende de tus ingresos, tus gastos y a quién le vendes. Un negocio con muchos gastos suele pagar menos en regímenes que permiten deducirlos (MYPE o General); uno con pocos gastos, en el RER. La calculadora te ayuda a comparar con tus cifras.</p></details>
+          <details><summary>¿Puedo emitir facturas en el Nuevo RUS?</summary><p>No. En el NRUS solo puedes emitir boletas de venta y tickets. Si necesitas facturar a empresas, debes acogerte al RER, al MYPE Tributario o al Régimen General.</p></details>
+          <details><summary>¿Puedo cambiar de régimen tributario?</summary><p>Sí. El cambio se gestiona ante la SUNAT y, en muchos casos, es obligatorio al superar los límites de ingresos o cuando tu actividad ya no encaja en el régimen actual. Conviene planificarlo con apoyo contable.</p></details>
+          <details><summary>¿El régimen depende de si soy persona natural o empresa?</summary><p>Ambas formas pueden acogerse a los distintos regímenes según sus ingresos y actividad. La forma jurídica y el régimen son decisiones distintas pero relacionadas, que conviene tomar en conjunto.</p></details>
+          <details><summary>¿La calculadora da el monto exacto que pagaré?</summary><p>No. Ofrece una estimación orientativa y simplificada del Impuesto a la Renta, útil para comparar regímenes. No reemplaza el cálculo oficial ni la asesoría de un contador para tu caso concreto.</p></details>
+          <details><summary>¿Dónde confirmo los límites y tasas vigentes?</summary><p>En la información oficial de la SUNAT, ya que los montos —expresados en soles o en UIT— pueden actualizarse. Ante cualquier duda, consulta con un contador o directamente en el portal de la administración tributaria.</p></details>
+        </div>
+      </section>
+
+      <p class="art-closing">Elegir bien tu régimen tributario es una de las decisiones que más impacto tienen en la rentabilidad y la tranquilidad de tu negocio: define cuánto pagas, qué comprobantes emites y cuánta contabilidad llevas. Conocer los cuatro regímenes —Nuevo RUS, Régimen Especial, MYPE Tributario y Régimen General—, entender sus límites, tasas y obligaciones, y compararlos con tus propias cifras es lo que convierte una decisión a ciegas en una elección estratégica. Usa la calculadora al inicio de esta página para estimar cuánto pagarías en cada régimen según tus ingresos y gastos, y toma esa referencia como punto de partida para una conversación informada con tu contador. Un régimen bien elegido, coherente con tu actividad y con tus planes de crecimiento, es la base de una formalidad que te impulsa en lugar de frenarte.</p>
+      </div>
+    </div>
+
+    <aside class="art-aside" id="artAside">
+      <div class="art-aside-inner">
+
+        <div class="aside-card aside-search">
+          <h3><span class="ic" data-icon="search"></span> Consulta rápida</h3>
+          <form id="asideQuickForm" class="aside-quick">
+            <input type="text" id="asideQuickInput" inputmode="numeric" maxlength="11"
+              placeholder="Escribe un RUC (11 dígitos)" aria-label="RUC">
+            <button type="submit" aria-label="Consultar"><span class="ic" data-icon="arrow-right"></span></button>
+          </form>
+          <p class="aside-quick-hint">También puedes <a href="/razon-social/">buscar por nombre</a> o <a href="/verificar-ruc-multiple/">verificar una lista</a>.</p>
+        </div>
+
+        <div class="aside-card">
+          <h3><span class="ic" data-icon="clock"></span> Consultas recientes</h3>
+          <div id="artHistoryList"><p class="aside-empty">Tus búsquedas aparecerán aquí.</p></div>
+        </div>
+
+        <div class="aside-card">
+          <h3><span class="ic" data-icon="compass"></span> Guía rápida de estados</h3>
+          <ul class="aside-legend">
+            <li class="lg st-ok"><span class="lg-head"><span class="dotk"></span><strong>Activo</strong></span><span class="lg-desc">El RUC opera con normalidad.</span></li>
+            <li class="lg st-warn"><span class="lg-head"><span class="dotk"></span><strong>Suspensión</strong></span><span class="lg-desc">Actividad pausada temporalmente.</span></li>
+            <li class="lg st-bad"><span class="lg-head"><span class="dotk"></span><strong>Baja</strong></span><span class="lg-desc">RUC dado de baja, no operativo.</span></li>
+            <li class="lg st-ok"><span class="lg-head"><span class="dotk"></span><strong>Habido</strong></span><span class="lg-desc">Domicilio fiscal verificado.</span></li>
+            <li class="lg st-warn"><span class="lg-head"><span class="dotk"></span><strong>No Habido</strong></span><span class="lg-desc">Domicilio no confirmado, precaución.</span></li>
+          </ul>
+        </div>
+
+        <div class="aside-card">
+          <h3><span class="ic" data-icon="wrench"></span> Herramientas</h3>
+          <a href="/ficha-ruc/" class="aside-link"><span class="ic" data-icon="file-text"></span> Descargar ficha RUC</a>
+          <a href="/calculadora-tributaria/" class="aside-link"><span class="ic" data-icon="calculator"></span> Calculadora de régimen</a>
+          <a href="/tipo-de-cambio-sunat/" class="aside-link"><span class="ic" data-icon="banknote"></span> Tipo de cambio SUNAT</a>
+          <a href="/verificar-ruc-multiple/" class="aside-link"><span class="ic" data-icon="list-checks"></span> Verificar RUC en lote</a>
+          <a href="/sello-verificado/" class="aside-link"><span class="ic" data-icon="shield-check"></span> Sello de verificación</a>
+        </div>
+
+        <button type="button" id="asideTop" class="aside-top"><span class="ic" data-icon="arrow-up"></span> Volver arriba</button>
+
+      </div>
+    </aside>
+  </div>
+
+  </main>
+  <script is:inline slot="scripts-before" src="/calculadora.js?v=4ed1a3c2"></script>
+
+</BaseLayout>

@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title={"Acerca de Consulta RUC Perú"}
+  description={"Consulta RUC Perú es un portal independiente que ofrece búsqueda gratuita del padrón de RUC de SUNAT. Conoce quiénes somos y cómo funciona el servicio."}
+  canonical={"https://consultaruc-pe.com/sobre-nosotros/"}
+  activePage="sobre-nosotros"
+  bodyClass="light-theme"
+>
+  <Fragment slot="head">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Consulta RUC Perú">
+  <meta property="og:locale" content="es_PE">
+  <meta property="og:title" content="Acerca de Consulta RUC Perú">
+  <meta property="og:description" content="Consulta RUC Perú es un portal independiente que ofrece búsqueda gratuita del padrón de RUC de SUNAT. Conoce quiénes somos y cómo funciona el servicio.">
+  <meta property="og:url" content="https://consultaruc-pe.com/sobre-nosotros/">
+  <meta property="og:image" content="https://consultaruc-pe.com/img/consulta-ruc-01-pasos.webp">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="670">
+  <meta property="og:image:alt" content="Acerca de Consulta RUC Perú">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Acerca de Consulta RUC Perú">
+  <meta name="twitter:description" content="Consulta RUC Perú es un portal independiente que ofrece búsqueda gratuita del padrón de RUC de SUNAT. Conoce quiénes somos y cómo funciona el servicio.">
+  <meta name="twitter:image" content="https://consultaruc-pe.com/img/consulta-ruc-01-pasos.webp">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Inicio","item":"https://consultaruc-pe.com/"},{"@type":"ListItem","position":2,"name":"Sobre Nosotros","item":"https://consultaruc-pe.com/sobre-nosotros/"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"AboutPage","name":"Acerca de Consulta RUC Perú","url":"https://consultaruc-pe.com/sobre-nosotros/","description":"Consulta RUC Perú es un portal independiente que ofrece búsqueda gratuita del padrón de RUC de SUNAT. Conoce quiénes somos y cómo funciona el servicio.","inLanguage":"es-PE","isPartOf":{"@type":"WebSite","name":"Consulta RUC Perú","url":"https://consultaruc-pe.com"},"publisher":{"@type":"Organization","name":"Consulta RUC Perú","url":"https://consultaruc-pe.com","logo":{"@type":"ImageObject","url":"https://consultaruc-pe.com/icon-512.png"}}}</script>
+  
+  </Fragment>
+
+  <nav class="breadcrumb"><a href="/">Inicio</a> › Acerca de</nav>
+
+  <main class="content-page">
+    <h1>Acerca de Consulta RUC Perú</h1>
+    <p class="content-updated">Última actualización: julio de 2026</p>
+
+    <p>Consulta RUC Perú (consultaruc-pe.com) es un portal independiente creado para facilitar la búsqueda gratuita de información pública sobre el Registro Único de Contribuyentes (RUC) en el Perú.</p>
+
+    <h2>¿Qué hacemos?</h2>
+    <p>Nuestro buscador permite consultar el estado, condición de domicilio, razón social y demás datos públicos de cualquier RUC registrado ante la Superintendencia Nacional de Aduanas y de Administración Tributaria (SUNAT), a partir del Padrón Reducido de RUC que SUNAT publica de forma abierta y gratuita.</p>
+
+    <h2>No somos SUNAT</h2>
+    <p>Este es un sitio <strong>independiente y no oficial</strong>. No estamos afiliados, patrocinados ni respaldados por la SUNAT ni por ninguna entidad del Estado peruano. La consulta oficial y definitiva del RUC siempre debe realizarse en el portal oficial: <a href="https://e-consultaruc.sunat.gob.pe" target="_blank" rel="noopener">e-consultaruc.sunat.gob.pe</a>.</p>
+
+    <h2>¿De dónde viene la información?</h2>
+    <p>Los datos mostrados provienen del Padrón Reducido de RUC, un archivo de datos abiertos que SUNAT publica y actualiza periódicamente en su propio portal, de acceso público y gratuito para cualquier ciudadano o desarrollador.</p>
+
+    <h2>Nuestro compromiso</h2>
+    <ul>
+      <li>Servicio 100% gratuito, sin registro ni contraseñas</li>
+      <li>No mostramos datos inventados ni aproximados: si un RUC no está en nuestra base, lo indicamos honestamente</li>
+      <li>Actualizamos nuestra base de datos de forma periódica siguiendo las publicaciones de SUNAT</li>
+    </ul>
+
+    <p>¿Tienes preguntas o comentarios? Visita nuestra página de <a href="/contacto/">Contacto</a>.</p>
+  </main>
+
+
+</BaseLayout>
