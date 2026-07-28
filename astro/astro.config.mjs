@@ -27,6 +27,15 @@ export default defineConfig({
   output: 'server',
   adapter: node({ mode: 'standalone' }),
 
+  // /sitemap.xml es la URL dada de alta en Search Console y la que anunciaba
+  // el robots.txt anterior, así que no puede quedarse en un 404 al pasar el
+  // sitemap a @astrojs/sitemap (que publica sitemap-index.xml). Google sigue
+  // las redirecciones de sitemaps. Se declara aquí en vez de con una ruta a
+  // mano porque es lo que Astro ofrece para esto.
+  redirects: {
+    '/sitemap.xml': '/sitemap-index.xml'
+  },
+
   integrations: [
     sitemap({
       // Lista blanca, no lista negra. Con `output: 'server'` el generador ve

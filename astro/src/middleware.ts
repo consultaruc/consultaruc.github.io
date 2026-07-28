@@ -43,6 +43,12 @@ async function bootOnce() {
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  // Las rutas prerenderizadas (robots.txt, llms.txt, llm.txt, ai.txt) se
+  // renderizan durante el build, donde no hay petición real: nada de esto
+  // aplica y leer cabeceras ahí sólo produce avisos. En producción esos
+  // ficheros los sirve el handler de estáticos, que ni siquiera pasa por aquí.
+  if (context.isPrerendered) return next();
+
   await bootOnce();
 
   const session = getSession(context);
