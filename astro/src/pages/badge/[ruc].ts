@@ -1,18 +1,21 @@
 import type { APIRoute } from 'astro';
 import { getByRuc } from '../../lib/db.js';
 import { renderBadgeHtml, siteOrigin } from '../../lib/renderRucPage.js';
-
-// TODO(phase5): wire real apiLimiter here (deliberately NO apiGuard - this
-// route must stay embeddable cross-origin, see server.js's original comment).
+import { apiLimiter } from '../../server/rateLimit.js';
 
 /**
  * Embeddable "Verificado" badge (see /sello-verificado/). This is the one
  * route on the whole site that MUST be embeddable in an <iframe> on a
  * third-party business's own domain - the opposite of every other page,
- * which the global security-headers middleware (Phase 5) blocks from
- * framing to prevent clickjacking. Overrides both headers for just this route.
+ * which the global security-headers middleware blocks from framing to
+ * prevent clickjacking. Overrides both headers for just this route.
+ * Deliberately NO apiGuard() call here - see server.js's original comment.
  */
-export const GET: APIRoute = ({ params, url }) => {
+export const GET: APIRoute = (context) => {
+  const limited = apiLimiter(context);
+  if (limited) return limited;
+
+  const { params, url } = context;
   const ruc = (params.ruc || '').trim();
   const record = /^\d{11}$/.test(ruc) ? getByRuc(ruc) : null;
   const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';

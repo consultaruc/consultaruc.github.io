@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getQuotaStatus } from '../../lib/liveScraper.js';
-
-// TODO(phase5): wire real apiGuard + rate limiting here.
+import { apiLimiter } from '../../server/rateLimit.js';
+import { apiGuard } from '../../server/apiGuard.js';
 
 /**
  * Public availability of real-time verification.
@@ -11,7 +11,12 @@ import { getQuotaStatus } from '../../lib/liveScraper.js';
  * operational details about how we talk to the upstream source and are
  * exposed only on the authenticated admin endpoint.
  */
-export const GET: APIRoute = () => {
+export const GET: APIRoute = (context) => {
+  const limited = apiLimiter(context);
+  if (limited) return limited;
+  const guarded = apiGuard(context, context.locals.session);
+  if (guarded) return guarded;
+
   const q = getQuotaStatus();
   return Response.json({ available: q.remaining > 0, retryAfterSeconds: q.retryAfterSeconds });
 };

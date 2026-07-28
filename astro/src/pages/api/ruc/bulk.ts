@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getByRuc } from '../../../lib/db.js';
-
-// TODO(phase5): wire real apiGuard + rate limiting here.
+import { apiLimiter } from '../../../server/rateLimit.js';
+import { apiGuard } from '../../../server/apiGuard.js';
 
 /**
  * Bulk RUC verification (for accountants/gestores checking many vendors at
@@ -11,7 +11,13 @@ import { getByRuc } from '../../../lib/db.js';
  */
 const MAX_BULK_RUCS = 200;
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async (context) => {
+  const limited = apiLimiter(context);
+  if (limited) return limited;
+  const guarded = apiGuard(context, context.locals.session);
+  if (guarded) return guarded;
+
+  const { request } = context;
   const body = await request.json().catch(() => ({}));
   const input = Array.isArray(body?.rucs) ? body.rucs : [];
 

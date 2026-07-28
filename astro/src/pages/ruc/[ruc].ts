@@ -1,11 +1,13 @@
 import type { APIRoute } from 'astro';
 import { getByRuc, enqueueEnrichment } from '../../lib/db.js';
 import { renderRucPage, renderRucNotFound } from '../../lib/renderRucPage.js';
+import { apiLimiter } from '../../server/rateLimit.js';
 
-// TODO(phase5): wire real apiLimiter here.
+export const GET: APIRoute = (context) => {
+  const limited = apiLimiter(context);
+  if (limited) return limited;
 
-export const GET: APIRoute = ({ params }) => {
-  const ruc = (params.ruc || '').trim();
+  const ruc = (context.params.ruc || '').trim();
   if (!/^\d{11}$/.test(ruc)) {
     return new Response(renderRucNotFound(ruc), { status: 404, headers: { 'Content-Type': 'text/html' } });
   }

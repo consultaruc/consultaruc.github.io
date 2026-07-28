@@ -1,8 +1,13 @@
 import type { APIRoute } from 'astro';
 import { countRecords } from '../../lib/db.js';
+import { apiLimiter } from '../../server/rateLimit.js';
+import { apiGuard } from '../../server/apiGuard.js';
 
-// TODO(phase5): wire real apiGuard + rate limiting here.
+export const GET: APIRoute = (context) => {
+  const limited = apiLimiter(context);
+  if (limited) return limited;
+  const guarded = apiGuard(context, context.locals.session);
+  if (guarded) return guarded;
 
-export const GET: APIRoute = () => {
   return Response.json({ totalRucRegistrados: countRecords() });
 };

@@ -1,16 +1,21 @@
 import type { APIRoute } from 'astro';
 import { getByRuc, searchByName, upsertRucRecord, enqueueEnrichment } from '../../../lib/db.js';
 import { scrapeRucLive, getQuotaStatus } from '../../../lib/liveScraper.js';
-
-// TODO(phase5): wire real apiGuard + rate limiting here (currently unguarded
-// - do not deploy this route to production before Phase 5 lands).
+import { apiLimiter } from '../../../server/rateLimit.js';
+import { apiGuard } from '../../../server/apiGuard.js';
 
 function publicQuota() {
   const q = getQuotaStatus();
   return { available: q.remaining > 0, retryAfterSeconds: q.retryAfterSeconds };
 }
 
-export const GET: APIRoute = async ({ params, url }) => {
+export const GET: APIRoute = async (context) => {
+  const limited = apiLimiter(context);
+  if (limited) return limited;
+  const guarded = apiGuard(context, context.locals.session);
+  if (guarded) return guarded;
+
+  const { params, url } = context;
   const query = (params.query || '').trim();
   const wantsLive = url.searchParams.get('live') === 'true';
 
