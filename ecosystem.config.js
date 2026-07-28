@@ -3,33 +3,45 @@
  *
  * Este hosting NO tiene CloudLinux Node Selector ni Passenger disponibles para
  * la cuenta, así que la app corre bajo PM2 y LiteSpeed le pasa el tráfico por
- * proxy desde public_html/.htaccess.
+ * proxy desde public_html/.htaccess (proxy genérico a 127.0.0.1:PORT - no
+ * necesitó cambios al migrar de Express a Astro, ver deploy/public_html.htaccess).
  *
  * Node se instaló a mano en ~/opt/node (symlink a la versión real): la del
  * sistema es la 16 y este proyecto necesita >=22.5 por `node:sqlite`.
  * Además, sólo Node 24+ trae SQLite compilado CON FTS5, que es lo que usa la
- * búsqueda por razón social (ver src/db.js).
+ * búsqueda por razón social (ver astro/src/lib/db.js).
+ *
+ * La app en sí vive en astro/ (Astro SSR, adapter @astrojs/node en modo
+ * standalone) - cwd se queda en la raíz del repo a propósito, no en astro/,
+ * para que astro/src/lib/db.js (ancla sus rutas en process.cwd()) siga
+ * encontrando el data/ ya existente en la raíz sin tocarlo ni perder el
+ * SQLite de 18M+ registros ni las credenciales de admin.
  */
 module.exports = {
   apps: [
     {
       name: 'consultaruc',
-      script: 'src/server.js',
+      script: 'astro/dist/server/entry.mjs',
       cwd: '/home/consultarucpe/consultaruc',
 
       // Una sola instancia a propósito. El estado vive en memoria del proceso
-      // (el ring buffer de consultas recientes en server.js, la cuota del
-      // scraper en liveScraper.js, el contador cacheado en db.js) y SQLite en
-      // modo WAL admite un solo escritor. Con cluster mode cada worker tendría
-      // su propia cuota y el límite auto-impuesto frente a SUNAT dejaría de
-      // valer.
+      // (el Map de sesiones y el limitador de tasa en astro/src/server/,
+      // la cuota del scraper en liveScraper.js, el contador cacheado en
+      // db.js) y SQLite en modo WAL admite un solo escritor. Con cluster
+      // mode cada worker tendría su propia cuota y el límite auto-impuesto
+      // frente a SUNAT dejaría de valer.
       instances: 1,
       exec_mode: 'fork',
 
       env: {
         NODE_ENV: 'production',
         PORT: 31500,
-        SITE_URL: 'https://consultaruc-pe.com'
+        SITE_URL: 'https://consultaruc-pe.com',
+        // astro/src/pages/admin/{login,dashboard}.ts leen estos HTML desde
+        // disco en cada request (no son módulos ES que Vite empaquete) -
+        // viven fuera de astro/public/ a propósito, para que no puedan
+        // servirse sin autenticación.
+        ADMIN_ASSETS_DIR: '/home/consultarucpe/consultaruc/astro/src/adminAssets'
       },
 
       // Reinicio automático si el proceso muere.

@@ -20,6 +20,15 @@ async function bootOnce() {
   const { seed } = await import('./lib/seedData.js');
   if (countRecords() === 0) seed();
 
+  // The deploy pipeline briefly runs a second, throwaway instance of this
+  // same build on a private port to verify it serves correctly against the
+  // real DB before swapping out the live process (see .github/workflows/
+  // deploy.yml). That instance sets this flag so it doesn't also run the
+  // enrichment worker - two processes writing to the same SQLite file at
+  // once is exactly the kind of thing WAL mode tolerates for reads but not
+  // for a second concurrent writer.
+  if (process.env.SKIP_BACKGROUND_WORKERS === '1') return;
+
   const enrichmentWorker = await import('./lib/enrichmentWorker.js');
   enrichmentWorker.start();
 
