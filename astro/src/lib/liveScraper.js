@@ -9,6 +9,22 @@ const USER_AGENT =
 // pass a genuine browser context. Verified working 2026-07-23 against RUC
 // 20100070970. See memory/project_consultaruc_architecture.md for the
 // raw-HTTP attempts that failed before this.
+//
+// OJO: `playwright` está clavado a 1.45.0 EXACTO en package.json, sin caret,
+// y no es arbitrario. Cada versión de Playwright exige un build concreto de
+// Chromium (1.45 -> chromium-1124) y en el servidor los navegadores se
+// instalaron a mano una vez; el despliegue corre con
+// PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 porque bajarlos (~170 MB) no cabe en la
+// cuota del hosting compartido. Al migrar a Astro esto subió sin querer a
+// 1.62, que busca chromium-1234, y el scraper quedó roto EN SILENCIO: el
+// binario no existe, scrapeRucLive() falla y la búsqueda en vivo deja de
+// funcionar sin que nada más se queje.
+//
+// Para subir de versión hay que hacer las dos cosas a la vez: cambiar el pin
+// Y correr `npx playwright install chromium` en el servidor, comprobando
+// antes que hay cuota de disco. Verificación rápida de que casan:
+//   node -e "const{chromium}=require('playwright');console.log(chromium.executablePath())"
+//   ls ~/.cache/ms-playwright/
 
 const MAX_CONCURRENT = 2;
 let activeCount = 0;
