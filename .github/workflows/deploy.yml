@@ -137,8 +137,32 @@ jobs:
           # admin sobreviven a cada despliegue. Sólo se asegura que exista.
           mkdir -p data tmp
 
-          pm2 restart consultaruc --update-env || pm2 start ecosystem.config.js
+          # `pm2 restart <nombre>` reinicia con la definición YA GUARDADA por
+          # PM2 para ese proceso (--update-env sólo refresca variables de
+          # entorno) - un cambio de `script` en ecosystem.config.js (como el
+          # de Express a Astro) NO se recoge así, el proceso viejo sigue
+          # corriendo con el script viejo aunque el comando "tenga éxito".
+          # Borrar y arrancar de cero desde el ecosystem.config.js actual
+          # elimina esa ambigüedad.
+          pm2 delete consultaruc 2>/dev/null || true
+          pm2 start ecosystem.config.js
           pm2 save
+
+          # Verificación explícita de que PM2 quedó apuntando al script que
+          # este despliegue espera - de haber quedado corriendo el anterior
+          # (ver el comentario de arriba), un simple exit-code 0 de pm2 no lo
+          # habría delatado, como pasó una vez.
+          running_script=$(pm2 jlist | node -e "
+            let d=''; process.stdin.on('data',c=>d+=c); process.stdin.on('end',()=>{
+              const app = JSON.parse(d).find(a => a.name === 'consultaruc');
+              console.log(app ? app.pm2_env.pm_exec_path : '');
+            });
+          ")
+          echo "PM2 script en ejecución: $running_script"
+          case "$running_script" in
+            *astro/dist/server/entry.mjs) echo "OK: corriendo el script esperado." ;;
+            *) echo "ERROR: PM2 no está corriendo astro/dist/server/entry.mjs"; exit 1 ;;
+          esac
 
           echo "Despliegue completado en $DEPLOY_PATH"
           REMOTE
