@@ -1,7 +1,8 @@
 # Consulta RUC Perú — todo el tráfico va a la app Node (PM2, puerto 31500).
-# La app es un servidor Express: sirve sus propios estáticos y renderiza
-# /ruc/:ruc, /badge/:ruc, /api/* y sitemap/robots/llms/ai.txt. Por eso NO se
-# excluye ningún path: nada se sirve desde public_html.
+# La app es Astro SSR (adapter @astrojs/node en modo standalone): sirve sus
+# propios estáticos y renderiza /ruc/:ruc, /badge/:ruc, /api/* y
+# sitemap/robots/llms/ai.txt. Por eso NO se excluye ningún path: nada se sirve
+# desde public_html.
 
 RewriteEngine On
 
@@ -23,6 +24,29 @@ RequestHeader set X-Forwarded-Host "consultaruc-pe.com"
 # segura una conexión que no lo era.
 RequestHeader set X-Forwarded-Proto "https" env=HTTPS
 RequestHeader set X-Forwarded-Proto "http" env=!HTTPS
+
+# Caché de estáticos. El Express de antes ponía estas cabeceras él mismo
+# (Lighthouse medía ~104 KiB re-descargados por página sin ellas); al migrar a
+# Astro se perdieron, porque el handler de estáticos del adapter sólo cachea a
+# un año lo que hay bajo /_astro/ — todo lo que viene de astro/public/
+# (style.css, site.js, app.js, /img/*, /media/*) se quedaba SIN cabecera y
+# Cloudflare le aplicaba su TTL por defecto de 4 h. Al ir todo por proxy no
+# sirve <FilesMatch> (no hay fichero en disco que casar), así que se marca por
+# URI y se aplica con `always` para que también afecte a la respuesta proxeada.
+<IfModule mod_headers.c>
+  SetEnvIf Request_URI "\.(?:png|jpe?g|webp|gif|svg|ico|mp4|woff2?)$" CRP_ASSET_INMUTABLE
+  SetEnvIf Request_URI "\.(?:css|js)$" CRP_ASSET_CODIGO
+
+  # Imágenes, fuentes y vídeo: un año. Son contenido, y una imagen cambiada
+  # estrena nombre en la práctica.
+  Header always set Cache-Control "public, max-age=31536000, immutable" env=CRP_ASSET_INMUTABLE
+
+  # CSS/JS: un día y must-revalidate. style.css y app.js conservan su nombre
+  # entre despliegues; lo que cambia es el ?v=<hash> que estampa
+  # scripts/stamp-assets-astro.js, y un TTL inmutable dejaría a quien pida el
+  # fichero sin ese parámetro anclado a código viejo.
+  Header always set Cache-Control "public, max-age=86400, must-revalidate" env=CRP_ASSET_CODIGO
+</IfModule>
 
 # Let's Encrypt / validación de dominio debe seguir sirviéndose del disco.
 RewriteCond %{REQUEST_URI} !^/\.well-known/

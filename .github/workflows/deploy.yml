@@ -53,17 +53,28 @@ jobs:
       - name: Verificar sintaxis de ecosystem.config.js
         run: node --check ecosystem.config.js
 
-      # style.css y app.js conservan su nombre entre despliegues, así que con
-      # Cache-Control largo el navegador (y Cloudflare) seguían sirviendo la
-      # copia vieja durante horas. Sellar la URL con el hash del contenido
-      # invalida al instante sin acortar la caché. Corre ANTES del build para
-      # que el HTML compilado ya incluya los ?v= correctos.
-      - name: Sellar assets con el hash de su contenido
-        run: node scripts/stamp-assets-astro.js
-
       - name: Instalar dependencias de la app
         working-directory: astro
         run: npm ci --no-audit --no-fund
+
+      # Astro no procesa nada de astro/public/, lo copia tal cual a
+      # dist/client/ - así que style.css (133 KB) y los scripts salían con
+      # comentarios y sangrado. Usa esbuild, que ya vive en astro/node_modules,
+      # de ahí que vaya DESPUÉS del `npm ci`. Sólo toca el checkout del runner,
+      # no se commitea nada.
+      - name: Minificar los estáticos de public/
+        run: node scripts/minify-public-assets.js
+
+      # style.css y app.js conservan su nombre entre despliegues, así que con
+      # Cache-Control largo el navegador (y Cloudflare) seguían sirviendo la
+      # copia vieja durante horas. Sellar la URL con el hash del contenido
+      # invalida al instante sin acortar la caché.
+      #
+      # ORDEN: minificar -> sellar -> build. El hash tiene que ser el de los
+      # bytes YA minificados (que son los que se sirven) y el HTML compilado
+      # tiene que salir con esos ?v= ya dentro.
+      - name: Sellar assets con el hash de su contenido
+        run: node scripts/stamp-assets-astro.js
 
       # `astro build` compila y type-checks todo (páginas, endpoints,
       # middleware) - un fallo aquí es la señal de "no despliegues esto",
