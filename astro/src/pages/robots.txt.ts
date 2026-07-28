@@ -17,7 +17,7 @@ export const GET: APIRoute = () => {
       'Disallow: /badge/\n' +
       'Disallow: /*?print=1\n\n' +
       '# AI/LLM crawlers welcome (with attribution) — see the policy files\n' +
-      `Sitemap: ${o}/sitemap.xml\n` +
+      `Sitemap: ${o}/sitemap-index.xml\n` +
       `# ${o}/llms.txt · ${o}/ai.txt\n`,
     { headers: { 'Content-Type': 'text/plain' } }
   );

@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@astrojs/node": "^11.0.2",
+    "@astrojs/sitemap": "^3.7.3",
     "adm-zip": "^0.5.12",
     "astro": "^7.1.4",
     "axios": "^1.7.2",
