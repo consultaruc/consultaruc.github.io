@@ -160,21 +160,37 @@ jobs:
             SKIP_BACKGROUND_WORKERS=1 \
             pm2 start astro/dist/server/entry.mjs --name consultaruc-verify --cwd "$DEPLOY_PATH" --time
 
-          sleep 5
+          # El primer request a un proceso recién arrancado abre la base
+          # SQLite real (18M+ filas) por primera vez en ese proceso - una vez
+          # esto tardó más de 20s y tumbó la verificación con un timeout, aun
+          # cuando el proceso estaba sano (los requests siguientes, ya con la
+          # base abierta, respondieron rápido). Por eso se espera con reintentos
+          # generosos a que responda ANTES de correr los checks que sí cuentan,
+          # en vez de una espera fija.
+          B="http://127.0.0.1:$VERIFY_PORT"
+          ready=0
+          for i in $(seq 1 20); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 "$B/robots.txt" || echo 000)
+            if [ "$code" = "200" ]; then ready=1; break; fi
+            sleep 3
+          done
+          if [ "$ready" != "1" ]; then
+            echo "ERROR: el proceso de verificación nunca llegó a responder."
+            exit 1
+          fi
 
           fail=0
-          B="http://127.0.0.1:$VERIFY_PORT"
           for p in "/" "/faq/" "/robots.txt" "/ruc/20100070970"; do
-            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$B$p" || echo 000)
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 "$B$p" || echo 000)
             echo "verificación $p -> $code"
             [ "$code" = "200" ] || fail=1
           done
 
-          ok=$(curl -sS --max-time 15 -H "Referer: https://consultaruc-pe.com/" "$B/api/stats" || echo '')
+          ok=$(curl -sS --max-time 25 -H "Referer: https://consultaruc-pe.com/" "$B/api/stats" || echo '')
           echo "verificación api propio: $ok"
           case "$ok" in *'"success":true'*) ;; *) echo "La API rechaza al propio sitio (verificación)"; fail=1 ;; esac
 
-          blocked=$(curl -sS --max-time 15 -H "Referer: https://ejemplo-ajeno.com/" "$B/api/stats" || echo '')
+          blocked=$(curl -sS --max-time 25 -H "Referer: https://ejemplo-ajeno.com/" "$B/api/stats" || echo '')
           case "$blocked" in *'no autorizado'*) ;; *) echo "La API no bloquea orígenes ajenos (verificación)"; fail=1 ;; esac
 
           if [ "$fail" != "0" ]; then
