@@ -25,15 +25,25 @@ una opción y hubo que montarlo a mano.
 Navegador
   → LiteSpeed (:443, dominio)
     → public_html/.htaccess  ── proxy [P] ──▶ 127.0.0.1:31500
-                                                └── PM2 → node src/server.js
+                                                └── PM2 → node astro/dist/server/entry.mjs
                                                       └── ~/consultaruc/data/*.sqlite
 ```
+
+> **`HOST=127.0.0.1` no es opcional.** Sin esa variable el adapter standalone
+> de `@astrojs/node` escucha en `"localhost"`, que en este servidor resuelve a
+> `::1` (IPv6) y deja el puerto **sin nadie escuchando en IPv4**. El proxy de
+> arriba va a `127.0.0.1`, así que el sitio devuelve **503 con el proceso
+> "online" y los logs limpios** — un fallo que no se parece en nada a su causa.
+> El Express anterior nunca lo sufrió porque `app.listen(PORT)` escucha en
+> `0.0.0.0` por defecto. Está fijada en `ecosystem.config.js` y el despliegue
+> lo comprueba con un `curl` a `127.0.0.1:31500` desde el propio servidor.
+> Para verlo a mano: `ss -ltnp | grep 31500`.
 
 | Pieza | Dónde | Nota |
 |---|---|---|
 | Código | `/home/consultarucpe/consultaruc` | **Fuera de `public_html`** a propósito: dentro, `data/admin_credentials.json` y `src/db.js` quedarían accesibles desde internet. |
 | Node | `~/opt/node` → `node-v24.4.1-linux-x64` | El del sistema es la **16**, insuficiente. Ver aviso sobre FTS5 más abajo. |
-| Proceso | PM2 (`ecosystem.config.js`) | Una sola instancia, `fork`. Reinicio automático. |
+| Proceso | PM2 (`ecosystem.config.js`) | Una sola instancia, `fork`. Reinicio automático. `cwd` se queda en la raíz, no en `astro/`, para que `data/` siga siendo el de siempre. |
 | Arranque | `crontab @reboot pm2 resurrect` | No hay systemd para la cuenta. |
 | Proxy | `public_html/.htaccess` | Copia previa guardada en `.htaccess.bak`. |
 | Base de datos | `~/consultaruc/data/` | Nunca se toca en el despliegue. |
@@ -46,7 +56,7 @@ Dos requisitos distintos, y el segundo es fácil pasarlo por alto:
 1. **≥ 22.5** — antes no existe `node:sqlite` y la app no arranca. Falla ruidoso.
 2. **≥ 24** — los binarios oficiales de 22 y 23 traen SQLite **sin FTS5**
    (verificado en este servidor: 22.14 y 23.11 fallan, 24.4.1 funciona). FTS5
-   es lo que usa la búsqueda por razón social ([db.js](../src/db.js)).
+   es lo que usa la búsqueda por razón social ([db.js](../astro/src/lib/db.js)).
 
 El segundo falla **en silencio**: `searchByName` captura el error y devuelve
 `[]`, así que el buscador diría "sin resultados" en lugar de dar un error. Por
@@ -58,14 +68,15 @@ repuntar el symlink `~/opt/node`.
 ### El proxy y la cabecera Host
 
 LiteSpeed reescribe `Host` a `127.0.0.1:31500` al hacer proxy. `apiGuard`
-([server.js](../src/server.js)) compara `Referer` contra el host de la petición
-para bloquear el uso de la API desde otros sitios — con el `Host` reescrito la
-comparación nunca cuadraba y **la API devolvía 403 al propio buscador**.
+([apiGuard.ts](../astro/src/server/apiGuard.ts)) compara `Referer` contra el
+host de la petición para bloquear el uso de la API desde otros sitios — con el
+`Host` reescrito la comparación nunca cuadraba y **la API devolvía 403 al
+propio buscador**.
 
 Solución en dos partes:
 
 - `.htaccess` manda `X-Forwarded-Host: consultaruc-pe.com`.
-- `requestHost()` en `server.js` prefiere esa cabecera, luego el host de
+- `requestHost()` en `apiGuard.ts` prefiere esa cabecera, luego el host de
   `SITE_URL`, y sólo al final `Host`.
 
 Sigue sin poder falsificarse desde un navegador: quien ponga esa cabecera a
@@ -101,8 +112,17 @@ npm run download-bulk        # descarga e ingesta ~18M registros (~40 min)
 npm run sync-tipo-cambio     # tipo de cambio oficial
 ```
 
+> Estos dos comandos son los de la **raíz** (`src/bulkDownloader.js`,
+> `src/tipoCambioSync.js`), no los de `astro/`, y así debe seguir siendo: el
+> `db.js` de la raíz ancla `data/` en su propia ubicación, mientras que el de
+> `astro/` lo ancla en `process.cwd()`. Correr la versión de `astro/` con
+> `cd ~/consultaruc/astro && npm run download-bulk` crearía **una base nueva y
+> vacía en `astro/data/`** en vez de actualizar la real, sin ningún error a la
+> vista. Si algún día se unifican, hay que pasar `DATA_DIR=~/consultaruc/data`
+> explícitamente.
+
 Hasta entonces la app funciona con las empresas de ejemplo de
-[seedData.js](../src/seedData.js).
+[seedData.js](../astro/src/lib/seedData.js).
 
 ### Mantenerse al día (ya automatizado)
 
