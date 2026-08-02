@@ -1,5 +1,42 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getLatestTipoCambio, getRecentTipoCambio } from '../../lib/db.js';
+
+// Se renderiza en el servidor en vez de pedirlo por fetch al montar. Antes la
+// tarjeta entera nacía en display:none hasta que respondía /api/tipo-cambio,
+// lo que obligaba a reservar su alto a mano para no empujar el artículo: la
+// reserva se quedaba corta (≈680 px frente a los ≈1940 px reales en
+// escritorio y ≈4820 px en móvil) y el salto volvía. Sirviéndolo ya
+// renderizado no hay nada que reservar, desaparece el estado de carga y
+// /api/tipo-cambio sale de la cadena crítica de la página.
+const latest = getLatestTipoCambio();
+const historial = getRecentTipoCambio(30);
+
+const fmtFecha = (iso: string) => {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+};
+
+// Variación frente al día hábil anterior del propio histórico - SUNAT no
+// publica fines de semana ni feriados, así que "ayer" no sirve.
+function delta(key: 'compra' | 'venta') {
+  if (historial.length < 2) return null;
+  const diff = historial[0][key] - historial[1][key];
+  if (Math.abs(diff) < 0.0005) return { cls: 'is-flat', txt: 'sin cambio' };
+  const pct = (diff / historial[1][key]) * 100;
+  const up = diff > 0;
+  return {
+    cls: up ? 'is-up' : 'is-down',
+    txt: `${up ? '▲' : '▼'} ${Math.abs(diff).toFixed(3)} (${up ? '+' : '−'}${Math.abs(pct).toFixed(2)}%)`
+  };
+}
+
+const dCompra = delta('compra');
+const dVenta = delta('venta');
+const vsFecha = historial.length > 1 ? `Frente al ${fmtFecha(historial[1].fecha)}` : undefined;
+const valores = historial.flatMap((r) => [r.compra, r.venta]);
+const minVal = valores.length ? Math.min(...valores) : 0;
+const maxVal = valores.length ? Math.max(...valores) : 0;
 ---
 <BaseLayout
   title={"Tipo de Cambio SUNAT Hoy: Compra y Venta del Dólar"}
@@ -33,13 +70,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
   <main class="content-page" style="padding-bottom: 0;">
     <h1>Tipo de Cambio SUNAT Hoy</h1>
-    <p class="content-updated" id="fechaActualizacion">Cargando fecha...</p>
+    <p class="content-updated" id="fechaActualizacion">{latest ? `Tipo de cambio del ${fmtFecha(latest.fecha)}` : 'Tipo de cambio oficial SUNAT'}</p>
     <p>El tipo de cambio oficial que publica la SUNAT corresponde a la cotización de cierre de la <strong>SBS</strong> (Superintendencia de Banca, Seguros y AFP) del día hábil anterior. Es el valor de referencia obligatorio para efectos tributarios en Perú (Impuesto a la Renta, IGV, comprobantes en moneda extranjera).</p>
   </main>
 
   <section class="rate-card">
-    <div id="rateLoader" class="rate-loader">Cargando tipo de cambio…</div>
-    <div id="rateContent" style="display:none;">
+    {!latest && <div class="rate-loader">El tipo de cambio aún no ha sido sincronizado. Vuelve a intentarlo más tarde.</div>}
+    {latest && (
+    <div id="rateContent">
       <div class="rate-head">
         <div class="rate-pair">
           <span class="rate-pair-ic"><span class="ic" data-icon="banknote"></span></span>
@@ -48,22 +86,46 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <span>USD → PEN · Tipo de cambio oficial SUNAT</span>
           </div>
         </div>
-        <span class="rate-date-badge"><span class="ic" data-icon="calendar"></span> <span id="rateRefDate">—</span></span>
+        <span class="rate-date-badge"><span class="ic" data-icon="calendar"></span> <span id="rateRefDate">{fmtFecha(latest.fecha)}</span></span>
       </div>
 
-      <div class="rate-grid">
-        <div class="rate-box rate-compra">
-          <span class="rate-label"><span class="rate-dot"></span> Compra</span>
-          <span class="rate-value"><span class="rate-cur">S/</span> <span id="valCompra">-</span></span>
-          <span class="rate-sub">para tus ingresos en USD</span>
+      <!-- Apaisado: cotizaciones a la izquierda, evolución a la derecha. El
+           gráfico da la lectura de un vistazo; la tabla completa sigue debajo
+           porque son 30 días de dato indexable. -->
+      <div class="rate-land">
+        <div class="rate-land-side">
+          <div class="rate-grid">
+            <div class="rate-box rate-compra">
+              <span class="rate-label"><span class="rate-dot"></span> Compra</span>
+              <span class="rate-value"><span class="rate-cur">S/</span> <span id="valCompra">{latest.compra.toFixed(3)}</span></span>
+              {dCompra && <span class={`rate-delta ${dCompra.cls}`} title={vsFecha}>{dCompra.txt}</span>}
+              <span class="rate-sub">para tus ingresos en USD</span>
+            </div>
+            <div class="rate-box rate-venta">
+              <span class="rate-label"><span class="rate-dot"></span> Venta</span>
+              <span class="rate-value"><span class="rate-cur">S/</span> <span id="valVenta">{latest.venta.toFixed(3)}</span></span>
+              {dVenta && <span class={`rate-delta ${dVenta.cls}`} title={vsFecha}>{dVenta.txt}</span>}
+              <span class="rate-sub">para tus gastos en USD</span>
+            </div>
+          </div>
+          <p class="rate-date-note" id="rateSourceNote"><span class="ic" data-icon="shield-check"></span> Fuente: SUNAT / SBS · sincronizado automáticamente</p>
         </div>
-        <div class="rate-box rate-venta">
-          <span class="rate-label"><span class="rate-dot"></span> Venta</span>
-          <span class="rate-value"><span class="rate-cur">S/</span> <span id="valVenta">-</span></span>
-          <span class="rate-sub">para tus gastos en USD</span>
-        </div>
+
+        <figure class="rate-chart" aria-labelledby="rateChartCap">
+          <figcaption class="rate-chart-head">
+            <span class="rate-chart-title">Evolución · últimos 30 días</span>
+            <span class="rate-readout" id="rateReadout" aria-live="polite"></span>
+          </figcaption>
+          <div class="rate-chart-plot">
+            <svg id="rateChart" viewBox="0 0 700 210" preserveAspectRatio="none" role="img" aria-describedby="rateChartCap"></svg>
+          </div>
+          <p id="rateChartCap" class="rate-chart-legend">
+            <span><i class="rate-key rate-key-c"></i> Compra</span>
+            <span><i class="rate-key rate-key-v"></i> Venta</span>
+            <span id="rateRange">mín {minVal.toFixed(3)} · máx {maxVal.toFixed(3)}</span>
+          </p>
+        </figure>
       </div>
-      <p class="rate-date-note" id="rateSourceNote"><span class="ic" data-icon="shield-check"></span> Fuente: SUNAT / SBS · sincronizado automáticamente</p>
 
       <h2 class="rate-hist-title"><span class="ic" data-icon="clock"></span> Historial reciente</h2>
       <div class="rate-hist-wrap">
@@ -71,11 +133,23 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <thead>
             <tr><th>Fecha</th><th>Compra</th><th>Venta</th></tr>
           </thead>
-          <tbody id="historyBody"></tbody>
+          <tbody id="historyBody">
+            {historial.map((row) => (
+              <tr>
+                <td data-label="Fecha">{fmtFecha(row.fecha)}</td>
+                <td data-label="Compra">S/ {row.compra.toFixed(3)}</td>
+                <td data-label="Venta">S/ {row.venta.toFixed(3)}</td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
+
+      {/* La serie del gráfico sale de aquí, no de un segundo fetch: así el SVG
+          y la tabla de arriba no pueden desincronizarse. */}
+      <script type="application/json" id="rateSeries" set:html={JSON.stringify(historial.map((r) => [r.fecha, r.compra, r.venta]))} />
     </div>
-    <div id="rateError" style="display:none; text-align:center; color: var(--text-muted); padding: 2rem 0;"></div>
+    )}
   </section>
 
   <main class="article-main">
