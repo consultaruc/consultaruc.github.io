@@ -127,23 +127,35 @@ const maxVal = valores.length ? Math.max(...valores) : 0;
         </figure>
       </div>
 
-      <h2 class="rate-hist-title"><span class="ic" data-icon="clock"></span> Historial reciente</h2>
-      <div class="rate-hist-wrap">
-        <table class="rate-history-table">
-          <thead>
-            <tr><th>Fecha</th><th>Compra</th><th>Venta</th></tr>
-          </thead>
-          <tbody id="historyBody">
-            {historial.map((row) => (
-              <tr>
-                <td data-label="Fecha">{fmtFecha(row.fecha)}</td>
-                <td data-label="Compra">S/ {row.compra.toFixed(3)}</td>
-                <td data-label="Venta">S/ {row.venta.toFixed(3)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Plegado por defecto: con el gráfico al lado, las 30 filas son el
+          detalle, no la lectura principal, y desplegadas hacían la tarjeta
+          desproporcionadamente alta. Se usa <details> y no un toggle en JS
+          para que abra igual sin scripts, y la tabla sigue estando en el HTML
+          (dentro de un <details> cerrado el contenido se indexa igual). */}
+      <details class="rate-hist">
+        <summary class="rate-hist-title">
+          <span class="ic" data-icon="clock"></span>
+          <h2>Historial reciente</h2>
+          <span class="rate-hist-hint">últimos {historial.length} días</span>
+          <span class="rate-hist-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="rate-hist-wrap">
+          <table class="rate-history-table">
+            <thead>
+              <tr><th>Fecha</th><th>Compra</th><th>Venta</th></tr>
+            </thead>
+            <tbody id="historyBody">
+              {historial.map((row) => (
+                <tr>
+                  <td data-label="Fecha">{fmtFecha(row.fecha)}</td>
+                  <td data-label="Compra">S/ {row.compra.toFixed(3)}</td>
+                  <td data-label="Venta">S/ {row.venta.toFixed(3)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
 
       {/* La serie del gráfico sale de aquí, no de un segundo fetch: así el SVG
           y la tabla de arriba no pueden desincronizarse. */}
