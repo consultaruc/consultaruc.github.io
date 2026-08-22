@@ -231,6 +231,20 @@
     white-space: nowrap; color: var(--text);
   }
   .rank-row .k.mono { font-family: var(--mono); font-size: .78rem; }
+  /* Fila de dos líneas: el identificador arriba, el nombre debajo. Se le da
+     max-width al contenedor y se lo quita a la clave, porque si no el
+     recorte se aplica dos veces y parte el texto antes de tiempo. */
+  .rank-row .k-wrap {
+    flex: 0 0 auto; max-width: 52%; min-width: 0; display: flex; flex-direction: column;
+    gap: .1rem; text-decoration: none; color: inherit;
+  }
+  .rank-row .k-wrap .k { max-width: 100%; }
+  .rank-row .k-wrap .sub {
+    font-size: .72rem; color: var(--muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  a.k-wrap:hover .k { color: var(--brand-lt); }
+  a.k-wrap:focus-visible { outline: 2px solid var(--brand-lt); outline-offset: 2px; border-radius: 4px; }
   .rank-row .track { flex: 1; height: 6px; border-radius: 3px; background: #1B2438; overflow: hidden; min-width: 24px; }
   .rank-row .track i { display: block; height: 100%; border-radius: 3px; background: var(--brand); }
   .rank-row .n {
@@ -430,6 +444,35 @@
 
   </div>
 
+  <div class="section-head" style="margin-top:1.6rem;">
+    <div>
+      <h2>Búsquedas de RUC</h2>
+      <p>Qué RUC busca la gente y desde qué página lo hace. Las fichas encontradas entran al <a href="/sitemap-rucs.xml" target="_blank" rel="noopener">sitemap de fichas</a>.</p>
+    </div>
+  </div>
+
+  <div class="tw-grid">
+
+    <div class="card" style="grid-column: span 2;">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        RUC más buscados
+      </h2>
+      <div class="rank" id="swTop"><div class="rank-empty">Cargando…</div></div>
+      <div class="detail" id="swTotals">—</div>
+    </div>
+
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16v6H4zM4 14h16v6H4z"></path></svg>
+        Desde qué página buscan
+      </h2>
+      <div class="rank" id="swPaths"><div class="rank-empty">Cargando…</div></div>
+      <div class="detail">Dice dónde conviene tener el buscador a mano.</div>
+    </div>
+
+  </div>
+
   <div class="panel">
     <div class="panel-head">
       <div style="flex:1; min-width:220px;">
@@ -583,7 +626,11 @@
   function renderRank(el, rows, opts) {
     opts = opts || {};
     if (!rows || !rows.length) {
-      el.innerHTML = '<div class="rank-empty">Sin datos todavía en este rango.</div>';
+      el.innerHTML = '';
+      var e = document.createElement('div');
+      e.className = 'rank-empty';
+      e.textContent = opts.empty || 'Sin datos todavía en este rango.';
+      el.appendChild(e);
       return;
     }
     var max = rows.reduce(function (m, r) { return Math.max(m, r.n); }, 0) || 1;
@@ -606,6 +653,23 @@
         k.textContent = opts.label ? opts.label(r) : (r.k || '');
       }
       k.title = opts.title ? opts.title(r) : (k.textContent || '');
+
+      // Un RUC suelto no se reconoce; con la razón social debajo, la lista se
+      // lee. Y si la fila apunta a una ficha, se puede saltar a ella.
+      if (r.sub || r.href) {
+        var wrap = document.createElement(r.href ? 'a' : 'span');
+        wrap.className = 'k-wrap';
+        if (r.href) { wrap.href = r.href; wrap.target = '_blank'; wrap.rel = 'noopener'; }
+        wrap.appendChild(k);
+        if (r.sub) {
+          var sub = document.createElement('span');
+          sub.className = 'sub';
+          sub.textContent = r.sub;
+          sub.title = r.sub;
+          wrap.appendChild(sub);
+        }
+        k = wrap;
+      }
 
       var track = document.createElement('span');
       track.className = 'track';
@@ -669,6 +733,35 @@
       : '';
   }
 
+  function renderSearches(sw) {
+    if (!sw) return;
+
+    // El RUC va en monoespaciada y el nombre debajo: buscando en la lista, el
+    // ojo salta por los números, que es lo que se reconoce de un vistazo.
+    var rows = sw.topRucs.map(function (r) {
+      return {
+        k: r.ruc,
+        sub: r.razonSocial || null,
+        href: '/ruc/' + r.ruc,
+        n: r.n
+      };
+    });
+    renderRank($('swTop'), rows, { mono: true, empty: 'Nadie ha buscado un RUC en esta ventana.' });
+
+    renderRank(
+      $('swPaths'),
+      sw.byPath.map(function (p) { return { k: p.path, n: p.n }; }),
+      { mono: true, empty: 'Sin búsquedas todavía.' }
+    );
+
+    var t = sw.totals;
+    $('swTotals').textContent = t.total
+      ? t.total.toLocaleString('es-PE') + ' búsquedas · ' +
+        t.distinctRucs.toLocaleString('es-PE') + ' RUC distintos · ' +
+        t.notFound.toLocaleString('es-PE') + ' sin resultado'
+      : 'Sin búsquedas registradas en esta ventana.';
+  }
+
   var currentHours = 720;
 
   function windowLabel(h) {
@@ -709,6 +802,8 @@
       renderRank($('twReferrers'), d.byReferrer.map(function (r) { return { k: r.referrer, n: r.n }; }), {
         mono: true, cls: function () { return 'src-referral'; }
       });
+
+      renderSearches(d.searches);
 
       renderRank($('twBots'), d.byBot.map(function (r) { return { k: r.source, n: r.n }; }), {
         mono: true, cls: function () { return 'src-direct'; }

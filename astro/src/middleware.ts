@@ -34,9 +34,27 @@ async function bootOnce() {
   const enrichmentWorker = await import('./lib/enrichmentWorker.js');
   enrichmentWorker.start();
 
+  // Las dos tablas de analítica crecen con cada visita y cada búsqueda, así
+  // que se recortan a 90 días. Se hace al arrancar y luego una vez al día:
+  // sólo al arrancar no bastaría, porque el proceso puede pasar meses en pie.
+  // unref() para que el temporizador no impida que Node termine.
+  const { pruneOldPageviews, pruneRucSearches } = await import('./lib/db.js');
+  const prune = () => {
+    try {
+      pruneOldPageviews(90);
+      pruneRucSearches(90);
+    } catch {
+      // Una purga fallida no debe tumbar el servidor; se reintenta mañana.
+    }
+  };
+  prune();
+  const pruneTimer = setInterval(prune, 24 * 60 * 60 * 1000);
+  pruneTimer.unref?.();
+
   const { closeBrowser } = await import('./lib/liveScraper.js');
   const shutdown = async () => {
     enrichmentWorker.stop();
+    clearInterval(pruneTimer);
     await closeBrowser();
     process.exit(0);
   };

@@ -26,6 +26,10 @@ export const GET: APIRoute = () => {
       'Disallow: /*?print=1\n\n' +
       '# AI/LLM crawlers welcome (with attribution) — see the policy files\n' +
       `Sitemap: ${o}/sitemap-index.xml\n` +
+      // Las fichas de RUC van en su propio sitemap porque se genera en cada
+      // petición a partir de lo que la gente busca, mientras que el index de
+      // arriba se compila en el build. Google admite varias directivas.
+      `Sitemap: ${o}/sitemap-rucs.xml\n` +
       `# ${o}/llms.txt · ${o}/ai.txt\n`,
     { headers: { 'Content-Type': 'text/plain' } }
   );

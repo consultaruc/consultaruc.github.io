@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getByRuc, searchByName, upsertRucRecord, enqueueEnrichment } from '../../../lib/db.js';
+import { getByRuc, searchByName, upsertRucRecord, enqueueEnrichment, recordRucSearch } from '../../../lib/db.js';
 import { scrapeRucLive, getQuotaStatus } from '../../../lib/liveScraper.js';
 import { apiLimiter } from '../../../server/rateLimit.js';
 import { apiGuard } from '../../../server/apiGuard.js';
@@ -7,6 +7,22 @@ import { apiGuard } from '../../../server/apiGuard.js';
 function publicQuota() {
   const q = getQuotaStatus();
   return { available: q.remaining > 0, retryAfterSeconds: q.retryAfterSeconds };
+}
+
+/**
+ * Desde qué página se lanzó la búsqueda. El Referer sirve porque apiGuard ya
+ * lo ha validado como propio antes de llegar aquí, así que no es un dato que
+ * pueda venir de cualquier sitio. Sólo se guarda la ruta, nunca la URL entera
+ * (podría llevar parámetros) ni nada del visitante.
+ */
+function originPath(context: { request: Request }) {
+  const ref = context.request.headers.get('referer');
+  if (!ref) return '/';
+  try {
+    return new URL(ref).pathname.slice(0, 300);
+  } catch {
+    return '/';
+  }
 }
 
 export const GET: APIRoute = async (context) => {
@@ -27,6 +43,11 @@ export const GET: APIRoute = async (context) => {
   }
 
   if (/^\d{11}$/.test(query)) {
+    // La página de origen se resuelve una vez; cada salida registra luego si
+    // el RUC se encontró o no, que es lo que distingue una búsqueda útil de
+    // un RUC inventado.
+    const from = originPath(context);
+
     if (wantsLive) {
       let liveData = null;
       try {
@@ -39,6 +60,7 @@ export const GET: APIRoute = async (context) => {
 
       if (liveData) {
         upsertRucRecord(liveData);
+        recordRucSearch(query, from, true);
         const record = getByRuc(query);
         return Response.json({ success: true, found: true, source: 'live', data: record, quota });
       }
@@ -47,6 +69,7 @@ export const GET: APIRoute = async (context) => {
       // before giving up. Availability is always returned so the frontend can
       // show whether real-time verification can be used right now.
       const cached = getByRuc(query);
+      recordRucSearch(query, from, !!cached);
       if (cached) {
         return Response.json({ success: true, found: true, source: 'index', data: cached, quota });
       }
@@ -64,6 +87,7 @@ export const GET: APIRoute = async (context) => {
     }
 
     const record = getByRuc(query);
+    recordRucSearch(query, from, !!record);
     if (!record) {
       return Response.json(
         {

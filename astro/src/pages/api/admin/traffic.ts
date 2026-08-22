@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getTrafficStats } from '../../../lib/db.js';
+import { getTrafficStats, getSearchStats } from '../../../lib/db.js';
 import { requireAuth } from '../../../server/requireAuth.js';
 
 /**
@@ -17,5 +17,10 @@ export const GET: APIRoute = (context) => {
   // podría pedir una agregación enorme sobre la tabla.
   const hours = [24, 168, 720, 2160].includes(raw) ? raw : 720;
 
-  return Response.json(getTrafficStats(hours));
+  // Las búsquedas viajan con el tráfico porque comparten ventana: el panel
+  // pinta ambas cosas al cambiar de rango, y así es una sola petición.
+  return Response.json({
+    ...getTrafficStats(hours),
+    searches: getSearchStats(hours)
+  });
 };

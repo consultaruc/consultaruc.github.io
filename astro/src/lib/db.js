@@ -601,3 +601,108 @@ export function getTrafficStats(hours = 720, limit = 12) {
     byBot: stmtBotsByAgent.all(sinceTs, limit)
   };
 }
+
+// ─── Búsquedas de RUC ──────────────────────────────────────────────────────
+// Distinto de pageview: aquí no interesa la visita sino QUÉ RUC se buscó y
+// DESDE QUÉ página, que es lo que permite (a) enseñarlo en el panel y (b)
+// decidir qué fichas merecen entrar al sitemap. Sin IP ni nada del visitante:
+// sólo el RUC, la página de origen y el instante.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS ruc_search (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts INTEGER NOT NULL,
+    day TEXT NOT NULL,
+    ruc TEXT NOT NULL,
+    from_path TEXT NOT NULL,
+    found INTEGER NOT NULL DEFAULT 1
+  )
+`);
+db.exec('CREATE INDEX IF NOT EXISTS idx_ruc_search_ts ON ruc_search(ts)');
+db.exec('CREATE INDEX IF NOT EXISTS idx_ruc_search_ruc ON ruc_search(ruc)');
+db.exec('CREATE INDEX IF NOT EXISTS idx_ruc_search_day ON ruc_search(day)');
+
+const stmtInsertSearch = db.prepare(
+  'INSERT INTO ruc_search (ts, day, ruc, from_path, found) VALUES (?, ?, ?, ?, ?)'
+);
+
+export function recordRucSearch(ruc, fromPath, found) {
+  if (!/^\d{11}$/.test(ruc || '')) return;
+  const now = new Date();
+  try {
+    stmtInsertSearch.run(
+      now.getTime(),
+      now.toISOString().slice(0, 10),
+      ruc,
+      String(fromPath || '/').slice(0, 300),
+      found ? 1 : 0
+    );
+  } catch {
+    // Igual que recordPageview: la analítica nunca debe tumbar una búsqueda.
+  }
+}
+
+// Los RUC más buscados, con el nombre ya resuelto para no tener que pedirlo
+// ficha por ficha desde el panel.
+const stmtTopSearched = db.prepare(`
+  SELECT s.ruc, COUNT(*) AS n, MAX(s.ts) AS lastTs, r.razon_social AS razonSocial
+  FROM ruc_search s LEFT JOIN ruc r ON r.ruc = s.ruc
+  WHERE s.ts >= ? GROUP BY s.ruc ORDER BY n DESC, lastTs DESC LIMIT ?
+`);
+
+// Desde qué páginas se busca. Responde a "¿la gente busca desde la home o
+// desde las guías?", que es lo que dice dónde poner el buscador.
+const stmtSearchByPath = db.prepare(`
+  SELECT from_path AS path, COUNT(*) AS n FROM ruc_search
+  WHERE ts >= ? GROUP BY from_path ORDER BY n DESC LIMIT ?
+`);
+
+const stmtSearchTotals = db.prepare(`
+  SELECT COUNT(*) AS total,
+         COUNT(DISTINCT ruc) AS distinctRucs,
+         SUM(CASE WHEN found = 0 THEN 1 ELSE 0 END) AS notFound
+  FROM ruc_search WHERE ts >= ?
+`);
+
+export function getSearchStats(hours = 720, limit = 12) {
+  const sinceTs = Date.now() - hours * 3600000;
+  const t = stmtSearchTotals.get(sinceTs) || {};
+  return {
+    totals: {
+      total: t.total || 0,
+      distinctRucs: t.distinctRucs || 0,
+      notFound: t.notFound || 0
+    },
+    topRucs: stmtTopSearched.all(sinceTs, limit),
+    byPath: stmtSearchByPath.all(sinceTs, limit)
+  };
+}
+
+// Las fichas que entran al sitemap. Deliberadamente NO es "todos los RUC":
+// sólo los que alguien buscó de verdad y además tienen datos propios que
+// justifiquen indexarlos (el mismo umbral que decide noindex en
+// renderRucPage.js). Lo que se quitó en su día fue el relleno aleatorio para
+// llegar a mil URLs; esto es lo contrario, demanda real y acotada.
+const stmtSitemapRucs = db.prepare(`
+  SELECT s.ruc, MAX(s.ts) AS lastTs, COUNT(*) AS n
+  FROM ruc_search s JOIN ruc r ON r.ruc = s.ruc
+  WHERE s.found = 1
+    AND (r.direccion IS NOT NULL AND r.direccion != '')
+  GROUP BY s.ruc
+  ORDER BY n DESC, lastTs DESC
+  LIMIT ?
+`);
+
+export function getSearchedRucsForSitemap(limit = 500) {
+  return stmtSitemapRucs.all(limit);
+}
+
+// Se purga con la misma política que pageview.
+const stmtPruneSearch = db.prepare('DELETE FROM ruc_search WHERE day < ?');
+export function pruneRucSearches(keepDays = 90) {
+  const cutoff = new Date(Date.now() - keepDays * 86400000).toISOString().slice(0, 10);
+  try {
+    return stmtPruneSearch.run(cutoff).changes;
+  } catch {
+    return 0;
+  }
+}
