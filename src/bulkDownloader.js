@@ -149,8 +149,24 @@ function extractZip(zipPath, expectedTxtPath) {
   return path.join(dir, txtFile);
 }
 
+/**
+ * SUNAT publica el padrón en Latin-1, no en UTF-8. Sin declararlo, Node
+ * decodifica cada byte acentuado como inválido y lo sustituye por U+FFFD de
+ * forma permanente: "INTEGRATEL PERÚ S.A.A." quedaba almacenado como
+ * "INTEGRATEL PER� S.A.A." y así salía en el título, en la ficha y en la
+ * API. Peor aún, el token corrupto tampoco casa en el índice FTS, así que
+ * buscar por el nombre correcto no encontraba a esas empresas.
+ *
+ * 'latin1' basta y no necesita dependencias: para el rango acentuado del
+ * español (0xC0-0xFF) es idéntico a Windows-1252.
+ */
+const PADRON_ENCODING = 'latin1';
+
 async function ingestRucFile(txtPath) {
-  const rl = readline.createInterface({ input: fs.createReadStream(txtPath), crlfDelay: Infinity });
+  const rl = readline.createInterface({
+    input: fs.createReadStream(txtPath, { encoding: PADRON_ENCODING }),
+    crlfDelay: Infinity
+  });
 
   let batch = [];
   let total = 0;
@@ -221,7 +237,12 @@ async function ingestRucFile(txtPath) {
  * 10 DEPARTAMENTO | 11 MANZANA
  */
 async function ingestSucursalesFile(txtPath) {
-  const rl = readline.createInterface({ input: fs.createReadStream(txtPath), crlfDelay: Infinity });
+  // Mismo Latin-1 que el padrón principal - aquí son las direcciones de los
+  // anexos las que llevan acentos.
+  const rl = readline.createInterface({
+    input: fs.createReadStream(txtPath, { encoding: PADRON_ENCODING }),
+    crlfDelay: Infinity
+  });
 
   let batch = [];
   let total = 0;
