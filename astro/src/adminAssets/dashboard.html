@@ -144,7 +144,19 @@
       btn.textContent = 'Probando (puede tardar ~10s)...';
       resultBox.textContent = '';
       try {
-        const res = await fetch('/api/admin/test-live', { method: 'POST' });
+        // El Content-Type no es decorativo: Astro trae su propia protección
+        // CSRF, y para un POST SIN cabecera de tipo compara el Origin del
+        // navegador contra su propia url.origin. Detrás del proxy de LiteSpeed
+        // esa url.origin es 127.0.0.1:31500, nunca el dominio real, así que la
+        // comparación fallaba y devolvía "Cross-site POST form submissions are
+        // forbidden" en texto plano - que luego reventaba al hacer res.json().
+        // Con un tipo no-formulario (JSON) el chequeo deja pasar la petición;
+        // la ruta ya está protegida por requireAuth y por apiGuard.
+        const res = await fetch('/api/admin/test-live', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}'
+        });
         const data = await res.json();
         resultBox.textContent = (data.ok ? '✓ ' : '✗ ') + data.message;
         resultBox.style.color = data.ok ? '#6ee7b7' : '#fca5a5';
