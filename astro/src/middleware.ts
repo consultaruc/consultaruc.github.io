@@ -2,6 +2,8 @@ import { defineMiddleware } from 'astro:middleware';
 import crypto from 'node:crypto';
 import { getSession, saveSession } from './server/session.js';
 import { applySecurityHeaders } from './server/securityHeaders.js';
+import { classifyRequest, isCountablePath } from './server/traffic.js';
+import { requestHost } from './server/apiGuard.js';
 
 // --- Process-lifecycle boot (equivalent of server.js's bottom section) -----
 // Astro's standalone-adapter entry is generated, not hand-written, so there's
@@ -82,6 +84,23 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // deliberate exception - see src/pages/badge/[ruc].ts) - don't clobber them.
   if (!isBadge) {
     applySecurityHeaders(response.headers);
+  }
+
+  // First-party traffic log. Search Console only reports Google; this records
+  // every visit that actually reaches the server - Bing, DuckDuckGo, social,
+  // referrals and direct - broken down by page and country. Recorded AFTER
+  // next() so a redirect or a 404 isn't counted as a page view, and wrapped
+  // so a logging failure can never take a page down with it.
+  if (response.status === 200 && isCountablePath(pathname, accept)) {
+    try {
+      const info = classifyRequest(context, requestHost(context));
+      if (info.source !== 'internal') {
+        const { recordPageview } = await import('./lib/db.js');
+        recordPageview(info);
+      }
+    } catch {
+      /* la analítica nunca debe romper una visita */
+    }
   }
 
   return response;

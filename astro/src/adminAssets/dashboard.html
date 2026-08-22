@@ -180,6 +180,84 @@
   .result.bad { border-color: rgba(248,113,113,.34); color: #FCA5A5; }
   .result svg { width: 15px; height: 15px; flex: none; margin-top: .15rem; }
 
+  /* ── analítica ───────────────────────────────────────────── */
+  .sec-head {
+    display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+    margin: 2rem 0 .9rem;
+  }
+  .sec-head h2 { font-size: 1rem; font-weight: 650; letter-spacing: -.015em; }
+  .sec-head p { font-size: .8rem; color: var(--muted); }
+  .range { display: flex; gap: .3rem; margin-left: auto; }
+  .range button {
+    padding: .3rem .7rem; font-size: .76rem; font-weight: 600;
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 7px;
+  }
+  .range button[aria-pressed="true"] {
+    background: rgba(37,99,235,.16); color: var(--brand-lt); border-color: var(--brand);
+  }
+  .range button:hover:not([aria-pressed="true"]) { color: var(--text); }
+
+  .tw-grid {
+    display: grid; gap: .9rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .tw-wide { grid-column: 1 / -1; }
+
+  /* Serie diaria: barras, no líneas — con pocos días una línea exagera la
+     pendiente y aquí lo que se compara es "cuánto hubo cada día". */
+  /* stretch, no flex-end: las columnas necesitan altura propia para que el
+     % de las barras de dentro resuelva contra algo. */
+  .chart { display: flex; align-items: stretch; gap: 2px; height: 96px; margin-top: .3rem; }
+  .chart .col {
+    flex: 1; min-width: 2px; height: 100%; display: flex; flex-direction: column;
+    justify-content: flex-end; gap: 1px; border-radius: 2px 2px 0 0; position: relative;
+  }
+  .chart .col .h { background: var(--brand); border-radius: 2px 2px 0 0; min-height: 1px; }
+  .chart .col .b { background: #2C3A57; min-height: 0; }
+  .chart .col:hover .h { background: var(--brand-lt); }
+  .chart-legend {
+    display: flex; gap: 1rem; flex-wrap: wrap; margin-top: .6rem;
+    font-size: .74rem; color: var(--muted);
+  }
+  .chart-legend span { display: inline-flex; align-items: center; gap: .38rem; }
+  .chart-legend i { width: 10px; height: 10px; border-radius: 3px; display: block; }
+
+  /* Listas ranked: una fila = etiqueta, barra proporcional y cifra. */
+  .rank { display: flex; flex-direction: column; gap: .45rem; margin-top: .2rem; }
+  .rank-row { display: flex; align-items: center; gap: .6rem; font-size: .82rem; min-width: 0; }
+  .rank-row .k {
+    flex: 0 0 auto; max-width: 46%; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; color: var(--text);
+  }
+  .rank-row .k.mono { font-family: var(--mono); font-size: .78rem; }
+  .rank-row .track { flex: 1; height: 6px; border-radius: 3px; background: #1B2438; overflow: hidden; min-width: 24px; }
+  .rank-row .track i { display: block; height: 100%; border-radius: 3px; background: var(--brand); }
+  .rank-row .n {
+    flex: none; font-family: var(--mono); font-variant-numeric: tabular-nums;
+    font-weight: 600; font-size: .8rem;
+  }
+  .rank-empty { font-size: .82rem; color: var(--dim); padding: .5rem 0; }
+
+  /* Cada fuente con su color, para reconocerlas de un vistazo entre paneles. */
+  .src-google  { background: #4285F4 !important; }
+  .src-bing    { background: #00897B !important; }
+  .src-direct  { background: #64748B !important; }
+  .src-referral{ background: var(--amber) !important; }
+  .src-social  { background: #A855F7 !important; }
+  .src-other   { background: #5B8DEF !important; }
+
+  /* Código de país como distintivo, no emoji de bandera: Windows no trae
+     fuente de banderas y las pinta como dos letras sueltas, que parecía un
+     fallo de renderizado. Dos letras en una cápsula se leen igual en todos
+     los sistemas. */
+  .cc {
+    font-family: var(--mono); font-size: .66rem; font-weight: 700;
+    letter-spacing: .04em; color: var(--brand-lt);
+    background: rgba(37,99,235,.16); border-radius: 4px;
+    padding: .1rem .3rem; margin-right: .4rem; flex: none;
+  }
+
   .err-banner {
     margin-top: 1.4rem; padding: .7rem .85rem; border-radius: 10px;
     background: #2A1215; border: 1px solid rgba(248,113,113,.32);
@@ -274,6 +352,79 @@
         <div class="bar-row"><span class="k">Descartadas</span><span class="track"><i style="width:0%;background:var(--bad)"></i></span><span class="n" id="enrGaveUp">—</span></div>
       </div>
       <div class="detail">El worker completa una ficha cada 3 min, dejando cuota libre para los visitantes.</div>
+    </div>
+
+  </div>
+
+  <!-- ── Analítica de visitas ─────────────────────────────────────────── -->
+  <div class="sec-head">
+    <div>
+      <h2>Tráfico del sitio</h2>
+      <p>Todo lo que llega al servidor, no sólo Google. Se excluyen los bots del conteo.</p>
+    </div>
+    <div class="range" role="group" aria-label="Rango de fechas">
+      <button type="button" data-days="7"  aria-pressed="false">7 días</button>
+      <button type="button" data-days="30" aria-pressed="true">30 días</button>
+      <button type="button" data-days="90" aria-pressed="false">90 días</button>
+    </div>
+  </div>
+
+  <div class="tw-grid">
+
+    <div class="card tw-wide">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"></path><path d="m7 14 4-4 3 3 5-6"></path></svg>
+        Visitas por día
+      </h2>
+      <div class="value" id="twTotal"><span class="skeleton"></span></div>
+      <div class="detail" id="twTotalDetail">—</div>
+      <div class="chart" id="twChart"></div>
+      <div class="chart-legend">
+        <span><i style="background:var(--brand)"></i> Personas</span>
+        <span><i style="background:#2C3A57"></i> Bots</span>
+        <span id="twPeak"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M3.6 9h16.8M3.6 15h16.8"></path><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"></path></svg>
+        De dónde llegan
+      </h2>
+      <div class="rank" id="twSources"><div class="rank-empty">Cargando…</div></div>
+    </div>
+
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16v16H4z"></path><path d="M4 9h16M9 9v11"></path></svg>
+        Páginas más vistas
+      </h2>
+      <div class="rank" id="twPages"><div class="rank-empty">Cargando…</div></div>
+    </div>
+
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"></path><circle cx="12" cy="10" r="2.6"></circle></svg>
+        Países
+      </h2>
+      <div class="rank" id="twCountries"><div class="rank-empty">Cargando…</div></div>
+    </div>
+
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"></path><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path></svg>
+        Sitios que enlazan
+      </h2>
+      <div class="rank" id="twReferrers"><div class="rank-empty">Cargando…</div></div>
+    </div>
+
+    <div class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="8" width="16" height="12" rx="2"></rect><path d="M12 8V4M9 14h.01M15 14h.01"></path></svg>
+        Rastreadores
+      </h2>
+      <div class="rank" id="twBots"><div class="rank-empty">Cargando…</div></div>
+      <div class="detail">Si Googlebot deja de aparecer, el sitio ha dejado de rastrearse.</div>
     </div>
 
   </div>
@@ -397,6 +548,163 @@
     setPulse(age > 90 ? 'stale' : '', 'actualizado ' + relTime(lastOk));
   }, 10000);
 
+  /* ── analítica de visitas ─────────────────────────────────────────── */
+
+  var SRC_LABEL = {
+    google:'Google', bing:'Bing', duckduckgo:'DuckDuckGo', yahoo:'Yahoo',
+    brave:'Brave', ecosia:'Ecosia', yandex:'Yandex', baidu:'Baidu',
+    startpage:'Startpage', qwant:'Qwant',
+    facebook:'Facebook', instagram:'Instagram', twitter:'X / Twitter',
+    whatsapp:'WhatsApp', linkedin:'LinkedIn', youtube:'YouTube',
+    reddit:'Reddit', tiktok:'TikTok', telegram:'Telegram',
+    direct:'Directo / sin referente', referral:'Otros sitios'
+  };
+  var SEARCH = ['google','bing','duckduckgo','yahoo','brave','ecosia','yandex','baidu','startpage','qwant'];
+  var SOCIAL = ['facebook','instagram','twitter','whatsapp','linkedin','youtube','reddit','tiktok','telegram'];
+
+  function srcClass(s) {
+    if (s === 'google') return 'src-google';
+    if (s === 'bing') return 'src-bing';
+    if (s === 'direct') return 'src-direct';
+    if (s === 'referral') return 'src-referral';
+    if (SOCIAL.indexOf(s) > -1) return 'src-social';
+    if (SEARCH.indexOf(s) > -1) return 'src-other';
+    return 'src-other';
+  }
+
+  var REGION = (typeof Intl !== 'undefined' && Intl.DisplayNames)
+    ? new Intl.DisplayNames(['es'], { type: 'region' }) : null;
+  function countryName(cc) {
+    if (!cc) return 'Desconocido';
+    try { return (REGION && REGION.of(cc)) || cc; } catch (e) { return cc; }
+  }
+
+  function renderRank(el, rows, opts) {
+    opts = opts || {};
+    if (!rows || !rows.length) {
+      el.innerHTML = '<div class="rank-empty">Sin datos todavía en este rango.</div>';
+      return;
+    }
+    var max = rows.reduce(function (m, r) { return Math.max(m, r.n); }, 0) || 1;
+    el.innerHTML = '';
+    rows.forEach(function (r) {
+      var row = document.createElement('div');
+      row.className = 'rank-row';
+
+      var k = document.createElement('span');
+      k.className = 'k' + (opts.mono ? ' mono' : '');
+      if (opts.badge) {
+        var cc = document.createElement('span');
+        cc.className = 'cc';
+        cc.textContent = opts.badge(r);
+        k.appendChild(cc);
+        k.appendChild(document.createTextNode(opts.label ? opts.label(r) : (r.k || '')));
+        k.style.display = 'inline-flex';
+        k.style.alignItems = 'center';
+      } else {
+        k.textContent = opts.label ? opts.label(r) : (r.k || '');
+      }
+      k.title = opts.title ? opts.title(r) : (k.textContent || '');
+
+      var track = document.createElement('span');
+      track.className = 'track';
+      var fill = document.createElement('i');
+      fill.style.width = Math.max(3, (r.n / max) * 100) + '%';
+      if (opts.cls) fill.className = opts.cls(r);
+      track.appendChild(fill);
+
+      var n = document.createElement('span');
+      n.className = 'n';
+      n.textContent = r.n.toLocaleString('es-PE');
+
+      row.appendChild(k); row.appendChild(track); row.appendChild(n);
+      el.appendChild(row);
+    });
+  }
+
+  function renderChart(byDay, days) {
+    var el = $('twChart');
+    el.innerHTML = '';
+    if (!byDay) return;
+
+    // La consulta sólo devuelve los días que tuvieron visitas. Si se pintan
+    // sólo esos, un único día ocupa el ancho entero y parece que hubo tráfico
+    // constante; rellenar el rango con ceros muestra los huecos tal cual son.
+    var have = {};
+    byDay.forEach(function (d) { have[d.day] = d; });
+    var series = [];
+    for (var i = days - 1; i >= 0; i--) {
+      var key = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+      series.push(have[key] || { day: key, humans: 0, bots: 0 });
+    }
+
+    var max = series.reduce(function (m, d) { return Math.max(m, d.humans + d.bots); }, 0) || 1;
+    var peak = series.reduce(function (a, d) { return d.humans > a.humans ? d : a; }, series[0]);
+    series.forEach(function (d) {
+      var col = document.createElement('div');
+      col.className = 'col';
+      col.title = d.day + ' — ' + d.humans + ' personas, ' + d.bots + ' bots';
+      var h = document.createElement('div');
+      h.className = 'h'; h.style.height = ((d.humans / max) * 90) + '%';
+      var b = document.createElement('div');
+      b.className = 'b'; b.style.height = ((d.bots / max) * 90) + '%';
+      col.appendChild(h); col.appendChild(b);
+      el.appendChild(col);
+    });
+    $('twPeak').textContent = 'máximo ' + peak.humans + ' el ' + peak.day;
+  }
+
+  var currentDays = 30;
+
+  async function loadTraffic(days) {
+    currentDays = days;
+    try {
+      var res = await fetch('/api/admin/traffic?days=' + days, { headers: { 'Accept': 'application/json' } });
+      if (res.status === 401) { window.location.href = '/admin/login'; return; }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var d = await res.json();
+
+      $('twTotal').textContent = d.totals.humans.toLocaleString('es-PE');
+      var perDay = d.totals.humans / Math.max(1, d.days);
+      $('twTotalDetail').textContent =
+        'visitas de personas en ' + d.days + ' días · ' + perDay.toFixed(1) + '/día · ' +
+        d.totals.bots.toLocaleString('es-PE') + ' de bots aparte';
+
+      renderChart(d.byDay, d.days);
+
+      renderRank($('twSources'), d.bySource.map(function (r) { return { k: r.source, n: r.n }; }), {
+        label: function (r) { return SRC_LABEL[r.k] || r.k; },
+        cls: function (r) { return srcClass(r.k); }
+      });
+
+      renderRank($('twPages'), d.byPath.map(function (r) { return { k: r.path, n: r.n }; }), { mono: true });
+
+      renderRank($('twCountries'), d.byCountry.map(function (r) { return { k: r.country, n: r.n }; }), {
+        badge: function (r) { return r.k || '??'; },
+        label: function (r) { return countryName(r.k); }
+      });
+
+      renderRank($('twReferrers'), d.byReferrer.map(function (r) { return { k: r.referrer, n: r.n }; }), {
+        mono: true, cls: function () { return 'src-referral'; }
+      });
+
+      renderRank($('twBots'), d.byBot.map(function (r) { return { k: r.source, n: r.n }; }), {
+        mono: true, cls: function () { return 'src-direct'; }
+      });
+    } catch (err) {
+      $('twSources').innerHTML = '<div class="rank-empty">No se pudo cargar (' + err.message + ').</div>';
+    }
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.range button'), function (b) {
+    b.addEventListener('click', function () {
+      Array.prototype.forEach.call(document.querySelectorAll('.range button'), function (o) {
+        o.setAttribute('aria-pressed', String(o === b));
+      });
+      loadTraffic(Number(b.dataset.days));
+    });
+  });
+
   $('testBtn').addEventListener('click', async function () {
     var btn = $('testBtn'), box = $('testResult');
     btn.disabled = true;
@@ -438,6 +746,11 @@
 
   loadHealth();
   setInterval(loadHealth, REFRESH_MS);
+
+  // El tráfico agrega sobre toda la tabla, así que se refresca mucho menos a
+  // menudo que health: cada 5 min basta para un panel que se mira de reojo.
+  loadTraffic(30);
+  setInterval(function () { loadTraffic(currentDays); }, 5 * 60 * 1000);
 })();
 </script>
 </body>

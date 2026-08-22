@@ -4,7 +4,8 @@ import {
   markEnrichmentDone,
   markEnrichmentFailed,
   upsertRucRecord,
-  getEnrichStats
+  getEnrichStats,
+  pruneOldPageviews
 } from './db.js';
 
 /**
@@ -33,10 +34,24 @@ const MIN_QUOTA_HEADROOM = 2; // always leave this many live checks for real use
 let timer = null;
 let running = false;
 
+// La tabla de visitas crece con cada página servida. Se poda desde aquí en vez
+// de con un cron aparte: este worker ya corre cada 3 min, y así la limpieza
+// vive con el proceso en lugar de depender de una entrada de crontab que
+// alguien tendría que recordar al reinstalar el servidor.
+const PAGEVIEW_KEEP_DAYS = 90;
+const PRUNE_EVERY_MS = 24 * 60 * 60 * 1000;
+let lastPrune = 0;
+
 export async function tick() {
   if (running) return; // never overlap
   running = true;
   try {
+    if (Date.now() - lastPrune > PRUNE_EVERY_MS) {
+      lastPrune = Date.now();
+      const removed = pruneOldPageviews(PAGEVIEW_KEEP_DAYS);
+      if (removed) console.log(`[Analytics] ${removed} visitas de más de ${PAGEVIEW_KEEP_DAYS} días purgadas.`);
+    }
+
     const quota = getQuotaStatus();
     if (quota.remaining <= MIN_QUOTA_HEADROOM) return;
 

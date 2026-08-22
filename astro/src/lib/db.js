@@ -471,3 +471,110 @@ export function getLastSyncTime() {
     return null;
   }
 }
+
+/* ── Analítica propia de visitas ────────────────────────────────────────────
+ * El sitio no tenía forma de saber de dónde llega la gente. Search Console
+ * cubre Google y nada más; esto cubre TODO lo que llega al servidor -
+ * Google, Bing, DuckDuckGo, enlaces de terceros y tráfico directo- y además
+ * por página y por país, que es lo que hace falta para decidir dónde invertir.
+ *
+ * Se guarda lo mínimo para agregar: día, ruta, fuente, host del referente,
+ * país y si era un bot. NADA que identifique a una persona: ni IP, ni cookie,
+ * ni user-agent completo, ni la URL entera del referente (sólo su host). Así
+ * no hay datos personales que custodiar ni aviso de cookies que dar.
+ */
+db.exec(`
+  CREATE TABLE IF NOT EXISTS pageview (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts INTEGER NOT NULL,
+    day TEXT NOT NULL,
+    path TEXT NOT NULL,
+    source TEXT NOT NULL,
+    referrer TEXT,
+    country TEXT,
+    bot INTEGER NOT NULL DEFAULT 0
+  )
+`);
+// Casi todas las consultas del panel filtran por día y separan bots, así que
+// ese es el índice que importa; el resto se agrupa sobre el subconjunto ya
+// reducido por fecha.
+db.exec('CREATE INDEX IF NOT EXISTS idx_pageview_day ON pageview(day, bot)');
+
+const stmtInsertView = db.prepare(
+  'INSERT INTO pageview (ts, day, path, source, referrer, country, bot) VALUES (?, ?, ?, ?, ?, ?, ?)'
+);
+const stmtPruneViews = db.prepare('DELETE FROM pageview WHERE day < ?');
+
+export function recordPageview({ path, source, referrer, country, bot }) {
+  const now = new Date();
+  try {
+    stmtInsertView.run(
+      now.getTime(),
+      now.toISOString().slice(0, 10),
+      String(path || '/').slice(0, 300),
+      String(source || 'direct').slice(0, 40),
+      referrer ? String(referrer).slice(0, 120) : null,
+      country ? String(country).slice(0, 4) : null,
+      bot ? 1 : 0
+    );
+  } catch {
+    // Una visita perdida no vale romper la petición del visitante.
+  }
+}
+
+/** Se llama desde el worker: mantiene la tabla acotada sin un cron aparte. */
+export function pruneOldPageviews(keepDays = 90) {
+  const cutoff = new Date(Date.now() - keepDays * 86400000).toISOString().slice(0, 10);
+  try {
+    return stmtPruneViews.run(cutoff).changes || 0;
+  } catch {
+    return 0;
+  }
+}
+
+const stmtViewsByDay = db.prepare(`
+  SELECT day, SUM(CASE WHEN bot = 0 THEN 1 ELSE 0 END) AS humans,
+              SUM(CASE WHEN bot = 1 THEN 1 ELSE 0 END) AS bots
+  FROM pageview WHERE day >= ? GROUP BY day ORDER BY day
+`);
+const stmtViewsBySource = db.prepare(`
+  SELECT source, COUNT(*) AS n FROM pageview
+  WHERE day >= ? AND bot = 0 GROUP BY source ORDER BY n DESC
+`);
+const stmtViewsByPath = db.prepare(`
+  SELECT path, COUNT(*) AS n FROM pageview
+  WHERE day >= ? AND bot = 0 GROUP BY path ORDER BY n DESC LIMIT ?
+`);
+const stmtViewsByCountry = db.prepare(`
+  SELECT country, COUNT(*) AS n FROM pageview
+  WHERE day >= ? AND bot = 0 AND country IS NOT NULL GROUP BY country ORDER BY n DESC LIMIT ?
+`);
+const stmtViewsByReferrer = db.prepare(`
+  SELECT referrer, COUNT(*) AS n FROM pageview
+  WHERE day >= ? AND bot = 0 AND referrer IS NOT NULL GROUP BY referrer ORDER BY n DESC LIMIT ?
+`);
+const stmtBotsByAgent = db.prepare(`
+  SELECT source, COUNT(*) AS n FROM pageview
+  WHERE day >= ? AND bot = 1 GROUP BY source ORDER BY n DESC LIMIT ?
+`);
+const stmtViewTotals = db.prepare(`
+  SELECT SUM(CASE WHEN bot = 0 THEN 1 ELSE 0 END) AS humans,
+         SUM(CASE WHEN bot = 1 THEN 1 ELSE 0 END) AS bots
+  FROM pageview WHERE day >= ?
+`);
+
+export function getTrafficStats(days = 30, limit = 12) {
+  const since = new Date(Date.now() - (days - 1) * 86400000).toISOString().slice(0, 10);
+  const totals = stmtViewTotals.get(since) || {};
+  return {
+    days,
+    since,
+    totals: { humans: totals.humans || 0, bots: totals.bots || 0 },
+    byDay: stmtViewsByDay.all(since),
+    bySource: stmtViewsBySource.all(since),
+    byPath: stmtViewsByPath.all(since, limit),
+    byCountry: stmtViewsByCountry.all(since, limit),
+    byReferrer: stmtViewsByReferrer.all(since, limit),
+    byBot: stmtBotsByAgent.all(since, limit)
+  };
+}
