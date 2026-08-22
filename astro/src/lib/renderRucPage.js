@@ -233,10 +233,19 @@ export function renderRucPage(ruc, record) {
   // until the enrichment worker fills them in.
   const isIndexable = !!record.domicilioFiscal || !!record.tipoContribuyente;
 
-  const condTag = condicion ? `[${condicion}] ` : '';
-  const title = `${condTag}RUC ${ruc} - ${razon} | Estado SUNAT`;
+  // La razón social va PRIMERO, igual que en el <h1> de más abajo: quien busca
+  // "cencosud ruc" tiene que ver "CENCOSUD…" al principio del resultado, no a
+  // 27 caracteres de distancia. El título anterior empezaba por "[HABIDO] RUC
+  // 20109072177 - …", así que el nombre buscado caía más allá de donde Google
+  // corta, y esas consultas convertían al 0,07% pese a rankear en el top 10.
+  // La condición sigue estando en la descripción, en el cuerpo y en el JSON-LD;
+  // sólo sale del título, donde no la busca nadie.
+  const title = `${razon} - RUC ${ruc} | Estado SUNAT`;
+  // Muchas razones sociales acaban en "S.A."/"S.A.C.", que junto al punto de la
+  // frase daba "… S.A..".
+  const razonFrase = razon.replace(/\.+$/, '');
   const description =
-    `Consulta el RUC ${ruc} de ${razon}. Estado: ${estado || 'no disponible'}, ` +
+    `Consulta el RUC ${ruc} de ${razonFrase}. Estado: ${estado || 'no disponible'}, ` +
     `condición de domicilio: ${condicion || 'no disponible'}${record.domicilioFiscal ? `, domicilio fiscal en ${record.domicilioFiscal}` : ''}.`;
 
   const dept = deriveDept(record.departamento, record.domicilioFiscal, record.ubigeo);

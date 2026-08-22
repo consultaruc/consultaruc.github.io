@@ -12,7 +12,7 @@ const ADMIN_ASSETS_DIR = process.env.ADMIN_ASSETS_DIR || path.join(process.cwd()
 
 export const GET: APIRoute = () => {
   const html = fs.readFileSync(path.join(ADMIN_ASSETS_DIR, 'login.html'), 'utf8');
-  return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+  return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
 };
 
 export const POST: APIRoute = async (context) => {

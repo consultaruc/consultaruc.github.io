@@ -22,7 +22,7 @@ export const GET: APIRoute = (context) => {
 
   return new Response(renderBadgeHtml(ruc, record, theme, siteOrigin()), {
     headers: {
-      'Content-Type': 'text/html',
+      'Content-Type': 'text/html; charset=utf-8',
       'Content-Security-Policy': "default-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors *;",
       'Cross-Origin-Resource-Policy': 'cross-origin'
       // Deliberately no X-Frame-Header set at all here (equivalent to the

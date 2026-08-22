@@ -10,5 +10,5 @@ export const GET: APIRoute = (context) => {
   if (denied) return denied;
 
   const html = fs.readFileSync(path.join(ADMIN_ASSETS_DIR, 'dashboard.html'), 'utf8');
-  return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+  return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
 };
