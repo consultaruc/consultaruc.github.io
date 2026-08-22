@@ -2,175 +2,443 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard - Consulta RUC Perú</title>
+<title>Panel — Consulta RUC Perú</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>
+  /* Consola de operación. Se lee de un vistazo, no de arriba abajo: lo que
+     importa es detectar en dos segundos si algo está roto. De ahí que el
+     estado vaya codificado en forma Y color (punto + etiqueta), que las
+     cifras usen tabular-nums para que alineen, y que el color semántico
+     (ok/aviso/error) sea independiente del azul de marca. */
+  :root {
+    --ink:      #0B1120;
+    --panel:    #131C2E;
+    --panel-2:  #0F1829;
+    --line:     #23304A;
+    --text:     #E8EEF9;
+    --muted:    #8496B3;
+    --dim:      #5C6E8C;
+    --brand:    #2563EB;
+    --brand-lt: #5B8DEF;
+    --amber:    #F97316;
+    --amber-lt: #FDBA74;
+    --ok:       #34D399;
+    --warn:     #FBBF24;
+    --bad:      #F87171;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: #0f172a;
-    color: #e2e8f0;
-    padding: 2rem;
+    font-family: var(--sans);
+    background: var(--ink);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 3rem;
   }
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    max-width: 900px;
-    margin-left: auto;
-    margin-right: auto;
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 1.25rem; }
+
+  /* ── top bar ─────────────────────────────────────────────── */
+  .topbar {
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #101A2C, var(--ink));
+    position: sticky; top: 0; z-index: 5;
   }
-  h1 { font-size: 1.4rem; }
-  a.logout { color: #94a3b8; text-decoration: none; font-size: 0.9rem; }
-  a.logout:hover { color: #e2e8f0; }
+  .topbar-in {
+    max-width: 1080px; margin: 0 auto; padding: .85rem 1.25rem;
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: .6rem; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px; flex: none;
+    background: linear-gradient(160deg, #3B6FE0, var(--brand));
+    display: grid; place-items: center;
+  }
+  .brand-mark svg { width: 16px; height: 16px; }
+  .brand strong {
+    font-family: var(--sans); font-size: .92rem; font-weight: 650;
+    letter-spacing: -.01em; display: block; line-height: 1.15;
+  }
+  /* Clase explícita, no `.brand span`: ese selector alcanzaba también al span
+     contenedor y le pasaba la monoespaciada al nombre de la marca. */
+  .brand-sub {
+    font-family: var(--mono); font-size: .62rem; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--dim);
+  }
+  .spacer { flex: 1; }
+  .refresh-note {
+    font-family: var(--mono); font-size: .68rem; color: var(--dim);
+    display: inline-flex; align-items: center; gap: .4rem;
+  }
+  .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); display: block; }
+  .pulse.stale { background: var(--warn); }
+  .pulse.dead  { background: var(--bad); }
+  .logout {
+    color: var(--muted); text-decoration: none; font-size: .82rem;
+    padding: .38rem .7rem; border: 1px solid var(--line); border-radius: 7px;
+    transition: color .14s, border-color .14s;
+  }
+  .logout:hover { color: var(--text); border-color: var(--brand-lt); }
+
+  /* ── stat grid ───────────────────────────────────────────── */
   .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1rem;
-    max-width: 900px;
-    margin: 0 auto 1.5rem auto;
+    display: grid; gap: .9rem; margin-top: 1.4rem;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   }
   .card {
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: var(--panel);
+    border: 1px solid var(--line);
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1.1rem 1.15rem;
+    min-width: 0;
   }
-  .card h2 { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em; }
-  .card .value { font-size: 1.6rem; font-weight: 600; }
-  .badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 600;
+  .card h2 {
+    font-size: .68rem; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: .6rem;
+    display: flex; align-items: center; gap: .45rem;
   }
-  .badge.ok { background: #064e3b; color: #6ee7b7; }
-  .badge.blocked { background: #78350f; color: #fcd34d; }
-  .badge.rate_limited_self { background: #1e3a5f; color: #7dd3fc; }
-  .badge.error { background: #7f1d1d; color: #fca5a5; }
-  .badge.unknown { background: #334155; color: #94a3b8; }
-  .badge.not_found { background: #334155; color: #cbd5e1; }
-  .detail { font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem; }
-  .actions { max-width: 900px; margin: 0 auto; }
+  .card h2 svg { width: 13px; height: 13px; flex: none; opacity: .8; }
+  .value {
+    font-family: var(--mono); font-size: 1.75rem; font-weight: 600;
+    letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1.1;
+  }
+  /* La fecha de sincronización es la única cifra que es texto largo; a 1.05rem
+     en monoespaciada se partía en dos líneas y descuadraba la tarjeta. */
+  .value.sm { font-size: .92rem; letter-spacing: 0; line-height: 1.35; }
+  .detail { font-size: .78rem; color: var(--muted); margin-top: .45rem; line-height: 1.45; }
+
+  /* Skeleton mientras carga: mejor que un "-" que parece un dato real. */
+  .skeleton {
+    display: inline-block; height: 1.5rem; width: 5.5rem; border-radius: 5px;
+    background: linear-gradient(90deg, #1B2438, #24314B, #1B2438);
+    background-size: 200% 100%; animation: sk 1.4s ease-in-out infinite;
+  }
+  @keyframes sk { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+
+  /* Estado: punto + texto, no sólo color. */
+  .status { display: inline-flex; align-items: center; gap: .5rem; font-size: .95rem; font-weight: 600; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .s-ok   .dot { background: var(--ok);   box-shadow: 0 0 0 3px rgba(52,211,153,.16); }
+  .s-warn .dot { background: var(--warn); box-shadow: 0 0 0 3px rgba(251,191,36,.16); }
+  .s-bad  .dot { background: var(--bad);  box-shadow: 0 0 0 3px rgba(248,113,113,.16); }
+  .s-idle .dot { background: var(--dim);  box-shadow: 0 0 0 3px rgba(92,110,140,.16); }
+  .s-ok   { color: var(--ok); }
+  .s-warn { color: var(--warn); }
+  .s-bad  { color: var(--bad); }
+  .s-idle { color: var(--muted); }
+
+  /* Medidor de cuota: un número solo no dice cuánto margen queda. */
+  .meter { height: 6px; border-radius: 3px; background: #1B2438; overflow: hidden; margin-top: .6rem; }
+  .meter i { display: block; height: 100%; border-radius: 3px; background: var(--amber); transition: width .3s ease; }
+  .meter.low i { background: var(--bad); }
+
+  /* Ocupa la fila entera: son tres barras comparables entre sí y encajonarlas
+     en el ancho de una tarjeta de cifra las dejaba ilegibles. */
+  .enrich-card { grid-column: 1 / -1; min-width: 0; }
+
+  /* Barra de enriquecimiento (datos que la API ya devolvía y nadie mostraba) */
+  .bars { display: flex; flex-direction: column; gap: .5rem; margin-top: .2rem; }
+  .bar-row { display: flex; align-items: center; gap: .6rem; font-size: .8rem; }
+  .bar-row .k { color: var(--muted); width: 5.5rem; flex: none; }
+  .bar-row .n {
+    font-family: var(--mono); font-variant-numeric: tabular-nums;
+    margin-left: auto; font-weight: 600;
+  }
+  .bar-row .track { flex: 1; height: 5px; border-radius: 3px; background: #1B2438; overflow: hidden; min-width: 30px; }
+  .bar-row .track i { display: block; height: 100%; border-radius: 3px; }
+
+  /* ── action panel ────────────────────────────────────────── */
+  .panel {
+    margin-top: 1.4rem; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 1.2rem 1.15rem;
+  }
+  .panel-head { display: flex; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: .9rem; }
+  .panel-head h2 { font-size: .95rem; font-weight: 650; letter-spacing: -.01em; }
+  .panel-head p { font-size: .8rem; color: var(--muted); margin-top: .25rem; max-width: 58ch; line-height: 1.5; }
+
   button {
-    padding: 0.7rem 1.4rem;
-    background: #1d4ed8;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    cursor: pointer;
+    padding: .6rem 1.1rem; background: var(--brand); color: #fff; border: none;
+    border-radius: 9px; font-size: .87rem; font-weight: 600; font-family: var(--sans);
+    cursor: pointer; transition: background .14s, opacity .14s; white-space: nowrap;
   }
-  button:hover { background: #1e40af; }
-  button:disabled { background: #334155; cursor: wait; }
-  #testResult { margin-top: 1rem; font-size: 0.9rem; }
+  button:hover:not(:disabled) { background: #1D4ED8; }
+  button:focus-visible { outline: 2px solid var(--brand-lt); outline-offset: 2px; }
+  button:disabled { opacity: .55; cursor: progress; }
+
+  .result {
+    margin-top: .9rem; font-size: .85rem; line-height: 1.5; padding: .65rem .8rem;
+    border-radius: 9px; border: 1px solid var(--line); background: var(--panel-2);
+    display: flex; gap: .55rem; align-items: flex-start;
+  }
+  .result[hidden] { display: none; }
+  .result.ok  { border-color: rgba(52,211,153,.34);  color: #A7F3D0; }
+  .result.bad { border-color: rgba(248,113,113,.34); color: #FCA5A5; }
+  .result svg { width: 15px; height: 15px; flex: none; margin-top: .15rem; }
+
+  .err-banner {
+    margin-top: 1.4rem; padding: .7rem .85rem; border-radius: 10px;
+    background: #2A1215; border: 1px solid rgba(248,113,113,.32);
+    color: #FCA5A5; font-size: .84rem;
+  }
+  .err-banner[hidden] { display: none; }
+
+  @media (max-width: 560px) {
+    .topbar-in { padding: .7rem 1rem; }
+    .wrap { padding: 0 1rem; }
+    .value { font-size: 1.5rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, .skeleton { animation: none !important; transition: none !important; }
+  }
 </style>
 </head>
 <body>
-  <div class="header">
-    <h1>Consulta RUC Perú — Panel de Admin</h1>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="6" width="18" height="12" rx="2"></rect>
+          <circle cx="12" cy="12" r="2.5"></circle>
+          <path d="M7 12h.01M17 12h.01"></path>
+        </svg>
+      </span>
+      <span class="brand-text">
+        <strong>Consulta RUC Perú</strong>
+        <span class="brand-sub">Panel interno</span>
+      </span>
+    </div>
+    <span class="spacer"></span>
+    <span class="refresh-note"><i class="pulse" id="pulse"></i><span id="refreshLabel">conectando…</span></span>
     <a class="logout" href="/admin/logout">Cerrar sesión</a>
   </div>
+</header>
+
+<div class="wrap">
+
+  <div class="err-banner" id="errBanner" role="alert" hidden></div>
 
   <div class="grid">
+
     <div class="card">
-      <h2>Estado del API en vivo (SUNAT)</h2>
-      <div id="liveStatusBadge" class="badge unknown">Cargando...</div>
-      <div class="detail" id="liveStatusDetail">-</div>
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 10 10"></path><path d="M12 6v6l4 2"></path></svg>
+        API en vivo (SUNAT)
+      </h2>
+      <div class="status s-idle" id="liveStatus"><span class="dot"></span><span id="liveStatusText">Cargando…</span></div>
+      <div class="detail" id="liveStatusDetail">—</div>
     </div>
+
     <div class="card">
-      <h2>Registros en la base de datos</h2>
-      <div class="value" id="dbCount">-</div>
-      <div class="detail">RUCs indexados del padrón SUNAT</div>
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"></path><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"></path></svg>
+        Registros en la base
+      </h2>
+      <div class="value" id="dbCount"><span class="skeleton"></span></div>
+      <div class="detail">RUC indexados del padrón SUNAT</div>
     </div>
+
     <div class="card">
-      <h2>Última sincronización masiva</h2>
-      <div class="value" id="lastSync" style="font-size:1rem;">-</div>
-      <div class="detail">Fecha de modificación de la base de datos</div>
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
+        Última sincronización
+      </h2>
+      <div class="value sm" id="lastSync"><span class="skeleton"></span></div>
+      <div class="detail" id="lastSyncRel">Fecha de modificación de la base</div>
     </div>
+
     <div class="card">
-      <h2>Cuota de verificación en vivo</h2>
-      <div class="value" id="quotaValue">-</div>
-      <div class="detail" id="quotaDetail">Límite propio para no arriesgar el bloqueo de nuestra IP en SUNAT</div>
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"></path></svg>
+        Cuota de consultas en vivo
+      </h2>
+      <div class="value" id="quotaValue"><span class="skeleton"></span></div>
+      <div class="meter" id="quotaMeter"><i style="width:0%"></i></div>
+      <div class="detail" id="quotaDetail">Límite propio, para no arriesgar un bloqueo de nuestra IP en SUNAT.</div>
     </div>
+
+    <div class="card enrich-card">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18"></path><circle cx="12" cy="12" r="9"></circle></svg>
+        Enriquecimiento de fichas
+      </h2>
+      <div class="bars" id="enrichBars">
+        <div class="bar-row"><span class="k">Enriquecidas</span><span class="track"><i style="width:0%;background:var(--ok)"></i></span><span class="n" id="enrEnriched">—</span></div>
+        <div class="bar-row"><span class="k">Pendientes</span><span class="track"><i style="width:0%;background:var(--amber)"></i></span><span class="n" id="enrPending">—</span></div>
+        <div class="bar-row"><span class="k">Descartadas</span><span class="track"><i style="width:0%;background:var(--bad)"></i></span><span class="n" id="enrGaveUp">—</span></div>
+      </div>
+      <div class="detail">El worker completa una ficha cada 3 min, dejando cuota libre para los visitantes.</div>
+    </div>
+
   </div>
 
-  <div class="actions">
-    <button id="testBtn">Probar API en vivo ahora</button>
-    <div id="testResult"></div>
+  <div class="panel">
+    <div class="panel-head">
+      <div style="flex:1; min-width:220px;">
+        <h2>Probar el scraper en vivo</h2>
+        <p>Hace una consulta real a SUNAT con un RUC de prueba. Consume una de las consultas de la cuota de arriba, así que úsala sólo para comprobar que el navegador headless sigue funcionando.</p>
+      </div>
+      <button id="testBtn">Probar ahora</button>
+    </div>
+    <div class="result" id="testResult" hidden></div>
   </div>
 
-  <script>
-    async function loadHealth() {
-      const res = await fetch('/api/admin/health');
+</div>
+
+<script>
+(function () {
+  var REFRESH_MS = 30000;
+  var lastOk = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  var OUTCOME = {
+    ok:                { text: 'Funcionando',                 cls: 's-ok'   },
+    not_found:         { text: 'Última consulta: sin datos',  cls: 's-warn' },
+    blocked:           { text: 'Bloqueado por SUNAT',         cls: 's-bad'  },
+    rate_limited_self: { text: 'Límite propio alcanzado',     cls: 's-warn' },
+    error:             { text: 'Error — revisar',             cls: 's-bad'  },
+    unknown:           { text: 'Sin consultas todavía',       cls: 's-idle' }
+  };
+
+  // "hace 4 min" se lee más rápido que una fecha completa cuando lo que
+  // importa es si el dato está fresco; la fecha exacta queda en el title.
+  function relTime(d) {
+    var s = Math.round((Date.now() - d.getTime()) / 1000);
+    if (s < 60)    return 'hace ' + s + ' s';
+    if (s < 3600)  return 'hace ' + Math.round(s / 60) + ' min';
+    if (s < 86400) return 'hace ' + Math.round(s / 3600) + ' h';
+    return 'hace ' + Math.round(s / 86400) + ' días';
+  }
+
+  function setPulse(state, label) {
+    $('pulse').className = 'pulse' + (state ? ' ' + state : '');
+    $('refreshLabel').textContent = label;
+  }
+
+  function bar(id, n, total, cls) {
+    $(id).textContent = n.toLocaleString('es-PE');
+    var track = $(id).parentNode.querySelector('.track i');
+    track.style.width = (total > 0 ? Math.max(2, (n / total) * 100) : 0) + '%';
+  }
+
+  async function loadHealth(quiet) {
+    try {
+      var res = await fetch('/api/admin/health', { headers: { 'Accept': 'application/json' } });
       if (res.status === 401) { window.location.href = '/admin/login'; return; }
-      const data = await res.json();
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var d = await res.json();
 
-      const badge = document.getElementById('liveStatusBadge');
-      const detail = document.getElementById('liveStatusDetail');
-      const outcome = data.liveApi.lastOutcome || 'unknown';
-      badge.className = 'badge ' + outcome;
-      badge.textContent = {
-        ok: 'Funcionando',
-        blocked: 'Bloqueado por SUNAT',
-        rate_limited_self: 'Límite propio alcanzado',
-        error: 'Error (revisar)',
-        not_found: 'Última consulta: no encontrado',
-        unknown: 'Sin datos aún'
-      }[outcome] || outcome;
+      $('errBanner').hidden = true;
 
-      detail.textContent = data.liveApi.lastCheckedAt
-        ? `Último chequeo: ${new Date(data.liveApi.lastCheckedAt).toLocaleString('es-PE')} — ${data.liveApi.lastMessage || ''}`
-        : 'Todavía no se ha hecho ninguna consulta en vivo.';
-
-      document.getElementById('dbCount').textContent = data.dbCount.toLocaleString('es-PE');
-      document.getElementById('lastSync').textContent = data.lastSyncAt
-        ? new Date(data.lastSyncAt).toLocaleString('es-PE')
-        : 'Desconocido';
-
-      const q = data.quota;
-      document.getElementById('quotaValue').textContent = `${q.remaining} / ${q.max}`;
-      document.getElementById('quotaDetail').textContent = q.remaining > 0
-        ? `Disponibles en esta ventana de ${q.windowMinutes} min`
-        : `Agotada - se libera en ${q.retryAfterSeconds}s`;
-    }
-
-    document.getElementById('testBtn').addEventListener('click', async () => {
-      const btn = document.getElementById('testBtn');
-      const resultBox = document.getElementById('testResult');
-      btn.disabled = true;
-      btn.textContent = 'Probando (puede tardar ~10s)...';
-      resultBox.textContent = '';
-      try {
-        // El Content-Type no es decorativo: Astro trae su propia protección
-        // CSRF, y para un POST SIN cabecera de tipo compara el Origin del
-        // navegador contra su propia url.origin. Detrás del proxy de LiteSpeed
-        // esa url.origin es 127.0.0.1:31500, nunca el dominio real, así que la
-        // comparación fallaba y devolvía "Cross-site POST form submissions are
-        // forbidden" en texto plano - que luego reventaba al hacer res.json().
-        // Con un tipo no-formulario (JSON) el chequeo deja pasar la petición;
-        // la ruta ya está protegida por requireAuth y por apiGuard.
-        const res = await fetch('/api/admin/test-live', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: '{}'
-        });
-        const data = await res.json();
-        resultBox.textContent = (data.ok ? '✓ ' : '✗ ') + data.message;
-        resultBox.style.color = data.ok ? '#6ee7b7' : '#fca5a5';
-      } catch (err) {
-        resultBox.textContent = 'Error al ejecutar la prueba: ' + err.message;
-        resultBox.style.color = '#fca5a5';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Probar API en vivo ahora';
-        loadHealth();
+      // --- live API status ---
+      var o = OUTCOME[d.liveApi.lastOutcome] || OUTCOME.unknown;
+      $('liveStatus').className = 'status ' + o.cls;
+      $('liveStatusText').textContent = o.text;
+      if (d.liveApi.lastCheckedAt) {
+        var when = new Date(d.liveApi.lastCheckedAt);
+        $('liveStatusDetail').textContent = relTime(when) + (d.liveApi.lastMessage ? ' · ' + d.liveApi.lastMessage : '');
+        $('liveStatusDetail').title = when.toLocaleString('es-PE');
+      } else {
+        $('liveStatusDetail').textContent = 'Todavía no se ha hecho ninguna consulta en vivo.';
       }
-    });
 
-    loadHealth();
-  </script>
+      // --- db count ---
+      $('dbCount').textContent = d.dbCount.toLocaleString('es-PE');
+
+      // --- last sync ---
+      if (d.lastSyncAt) {
+        var sync = new Date(d.lastSyncAt);
+        $('lastSync').textContent = sync.toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' });
+        $('lastSyncRel').textContent = relTime(sync) + ' · fecha de modificación de la base';
+      } else {
+        $('lastSync').textContent = 'Desconocida';
+      }
+
+      // --- quota ---
+      var q = d.quota;
+      $('quotaValue').textContent = q.remaining + ' / ' + q.max;
+      var pct = q.max > 0 ? (q.remaining / q.max) * 100 : 0;
+      $('quotaMeter').className = 'meter' + (q.remaining === 0 ? ' low' : '');
+      $('quotaMeter').firstElementChild.style.width = pct + '%';
+      $('quotaDetail').textContent = q.remaining > 0
+        ? 'Disponibles en esta ventana de ' + q.windowMinutes + ' min.'
+        : 'Agotada — se libera en ' + q.retryAfterSeconds + ' s.';
+
+      // --- enrichment (la API ya lo devolvía; antes no se mostraba) ---
+      if (d.enrichment) {
+        var e = d.enrichment;
+        var tot = Math.max(1, e.enriched + e.pending + e.gaveUp);
+        bar('enrEnriched', e.enriched, tot);
+        bar('enrPending',  e.pending,  tot);
+        bar('enrGaveUp',   e.gaveUp,   tot);
+      }
+
+      lastOk = new Date();
+      setPulse('', 'actualizado ' + relTime(lastOk));
+    } catch (err) {
+      setPulse('dead', 'sin conexión');
+      $('errBanner').hidden = false;
+      $('errBanner').textContent = 'No se pudo leer el estado del servidor (' + err.message + '). Se reintenta cada 30 s.';
+    }
+  }
+
+  // El "hace X" del topbar envejece solo; refrescarlo cada 10 s evita que
+  // diga "hace 0 s" indefinidamente y delata si el refresco se paró.
+  setInterval(function () {
+    if (!lastOk) return;
+    var age = (Date.now() - lastOk.getTime()) / 1000;
+    setPulse(age > 90 ? 'stale' : '', 'actualizado ' + relTime(lastOk));
+  }, 10000);
+
+  $('testBtn').addEventListener('click', async function () {
+    var btn = $('testBtn'), box = $('testResult');
+    btn.disabled = true;
+    btn.textContent = 'Probando (~10 s)…';
+    box.hidden = true;
+
+    try {
+      // El Content-Type no es decorativo: Astro trae su propia protección
+      // CSRF, y para un POST SIN cabecera de tipo compara el Origin del
+      // navegador contra su propia url.origin. Detrás del proxy de LiteSpeed
+      // esa url.origin es 127.0.0.1:31500, nunca el dominio real, así que la
+      // comparación fallaba y devolvía "Cross-site POST form submissions are
+      // forbidden" en texto plano - que luego reventaba al hacer res.json().
+      // Con un tipo no-formulario (JSON) el chequeo deja pasar la petición;
+      // la ruta ya está protegida por requireAuth y por apiGuard.
+      var res = await fetch('/api/admin/test-live', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}'
+      });
+      var data = await res.json();
+      box.hidden = false;
+      box.className = 'result ' + (data.ok ? 'ok' : 'bad');
+      box.innerHTML = (data.ok
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>')
+        + '<span></span>';
+      box.querySelector('span').textContent = data.message || (data.ok ? 'Correcto.' : 'Falló.');
+    } catch (err) {
+      box.hidden = false;
+      box.className = 'result bad';
+      box.textContent = 'Error al ejecutar la prueba: ' + err.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Probar ahora';
+      loadHealth();
+    }
+  });
+
+  loadHealth();
+  setInterval(loadHealth, REFRESH_MS);
+})();
+</script>
 </body>
 </html>
