@@ -360,12 +360,13 @@
   <div class="sec-head">
     <div>
       <h2>Tráfico del sitio</h2>
-      <p>Todo lo que llega al servidor, no sólo Google. Se excluyen los bots del conteo.</p>
+      <p>Todo lo que llega al servidor, no sólo Google. Los bots van aparte.</p>
     </div>
     <div class="range" role="group" aria-label="Rango de fechas">
-      <button type="button" data-days="7"  aria-pressed="false">7 días</button>
-      <button type="button" data-days="30" aria-pressed="true">30 días</button>
-      <button type="button" data-days="90" aria-pressed="false">90 días</button>
+      <button type="button" data-hours="24"   aria-pressed="false">24 h</button>
+      <button type="button" data-hours="168"  aria-pressed="false">7 días</button>
+      <button type="button" data-hours="720"  aria-pressed="true">30 días</button>
+      <button type="button" data-hours="2160" aria-pressed="false">90 días</button>
     </div>
   </div>
 
@@ -374,7 +375,7 @@
     <div class="card tw-wide">
       <h2>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"></path><path d="m7 14 4-4 3 3 5-6"></path></svg>
-        Visitas por día
+        <span id="twChartTitle">Visitas por día</span>
       </h2>
       <div class="value" id="twTotal"><span class="skeleton"></span></div>
       <div class="detail" id="twTotalDetail">—</div>
@@ -622,55 +623,76 @@
     });
   }
 
-  function renderChart(byDay, days) {
+  function bucketLabel(t, bucket) {
+    var d = new Date(t);
+    return bucket === 'hour'
+      ? d.toLocaleString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+      : d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
+  }
+
+  function renderChart(data) {
     var el = $('twChart');
     el.innerHTML = '';
-    if (!byDay) return;
+    if (!data || !data.series) return;
 
-    // La consulta sólo devuelve los días que tuvieron visitas. Si se pintan
-    // sólo esos, un único día ocupa el ancho entero y parece que hubo tráfico
-    // constante; rellenar el rango con ceros muestra los huecos tal cual son.
+    $('twChartTitle').textContent = data.bucket === 'hour' ? 'Visitas por hora' : 'Visitas por día';
+
+    // La consulta sólo devuelve los cubos que tuvieron visitas. Pintando sólo
+    // esos, un único día ocupa el ancho entero y parece tráfico constante;
+    // rellenar el rango con ceros enseña los huecos tal cual son.
     var have = {};
-    byDay.forEach(function (d) { have[d.day] = d; });
+    data.series.forEach(function (p) { have[p.t] = p; });
+    var size = data.bucketMs;
+    var last = Math.floor(Date.now() / size) * size;
+    var slots = Math.round((data.hours * 3600000) / size);
     var series = [];
-    for (var i = days - 1; i >= 0; i--) {
-      var key = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
-      series.push(have[key] || { day: key, humans: 0, bots: 0 });
+    for (var i = slots - 1; i >= 0; i--) {
+      var t = last - i * size;
+      series.push(have[t] || { t: t, humans: 0, bots: 0 });
     }
 
-    var max = series.reduce(function (m, d) { return Math.max(m, d.humans + d.bots); }, 0) || 1;
-    var peak = series.reduce(function (a, d) { return d.humans > a.humans ? d : a; }, series[0]);
-    series.forEach(function (d) {
+    var max = series.reduce(function (m, p) { return Math.max(m, p.humans + p.bots); }, 0) || 1;
+    var peak = series.reduce(function (a, p) { return p.humans > a.humans ? p : a; }, series[0]);
+    series.forEach(function (p) {
       var col = document.createElement('div');
       col.className = 'col';
-      col.title = d.day + ' — ' + d.humans + ' personas, ' + d.bots + ' bots';
+      col.title = bucketLabel(p.t, data.bucket) + ' — ' + p.humans + ' personas, ' + p.bots + ' bots';
       var h = document.createElement('div');
-      h.className = 'h'; h.style.height = ((d.humans / max) * 90) + '%';
+      h.className = 'h'; h.style.height = ((p.humans / max) * 90) + '%';
       var b = document.createElement('div');
-      b.className = 'b'; b.style.height = ((d.bots / max) * 90) + '%';
+      b.className = 'b'; b.style.height = ((p.bots / max) * 90) + '%';
       col.appendChild(h); col.appendChild(b);
       el.appendChild(col);
     });
-    $('twPeak').textContent = 'máximo ' + peak.humans + ' el ' + peak.day;
+    $('twPeak').textContent = peak.humans
+      ? 'máximo ' + peak.humans + ' · ' + bucketLabel(peak.t, data.bucket)
+      : '';
   }
 
-  var currentDays = 30;
+  var currentHours = 720;
 
-  async function loadTraffic(days) {
-    currentDays = days;
+  function windowLabel(h) {
+    if (h < 48) return 'las últimas ' + h + ' h';
+    return 'los últimos ' + Math.round(h / 24) + ' días';
+  }
+
+  async function loadTraffic(hours) {
+    currentHours = hours;
     try {
-      var res = await fetch('/api/admin/traffic?days=' + days, { headers: { 'Accept': 'application/json' } });
+      var res = await fetch('/api/admin/traffic?hours=' + hours, { headers: { 'Accept': 'application/json' } });
       if (res.status === 401) { window.location.href = '/admin/login'; return; }
       if (!res.ok) throw new Error('HTTP ' + res.status);
       var d = await res.json();
 
       $('twTotal').textContent = d.totals.humans.toLocaleString('es-PE');
-      var perDay = d.totals.humans / Math.max(1, d.days);
+      var rate = d.bucket === 'hour'
+        ? (d.totals.humans / Math.max(1, d.hours)).toFixed(1) + '/h'
+        : (d.totals.humans / Math.max(1, d.hours / 24)).toFixed(1) + '/día';
       $('twTotalDetail').textContent =
-        'visitas de personas en ' + d.days + ' días · ' + perDay.toFixed(1) + '/día · ' +
+        'visitas de personas en ' + windowLabel(d.hours) + ' · ' + rate + ' · ' +
         d.totals.bots.toLocaleString('es-PE') + ' de bots aparte';
 
-      renderChart(d.byDay, d.days);
+      renderChart(d);
 
       renderRank($('twSources'), d.bySource.map(function (r) { return { k: r.source, n: r.n }; }), {
         label: function (r) { return SRC_LABEL[r.k] || r.k; },
@@ -701,7 +723,7 @@
       Array.prototype.forEach.call(document.querySelectorAll('.range button'), function (o) {
         o.setAttribute('aria-pressed', String(o === b));
       });
-      loadTraffic(Number(b.dataset.days));
+      loadTraffic(Number(b.dataset.hours));
     });
   });
 
@@ -749,8 +771,10 @@
 
   // El tráfico agrega sobre toda la tabla, así que se refresca mucho menos a
   // menudo que health: cada 5 min basta para un panel que se mira de reojo.
-  loadTraffic(30);
-  setInterval(function () { loadTraffic(currentDays); }, 5 * 60 * 1000);
+  loadTraffic(720);
+  // En la vista de 24 h interesa ver el movimiento del día, así que se refresca
+  // más seguido; los rangos largos apenas cambian de un minuto a otro.
+  setInterval(function () { loadTraffic(currentHours); }, 60 * 1000);
 })();
 </script>
 </body>

@@ -495,10 +495,11 @@ db.exec(`
     bot INTEGER NOT NULL DEFAULT 0
   )
 `);
-// Casi todas las consultas del panel filtran por día y separan bots, así que
-// ese es el índice que importa; el resto se agrupa sobre el subconjunto ya
-// reducido por fecha.
-db.exec('CREATE INDEX IF NOT EXISTS idx_pageview_day ON pageview(day, bot)');
+// El panel filtra siempre por instante (ts) y separa bots, así que ese es el
+// índice que sirve igual al rango de 24 h que al de 90 días. El de day se
+// mantiene porque es el que usa la purga, que sí borra por fecha.
+db.exec('CREATE INDEX IF NOT EXISTS idx_pageview_ts ON pageview(ts, bot)');
+db.exec('CREATE INDEX IF NOT EXISTS idx_pageview_day ON pageview(day)');
 
 const stmtInsertView = db.prepare(
   'INSERT INTO pageview (ts, day, path, source, referrer, country, bot) VALUES (?, ?, ?, ?, ?, ?, ?)'
@@ -532,49 +533,71 @@ export function pruneOldPageviews(keepDays = 90) {
   }
 }
 
-const stmtViewsByDay = db.prepare(`
-  SELECT day, SUM(CASE WHEN bot = 0 THEN 1 ELSE 0 END) AS humans,
-              SUM(CASE WHEN bot = 1 THEN 1 ELSE 0 END) AS bots
-  FROM pageview WHERE day >= ? GROUP BY day ORDER BY day
+// Todo se filtra por instante y no por fecha: así el mismo juego de consultas
+// sirve para «últimas 24 h» y para «90 días», sin un camino aparte para cada
+// uno. El tamaño del cubo se interpola en el SQL - es una constante nuestra,
+// nunca entrada del usuario - para que SQLite pueda reutilizar el plan.
+const BUCKET = { hour: 3600000, day: 86400000 };
+
+const bucketQuery = (size) => db.prepare(`
+  SELECT (ts / ${size}) AS bucket,
+         SUM(CASE WHEN bot = 0 THEN 1 ELSE 0 END) AS humans,
+         SUM(CASE WHEN bot = 1 THEN 1 ELSE 0 END) AS bots
+  FROM pageview WHERE ts >= ? GROUP BY bucket ORDER BY bucket
 `);
+const stmtViewsByHour = bucketQuery(BUCKET.hour);
+const stmtViewsByDay = bucketQuery(BUCKET.day);
+
 const stmtViewsBySource = db.prepare(`
   SELECT source, COUNT(*) AS n FROM pageview
-  WHERE day >= ? AND bot = 0 GROUP BY source ORDER BY n DESC
+  WHERE ts >= ? AND bot = 0 GROUP BY source ORDER BY n DESC
 `);
 const stmtViewsByPath = db.prepare(`
   SELECT path, COUNT(*) AS n FROM pageview
-  WHERE day >= ? AND bot = 0 GROUP BY path ORDER BY n DESC LIMIT ?
+  WHERE ts >= ? AND bot = 0 GROUP BY path ORDER BY n DESC LIMIT ?
 `);
 const stmtViewsByCountry = db.prepare(`
   SELECT country, COUNT(*) AS n FROM pageview
-  WHERE day >= ? AND bot = 0 AND country IS NOT NULL GROUP BY country ORDER BY n DESC LIMIT ?
+  WHERE ts >= ? AND bot = 0 AND country IS NOT NULL GROUP BY country ORDER BY n DESC LIMIT ?
 `);
 const stmtViewsByReferrer = db.prepare(`
   SELECT referrer, COUNT(*) AS n FROM pageview
-  WHERE day >= ? AND bot = 0 AND referrer IS NOT NULL GROUP BY referrer ORDER BY n DESC LIMIT ?
+  WHERE ts >= ? AND bot = 0 AND referrer IS NOT NULL GROUP BY referrer ORDER BY n DESC LIMIT ?
 `);
 const stmtBotsByAgent = db.prepare(`
   SELECT source, COUNT(*) AS n FROM pageview
-  WHERE day >= ? AND bot = 1 GROUP BY source ORDER BY n DESC LIMIT ?
+  WHERE ts >= ? AND bot = 1 GROUP BY source ORDER BY n DESC LIMIT ?
 `);
 const stmtViewTotals = db.prepare(`
   SELECT SUM(CASE WHEN bot = 0 THEN 1 ELSE 0 END) AS humans,
          SUM(CASE WHEN bot = 1 THEN 1 ELSE 0 END) AS bots
-  FROM pageview WHERE day >= ?
+  FROM pageview WHERE ts >= ?
 `);
 
-export function getTrafficStats(days = 30, limit = 12) {
-  const since = new Date(Date.now() - (days - 1) * 86400000).toISOString().slice(0, 10);
-  const totals = stmtViewTotals.get(since) || {};
+/**
+ * @param hours ventana a mirar. Hasta 48 h la serie se agrupa por hora: en un
+ *   solo día, tres o cuatro barras diarias no dicen nada. Por encima, por día.
+ * Los cubos salen como instante de inicio en ms para que el panel los etiquete
+ * en la zona del navegador, en vez de fijar una zona horaria en el servidor.
+ */
+export function getTrafficStats(hours = 720, limit = 12) {
+  const byHour = hours <= 48;
+  const size = byHour ? BUCKET.hour : BUCKET.day;
+  // Alineado al inicio del cubo, para que el primero no salga recortado.
+  const sinceTs = Math.floor((Date.now() - hours * BUCKET.hour) / size) * size;
+  const totals = stmtViewTotals.get(sinceTs) || {};
+  const rows = (byHour ? stmtViewsByHour : stmtViewsByDay).all(sinceTs);
   return {
-    days,
-    since,
+    hours,
+    bucket: byHour ? 'hour' : 'day',
+    bucketMs: size,
+    sinceTs,
     totals: { humans: totals.humans || 0, bots: totals.bots || 0 },
-    byDay: stmtViewsByDay.all(since),
-    bySource: stmtViewsBySource.all(since),
-    byPath: stmtViewsByPath.all(since, limit),
-    byCountry: stmtViewsByCountry.all(since, limit),
-    byReferrer: stmtViewsByReferrer.all(since, limit),
-    byBot: stmtBotsByAgent.all(since, limit)
+    series: rows.map((r) => ({ t: Number(r.bucket) * size, humans: r.humans, bots: r.bots })),
+    bySource: stmtViewsBySource.all(sinceTs),
+    byPath: stmtViewsByPath.all(sinceTs, limit),
+    byCountry: stmtViewsByCountry.all(sinceTs, limit),
+    byReferrer: stmtViewsByReferrer.all(sinceTs, limit),
+    byBot: stmtBotsByAgent.all(sinceTs, limit)
   };
 }
