@@ -3157,3 +3157,15 @@ body:not(.light-theme) .rate-hist > summary.rate-hist-title { background: rgba(2
   .rate-hist-hint { font-size: 0.72rem; }
   .rate-hist .rate-hist-wrap { padding: 0.6rem; border: 0; }
 }
+
+/* Nota bajo la cabecera de una sección del directorio. La usa el bloque de
+   "más buscadas", que necesita explicar de dónde sale la lista - sin eso
+   parece otro grupo curado más y no lo es. */
+.rubro-note {
+  margin: -0.35rem 0 1rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  max-width: 68ch;
+  line-height: 1.55;
+}
+@media (max-width: 640px) { .rubro-note { font-size: 0.84rem; } }

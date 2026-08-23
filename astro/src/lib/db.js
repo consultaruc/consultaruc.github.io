@@ -696,6 +696,26 @@ export function getSearchedRucsForSitemap(limit = 500) {
   return stmtSitemapRucs.all(limit);
 }
 
+// Lo mismo, pero con la ficha entera, para poder pintar tarjetas en el
+// directorio sin una segunda consulta por empresa. Mismo filtro de calidad que
+// el sitemap: si no tiene domicilio, no se enseña - una tarjeta con la mitad
+// de los campos vacíos queda peor que no ponerla.
+const stmtMostSearchedFull = db.prepare(`
+  SELECT r.ruc, r.razon_social AS razonSocial, r.estado, r.condicion,
+         r.direccion AS domicilioFiscal, r.actividad_economica AS actividadEconomica,
+         COUNT(*) AS searches
+  FROM ruc_search s JOIN ruc r ON r.ruc = s.ruc
+  WHERE s.ts >= ? AND s.found = 1
+    AND (r.direccion IS NOT NULL AND r.direccion != '')
+  GROUP BY s.ruc
+  ORDER BY searches DESC, MAX(s.ts) DESC
+  LIMIT ?
+`);
+
+export function getMostSearchedCompanies(hours = 720, limit = 12) {
+  return stmtMostSearchedFull.all(Date.now() - hours * 3600000, limit);
+}
+
 // Se purga con la misma política que pageview.
 const stmtPruneSearch = db.prepare('DELETE FROM ruc_search WHERE day < ?');
 export function pruneRucSearches(keepDays = 90) {
