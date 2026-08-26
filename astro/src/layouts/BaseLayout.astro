@@ -26,6 +26,12 @@ const recordCount = countRecords().toLocaleString('es-PE');
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <title>{title}</title>
   <meta name="description" content={description}>
+  <!-- Verificación de dominio de Trustpilot. Comprueban la portada, así que
+       basta con que esté en las páginas que pasan por este layout: las fichas
+       de RUC (que se montan en lib/renderRucPage.js) no la necesitan.
+       Es de un solo uso: una vez validado el dominio en Trustpilot, esta línea
+       se puede borrar sin que se pierda la verificación. -->
+  <meta name="trustpilot-one-time-domain-verification-id" content="ae94d389-7c46-4c45-a14b-222931087957"/>
   <link rel="stylesheet" href="/style.css?v=688852fa">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
