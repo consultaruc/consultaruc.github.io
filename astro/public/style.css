@@ -925,7 +925,10 @@ body.light-theme .source-badge-live { background: rgba(37, 99, 235, 0.1); color:
 .disclaimer { margin-top: 0.5rem; opacity: 0.7; }
 
 /* ===== Directorio de Empresas por Rubro ===== */
-.rubro-page { max-width: 1200px; margin: 0 auto; padding: 0.5rem 1.5rem 0; }
+/* width:100% because <body> is a flex container: without it <main> took its
+   fit-content width and pushed the page 23px past a 390px phone screen. Same
+   fix as main.geo-result on the /ruc/ pages. */
+.rubro-page { max-width: 1200px; margin: 0 auto; padding: 0.5rem 1.5rem 0; width: 100%; }
 .rubro-hero { position: relative; padding: 1rem 0 1.75rem; overflow: hidden; }
 .rubro-hero-map {
   position: absolute; top: -10px; right: 0; width: 200px; height: 220px; z-index: 0; opacity: .5; pointer-events: none;
@@ -1464,6 +1467,7 @@ body:not(.light-theme) .btn-consultar:hover { background: var(--accent-hover); }
    result is a <section>, so it is intentionally untouched. */
 main.geo-result { width: 100%; }
 main.geo-result > .ruc-page-h1,
+main.geo-result > .ruc-answer,
 main.geo-result > .breadcrumb,
 main.geo-result > .rp,
 main.geo-result > .ruc-summary { max-width: 1240px; margin-left: auto; margin-right: auto; }
@@ -2294,12 +2298,30 @@ body:not(.light-theme) .rp-tag { background: rgba(37,99,235,.14); color: #93B4FF
 .rp-ubi-map .lima-label { font-family: var(--mono); font-size: 60px; fill: #EA5B0C; font-weight: 700; }
 
 @media (max-width: 760px) {
-  .rp-hero { flex-direction: column; align-items: flex-start; }
-  .rp-hero-side { align-items: flex-start; }
+  /* Stacked hero: the two halves have to STRETCH to the card. With
+     align-items:flex-start each one sized to its own content, came out wider
+     than the card, and .rp-hero's overflow:hidden cut off the name, badges,
+     RUC digits and the second button on phones. */
+  .rp-hero { flex-direction: column; align-items: stretch; }
+  .rp-hero-side, .rp-hero-side-top { align-items: flex-start; }
+  .rp-hero-actions { flex-wrap: wrap; }
   .rp-cards { grid-template-columns: 1fr 1fr; }
   .rp-cards-ubi { grid-template-columns: 1fr; }
 }
-@media (max-width: 500px) { .rp-cards, .rp-ubi-row { grid-template-columns: 1fr; } .rp-hero-name { font-size: 1.1rem; } }
+@media (max-width: 500px) {
+  .rp-cards, .rp-ubi-row { grid-template-columns: 1fr; }
+  /* Two nested paddings (white card + navy hero) left ~220px for content. */
+  .geo-result { padding: 0 1rem; }
+  .geo-result .rp { padding: 1.15rem 1rem; border-radius: 14px; }
+  .rp-hero { padding: 1.1rem 1rem; gap: 1rem; }
+  .rp-hero-main { align-items: flex-start; gap: 0.75rem; }
+  .rp-avatar { width: 44px; height: 44px; font-size: 1.3rem; border-radius: 12px; }
+  .rp-hero-name { font-size: 1.1rem; overflow-wrap: anywhere; }
+  .rp-hero-side .rp-seg { font-size: 1.05rem; padding: 2px 8px; }
+  .rp-verified { flex-wrap: wrap; }
+  .rp-hero-actions { width: 100%; margin-top: 0.4rem; }
+  .rp-btn { flex: 1 1 auto; justify-content: center; }
+}
 
 /* ==========================================================================
    LIVE-VERIFICATION TOGGLE — pretty custom switch + availability pill,
@@ -2445,7 +2467,7 @@ html { scroll-behavior: smooth; }
 .ruc-summary-links a:hover { background: var(--geo-orange); color: #fff; }
 /* Respuesta directa bajo el <h1>: la frase que un buscador o un asistente
    puede citar tal cual ("El RUC de EsSalud es 20131257750…"). */
-.ruc-answer { max-width: var(--container); margin: -0.35rem auto 1.1rem; font-size: 1rem; line-height: 1.6; color: var(--text-main); }
+.ruc-answer { margin: -0.35rem auto 1.1rem; font-size: 1rem; line-height: 1.6; color: var(--text-main); }
 .ruc-summary .ruc-sec-title { margin: 1.85rem 0 0.9rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); font-size: 1.15rem; }
 .ruc-guide-link { margin: 0.75rem 0 0; font-size: 0.92rem; font-weight: 600; }
 .ruc-guide-link a { color: var(--geo-orange-text); }
