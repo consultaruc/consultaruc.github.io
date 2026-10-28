@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { countRecords } from './db.js';
+import { isIndexableRuc } from './indexableRucs.js';
+import { getProfile, groupSiblings, sectorSiblings, SECTORS } from './rucProfiles.js';
 import { DEPT_COORDS, deriveDept, titleCase } from './geo.js';
 import { renderNav } from './nav.js';
 import * as CRP from './components.js';
@@ -127,92 +129,154 @@ export function renderBadgeHtml(ruc, record, theme, origin) {
 </body></html>`;
 }
 
-/**
- * Builds the page's prose summary out of that record's OWN values rather than
- * one fixed paragraph with a couple of words swapped in. Templates repeated
- * verbatim across millions of URLs are what actually triggers "thin content"
- * judgements - the sentences a page gets here depend on which fields it has,
- * so pages genuinely differ from one another.
- */
-export function buildSummary(ruc, record, dept) {
-  const tipo = ruc.startsWith('10') ? 'persona natural' : 'persona jurídica';
-  const parts = [`El RUC ${ruc} corresponde a ${record.razonSocial}, registrado ante SUNAT como ${tipo}.`];
+// "12/08/1936", como lo publica SUNAT, a "1936-08-12"; '' si no es una fecha.
+function isoDate(dmy) {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(dmy || '').trim());
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
+}
 
-  if (record.estado) {
-    parts.push(
-      record.estado === 'ACTIVO'
-        ? 'Actualmente figura con estado ACTIVO, es decir que mantiene actividades formales vigentes.'
-        : `Actualmente figura con estado ${record.estado}, por lo que no mantiene actividades vigentes.`
-    );
-  }
-  if (record.condicion) {
-    parts.push(
-      record.condicion === 'HABIDO'
-        ? 'Su condición de domicilio es HABIDO: SUNAT pudo verificar la dirección fiscal declarada.'
-        : `Su condición de domicilio es ${record.condicion}, lo que indica que SUNAT no pudo confirmar la dirección declarada.`
-    );
-  }
-  if (record.domicilioFiscal) {
-    parts.push(`Su domicilio fiscal declarado está en ${record.domicilioFiscal}${dept ? ` (${titleCase(dept)})` : ''}.`);
-  }
-  if (record.fechaInscripcion) {
-    parts.push(`Fue inscrito en el registro el ${record.fechaInscripcion}.`);
-  }
-  if (Array.isArray(record.actividadEconomica) && record.actividadEconomica.length > 0) {
-    parts.push(`Su actividad económica principal declarada es: ${record.actividadEconomica[0].replace(/^Principal\s*-\s*/, '')}.`);
-  }
-  if (Array.isArray(record.comprobantesPago) && record.comprobantesPago.length > 0) {
-    parts.push(`Está autorizado a emitir: ${record.comprobantesPago.join(', ').toLowerCase()}.`);
-  }
-  return parts.join(' ');
+function yearsSince(dmy) {
+  const iso = isoDate(dmy);
+  if (!iso) return null;
+  const years = Math.floor((Date.now() - Date.parse(iso)) / (365.25 * 86400000));
+  return years >= 1 ? years : null;
+}
+
+// "Principal - 8430 - ACTIVIDADES DE PLANES…" → "actividades de planes… (CIIU 8430)"
+function activityText(raw) {
+  const s = String(raw || '').replace(/^Principal\s*-\s*/i, '').trim();
+  const m = /^(\d{4})\s*-\s*(.+)$/.exec(s);
+  return m ? `${m[2].toLowerCase()} (CIIU ${m[1]})` : s.toLowerCase();
+}
+
+function padronFlags(padrones) {
+  const txt = (Array.isArray(padrones) ? padrones.join(' | ') : String(padrones || '')).toUpperCase();
+  return {
+    retencion: txt.includes('AGENTES DE RETENCI'),
+    percepcion: txt.includes('AGENTES DE PERCEPCI'),
+    buenContribuyente: txt.includes('BUENOS CONTRIBUYENTES')
+  };
+}
+
+// SUNAT escribe "GUIA" sin tilde y sin decir de qué; en la ficha es la guía de remisión.
+const ELECTRONIC_LABELS = { guia: 'guía de remisión', 'guia de remision': 'guía de remisión' };
+
+// "FACTURA (desde 21/10/2017)" → "factura"; "a, b y c".
+function electronicKinds(list) {
+  const kinds = (Array.isArray(list) ? list : [])
+    .map((s) => String(s).replace(/\s*\(.*\)\s*$/, '').trim().toLowerCase())
+    .filter(Boolean)
+    .map((k) => ELECTRONIC_LABELS[k] || k);
+  if (kinds.length < 2) return kinds.join('');
+  return `${kinds.slice(0, -1).join(', ')} y ${kinds[kinds.length - 1]}`;
 }
 
 /**
- * Builds a per-RUC FAQ from the record's own fields. Each answer targets a
- * real long-tail query ("¿el RUC X está activo?", "¿a quién pertenece?") and
- * feeds both the visible accordion and the FAQPage schema, so every page ships
- * unique, question-shaped content rather than one repeated paragraph.
+ * Lo que los datos de la ficha significan en la práctica, una línea por hecho.
+ * La ficha de arriba ya muestra los campos tal cual; repetirlos en prosa (como
+ * hacía el resumen anterior, y otra vez en las preguntas) sólo alargaba la
+ * página. Aquí cada línea dice algo que el campo solo no dice: qué implica ser
+ * agente de retención para quien le vende, cuántos años lleva operando, qué
+ * hacer si el estado no es el esperado. Sólo salen las que el registro tiene.
  */
-export function buildRucFaq(ruc, record, dept) {
-  const tipo = ruc.startsWith('10') ? 'persona natural' : 'persona jurídica';
+export function buildInsights(record, names) {
+  const out = [];
+  const estado = (record.estado || '').toUpperCase();
+  const condicion = (record.condicion || '').toUpperCase();
+  const nom = escapeHtml(names.nom);
+
+  if (estado === 'ACTIVO' && condicion === 'HABIDO') {
+    out.push(`<strong>Activo y habido.</strong> ${escapeHtml(names.Nom)} opera con normalidad y la SUNAT pudo verificar su domicilio fiscal: es justo lo que conviene confirmar antes de facturarle, contratarle o pagarle.`);
+  } else if (estado && estado !== 'ACTIVO') {
+    out.push(`<strong>Estado ${escapeHtml(estado)}.</strong> Este RUC no figura como activo, así que conviene confirmarlo con ${nom} antes de operar. Si eres el titular, revisa <a href="/activar-ruc/">cómo reactivar o regularizar tu RUC</a>.`);
+  } else if (condicion && condicion !== 'HABIDO') {
+    out.push(`<strong>Condición ${escapeHtml(condicion)}.</strong> La SUNAT no pudo verificar el domicilio fiscal declarado, así que conviene precaución antes de operar. Si eres el titular, revisa <a href="/actualizar-datos-ruc/">cómo actualizar tu domicilio fiscal</a>.`);
+  }
+
+  const years = yearsSince(record.fechaInicioActividades);
+  if (years) {
+    out.push(`<strong>${years} años de actividad.</strong> Inició actividades el ${escapeHtml(record.fechaInicioActividades)}${record.fechaInscripcion ? ` y figura inscrito en el RUC desde el ${escapeHtml(record.fechaInscripcion)}` : ''}.`);
+  } else if (record.fechaInscripcion) {
+    out.push(`<strong>Inscrito en el RUC</strong> desde el ${escapeHtml(record.fechaInscripcion)}.`);
+  }
+
+  if (record.emisorElectronicoDesde) {
+    const kinds = electronicKinds(record.comprobantesElectronicos);
+    out.push(`<strong>Emisor electrónico</strong> desde el ${escapeHtml(record.emisorElectronicoDesde)}${kinds ? ` (${escapeHtml(kinds)})` : ''}: sus comprobantes electrónicos se pueden validar en la SUNAT con su número de RUC.`);
+  }
+
+  const f = padronFlags(record.padrones);
+  if (f.retencion) out.push('<strong>Agente de retención del IGV.</strong> Si le vendes, retendrá una parte del importe de tus facturas a cuenta del IGV y te entregará un comprobante de retención.');
+  if (f.percepcion) out.push('<strong>Agente de percepción.</strong> Al venderte ciertos bienes cobra un monto adicional a cuenta del IGV, que luego puedes aplicar contra tu propio impuesto.');
+  if (f.buenContribuyente) out.push('<strong>Buen contribuyente.</strong> Figura en el padrón de Buenos Contribuyentes de la SUNAT.');
+
+  const anexos = Array.isArray(record.sucursales) ? record.sucursales.length : 0;
+  if (anexos > 0) out.push(`<strong>${anexos} ${anexos === 1 ? 'establecimiento anexo' : 'establecimientos anexos'}</strong> registrados además de su domicilio fiscal.`);
+
+  const ce = (record.comercioExterior || '').toUpperCase();
+  if (ce && ce !== 'SIN ACTIVIDAD' && ce !== '-') {
+    out.push(`<strong>Comercio exterior:</strong> figura como ${escapeHtml(ce.toLowerCase())}. <a href="/comercio-exterior-ruc/">Qué significa este dato en la ficha RUC</a>.`);
+  }
+  return out;
+}
+
+/**
+ * Preguntas de la ficha, redactadas como las busca la gente ("¿cuál es el RUC
+ * de EsSalud?", "¿emite factura electrónica?"). Alimentan el acordeón visible y
+ * el FAQPage. Estado y condición van en una sola respuesta: por separado eran
+ * dos preguntas que decían lo mismo que la ficha.
+ */
+export function buildRucFaq(ruc, record, dept, names, isCurated) {
+  const { Nom, nom, deN } = names;
   const razon = record.razonSocial || 'el titular';
+  const estado = (record.estado || '').toUpperCase();
+  const condicion = (record.condicion || '').toUpperCase();
   const faq = [];
-  faq.push({
-    q: `¿A quién pertenece el RUC ${ruc}?`,
-    a: `El RUC ${ruc} pertenece a ${razon}, registrado ante la SUNAT como ${tipo}.`
-  });
-  if (record.estado) {
-    faq.push({
-      q: `¿El RUC ${ruc} está activo?`,
-      a: record.estado === 'ACTIVO'
-        ? `Sí. El RUC ${ruc} figura con estado ACTIVO en la SUNAT, es decir que ${razon} mantiene actividades formales vigentes.`
-        : `No. El RUC ${ruc} figura con estado ${record.estado} en la SUNAT, por lo que no mantiene actividades vigentes en este momento.`
-    });
+
+  faq.push(
+    isCurated
+      ? { q: `¿Cuál es el RUC ${deN}?`, a: `El RUC ${deN} es ${ruc}, registrado ante la SUNAT a nombre de ${razon}.` }
+      : { q: `¿A quién pertenece el RUC ${ruc}?`, a: `El RUC ${ruc} pertenece a ${razon}, registrado ante la SUNAT como ${ruc.startsWith('10') ? 'persona natural' : 'persona jurídica'}.` }
+  );
+
+  if (estado || condicion) {
+    let a;
+    if (estado === 'ACTIVO' && condicion === 'HABIDO') {
+      a = `Sí. Según la SUNAT, el RUC ${ruc} está ACTIVO y su domicilio fiscal figura como HABIDO.`;
+    } else {
+      a = `El RUC ${ruc} figura con estado ${estado || 'no disponible'} y condición de domicilio ${condicion || 'no disponible'}.`;
+      if (estado && estado !== 'ACTIVO') a += ' No mantiene actividades vigentes en este momento.';
+      if (condicion && condicion !== 'HABIDO') a += ' La SUNAT no pudo verificar su domicilio fiscal.';
+    }
+    faq.push({ q: `¿${Nom} tiene el RUC activo y habido?`, a });
   }
-  if (record.condicion) {
-    faq.push({
-      q: `¿El RUC ${ruc} es habido o no habido?`,
-      a: record.condicion === 'HABIDO'
-        ? `El RUC ${ruc} tiene condición de domicilio HABIDO: la SUNAT pudo verificar la dirección fiscal declarada por ${razon}.`
-        : `El RUC ${ruc} tiene condición ${record.condicion}: la SUNAT no pudo confirmar la dirección fiscal declarada. Conviene tener precaución antes de operar.`
-    });
-  }
+
   if (record.domicilioFiscal) {
     faq.push({
-      q: `¿Dónde está el domicilio fiscal de ${razon}?`,
-      a: `El domicilio fiscal declarado de ${razon} está en ${record.domicilioFiscal}${dept ? `, en el departamento de ${titleCase(dept)}` : ''}.`
+      q: `¿Dónde está el domicilio fiscal ${deN}?`,
+      a: `${isCurated ? `${Nom} (${razon})` : razon} declara su domicilio fiscal en ${record.domicilioFiscal}${dept ? `, departamento de ${titleCase(dept)}` : ''}.`
     });
   }
+
   if (Array.isArray(record.actividadEconomica) && record.actividadEconomica.length > 0) {
     faq.push({
-      q: `¿Cuál es la actividad económica del RUC ${ruc}?`,
-      a: `La actividad económica principal declarada del RUC ${ruc} es: ${record.actividadEconomica[0].replace(/^Principal\s*-\s*/, '')}.`
+      q: `¿A qué se dedica ${nom} según la SUNAT?`,
+      a: `Su actividad económica principal declarada es ${activityText(record.actividadEconomica[0])}.`
     });
   }
-  if (Array.isArray(record.comprobantesPago) && record.comprobantesPago.length > 0) {
+
+  if (record.emisorElectronicoDesde) {
+    const kinds = electronicKinds(record.comprobantesElectronicos);
     faq.push({
-      q: `¿Qué comprobantes puede emitir ${razon}?`,
-      a: `Según la SUNAT, ${razon} está autorizado a emitir: ${record.comprobantesPago.join(', ').toLowerCase()}.`
+      q: `¿${Nom} emite comprobantes electrónicos?`,
+      a: `Sí. Según la SUNAT, es emisor electrónico desde el ${record.emisorElectronicoDesde}${kinds ? ` y emite ${kinds} electrónicas` : ''}.`
+    });
+  }
+
+  if (padronFlags(record.padrones).retencion) {
+    faq.push({
+      q: `¿${Nom} es agente de retención del IGV?`,
+      a: 'Sí. Figura en el régimen de agentes de retención del IGV: al pagar a sus proveedores retiene una parte del importe a cuenta del IGV y entrega un comprobante de retención.'
     });
   }
   return faq;
@@ -225,69 +289,129 @@ export function renderRucPage(ruc, record) {
   const origin = siteOrigin();
   const canonical = `${origin}/ruc/${ruc}`;
 
-  // Indexability threshold: a real domicilio fiscal. With it the page carries
-  // enough of its own data (razón social, estado, condición, address, ubigeo,
-  // department) that the unique content outweighs the template. Without it
-  // there's little more than a name and a status, which genuinely is thin -
-  // those stay noindex,follow (crawlable, links followed, just not indexed)
-  // until the enrichment worker fills them in.
-  const isIndexable = !!record.domicilioFiscal || !!record.tipoContribuyente;
+  // Sólo el directorio curado y las fichas con demanda real se indexan; el
+  // resto queda noindex,follow (se sirve igual al visitante y sus enlaces se
+  // siguen). El criterio y su porqué viven en indexableRucs.js.
+  const isIndexable = isIndexableRuc(ruc, record);
 
-  // La razón social va PRIMERO, igual que en el <h1> de más abajo: quien busca
-  // "cencosud ruc" tiene que ver "CENCOSUD…" al principio del resultado, no a
-  // 27 caracteres de distancia. El título anterior empezaba por "[HABIDO] RUC
-  // 20109072177 - …", así que el nombre buscado caía más allá de donde Google
-  // corta, y esas consultas convertían al 0,07% pese a rankear en el top 10.
-  // La condición sigue estando en la descripción, en el cuerpo y en el JSON-LD;
-  // sólo sale del título, donde no la busca nadie.
-  const title = `${razon} - RUC ${ruc} | Estado SUNAT`;
-  // Muchas razones sociales acaban en "S.A."/"S.A.C.", que junto al punto de la
-  // frase daba "… S.A..".
-  const razonFrase = razon.replace(/\.+$/, '');
-  const description =
-    `Consulta el RUC ${ruc} de ${razonFrase}. Estado: ${estado || 'no disponible'}, ` +
-    `condición de domicilio: ${condicion || 'no disponible'}${record.domicilioFiscal ? `, domicilio fiscal en ${record.domicilioFiscal}` : ''}.`;
-
+  const profile = getProfile(ruc);
+  // Nombre con el que se busca la ficha: "EsSalud", no "SEGURO SOCIAL DE SALUD".
+  // Las consultas de Search Console son de marca ("essalud ruc", "ruc banco de
+  // la nacion"), y con la razón social en el título rankeaban en el top 5 sin
+  // que nadie hiciera clic. Fuera de las curadas no hay marca fiable: se queda
+  // la razón social.
+  const name = profile ? profile.brand : razon;
+  // Con artículo donde el español lo pide: "el RUC del BCP", "de la SUNAT".
+  const art = profile && profile.art;
+  const nom = art ? `${art} ${name}` : name;
+  const names = { nom, Nom: nom.charAt(0).toUpperCase() + nom.slice(1), deN: art === 'el' ? `del ${name}` : art === 'la' ? `de la ${name}` : `de ${name}` };
   const dept = deriveDept(record.departamento, record.domicilioFiscal, record.ubigeo);
   const coords = DEPT_COORDS[dept];
 
-  const schema = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: razon,
-    taxID: ruc,
-    identifier: ruc,
-    url: canonical
-  };
-  if (record.domicilioFiscal || dept) {
-    schema.address = {
-      '@type': 'PostalAddress',
-      streetAddress: record.domicilioFiscal || undefined,
-      addressRegion: dept ? titleCase(dept) : undefined,
-      addressCountry: 'PE'
-    };
+  // El nombre buscado va PRIMERO: quien busca "cencosud ruc" tiene que verlo al
+  // principio del resultado. El título anterior empezaba por "[HABIDO] RUC …" y
+  // esas consultas convertían al 0,07% pese a rankear en el top 10.
+  let title = `${razon} - RUC ${ruc} | Estado SUNAT`;
+  if (profile) {
+    title = `${name} RUC ${ruc} | ${profile.name !== name ? profile.name : 'Estado SUNAT'}`;
+    if (title.length > 65) title = `${name} RUC ${ruc} | Ficha SUNAT`;
   }
 
-  const breadcrumb = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${origin}/` },
-      { '@type': 'ListItem', position: 2, name: 'Consulta RUC', item: `${origin}/ficha-ruc/` },
-      { '@type': 'ListItem', position: 3, name: `RUC ${ruc}`, item: canonical }
-    ]
-  };
+  // Muchas razones sociales acaban en "S.A."/"S.A.C.", que junto al punto de la
+  // frase daba "… S.A..".
+  const razonFrase = razon.replace(/\.+$/, '');
+  const estadoTxt = `Estado ${estado || 'no disponible'} y condición ${condicion || 'no disponible'}`;
+  let description;
+  if (profile) {
+    const quien = profile.name !== name ? ` (${profile.name})` : '';
+    description = `RUC ${names.deN}${quien}: ${ruc}. ${estadoTxt}${dept ? `, domicilio fiscal en ${titleCase(dept)}` : ''}. Revisa su ficha SUNAT, actividad y comprobantes.`;
+    if (description.length > 165) description = `RUC ${names.deN}: ${ruc}. ${estadoTxt}. Revisa su ficha SUNAT, actividad y comprobantes.`;
+  } else {
+    description =
+      `Consulta el RUC ${ruc} de ${razonFrase}. Estado: ${estado || 'no disponible'}, ` +
+      `condición de domicilio: ${condicion || 'no disponible'}${record.domicilioFiscal ? `, domicilio fiscal en ${record.domicilioFiscal}` : ''}.`;
+  }
 
-  const faqList = buildRucFaq(ruc, record, dept);
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqList.map((f) => ({
-      '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a }
-    }))
-  };
+  // Un solo @graph con ids enlazados: la página trata SOBRE la organización, y
+  // la organización tiene su RUC como identificador. Antes Organization.url
+  // apuntaba a esta misma ficha, que no es la web de la empresa.
+  const pageId = `${canonical}#webpage`;
+  const orgId = `${canonical}#org`;
+  const crumbs = profile
+    ? [['Inicio', `${origin}/`], ['Directorio de empresas', `${origin}/empresas-populares/`], [name, canonical]]
+    : [['Inicio', `${origin}/`], ['Consulta RUC', `${origin}/ficha-ruc/`], [`RUC ${ruc}`, canonical]];
+
+  const faqList = buildRucFaq(ruc, record, dept, names, !!profile);
+  const graph = [
+    {
+      '@type': 'WebPage',
+      '@id': pageId,
+      url: canonical,
+      name: title,
+      description,
+      inLanguage: 'es-PE',
+      isPartOf: { '@type': 'WebSite', '@id': `${origin}/#website`, name: 'Consulta RUC Perú', url: `${origin}/` },
+      breadcrumb: { '@id': `${canonical}#breadcrumb` },
+      dateModified: record.updatedAt || undefined,
+      about: ruc.startsWith('10') ? undefined : { '@id': orgId }
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': `${canonical}#breadcrumb`,
+      itemListElement: crumbs.map(([n, item], i) => ({ '@type': 'ListItem', position: i + 1, name: n, item }))
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': `${canonical}#faq`,
+      mainEntity: faqList.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a }
+      }))
+    }
+  ];
+  // Las personas naturales (RUC 10) no son una Organization, y publicar su
+  // domicilio como datos estructurados no aporta nada a nadie.
+  if (!ruc.startsWith('10')) {
+    const alt = [profile && profile.brand, record.nombreComercial]
+      .filter((x) => x && x !== '-' && x.toUpperCase() !== razon.toUpperCase());
+    graph.push({
+      '@type': profile ? profile.type : 'Organization',
+      '@id': orgId,
+      name: profile ? profile.name : razon,
+      legalName: razon,
+      alternateName: alt.length ? [...new Set(alt)] : undefined,
+      description: profile ? profile.about : undefined,
+      taxID: ruc,
+      identifier: { '@type': 'PropertyValue', propertyID: 'RUC', value: ruc },
+      foundingDate: isoDate(record.fechaInicioActividades) || undefined,
+      address: record.domicilioFiscal || dept
+        ? {
+            '@type': 'PostalAddress',
+            streetAddress: record.domicilioFiscal || undefined,
+            addressRegion: dept ? titleCase(dept) : undefined,
+            addressCountry: 'PE'
+          }
+        : undefined,
+      mainEntityOfPage: { '@id': pageId }
+    });
+  }
+  // "</" dentro de un <script> lo cerraría; una razón social no debería
+  // traerlo, pero el dato viene de fuera.
+  const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(/</g, '\\u003c');
+
+  const insights = buildInsights(record, names);
+  const siblings = groupSiblings(ruc);
+  const sameSector = sectorSiblings(ruc);
+  // La marca como texto del enlace ("SUNAT", "Ministerio Público Arequipa"): es lo que la gente busca.
+  const relItem = (s) => `<li><a href="/ruc/${s.ruc}">${escapeHtml(s.brand)}</a> <span class="ruc-rel-num">RUC ${s.ruc}</span></li>`;
+  const answer = profile
+    ? `El RUC ${art === 'el' ? 'del ' : art === 'la' ? 'de la ' : 'de '}<strong>${escapeHtml(name)}</strong> es <strong>${ruc}</strong>${razon.toUpperCase() !== name.toUpperCase() ? `, registrado a nombre de ${escapeHtml(razon)}` : ''}.`
+    : `El RUC <strong>${ruc}</strong> pertenece a <strong>${escapeHtml(razon)}</strong>.`;
+  const answerEstado = estado
+    ? ` Según la SUNAT, figura como <strong>${escapeHtml(estado)}</strong>${condicion ? ` y <strong>${escapeHtml(condicion)}</strong>` : ''}.`
+    : '';
+  const ogImage = `${origin}/img/og-home.png`;
 
   const mapSvg = PERU_MAP_PATH
     ? `<div class="field result-map-cell">
@@ -314,13 +438,24 @@ export function renderRucPage(ruc, record) {
   <meta name="description" content="${escapeHtml(description)}">
   <link rel="canonical" href="${escapeHtml(canonical)}">
   ${isIndexable ? '' : '<meta name="robots" content="noindex,follow">'}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Consulta RUC Perú">
+  <meta property="og:locale" content="es_PE">
+  <meta property="og:title" content="${escapeHtml(title)}">
+  <meta property="og:description" content="${escapeHtml(description)}">
+  <meta property="og:url" content="${escapeHtml(canonical)}">
+  <meta property="og:image" content="${ogImage}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeHtml(title)}">
+  <meta name="twitter:description" content="${escapeHtml(description)}">
+  <meta name="twitter:image" content="${ogImage}">
   <link rel="stylesheet" href="/style.css?v=688852fa">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script type="application/ld+json">${JSON.stringify(schema)}</script>
-  <script type="application/ld+json">${JSON.stringify(breadcrumb)}</script>
-  <script type="application/ld+json">${JSON.stringify(faqSchema)}</script>
+  <script type="application/ld+json">${jsonLd}</script>
 </head>
 <body class="light-theme">
   <header class="top-nav">
@@ -351,7 +486,7 @@ export function renderRucPage(ruc, record) {
 
 ${renderNav('ficha-ruc')}
 
-  <nav class="breadcrumb"><a href="/">Inicio</a> › <a href="/ficha-ruc/">Consulta RUC</a> › RUC ${escapeHtml(ruc)}</nav>
+  <nav class="breadcrumb">${crumbs.map(([n, item], i) => (i < crumbs.length - 1 ? `<a href="${escapeHtml(item.slice(origin.length))}">${escapeHtml(n)}</a>` : escapeHtml(n))).join(' › ')}</nav>
 
   <main class="geo-result" style="margin-top:1.5rem;">
     <div class="print-only print-head">
@@ -362,26 +497,47 @@ ${renderNav('ficha-ruc')}
       </div>
       <div class="print-head-url">consultaruc-pe.com</div>
     </div>
-    <h1 class="ruc-page-h1">${escapeHtml(razon)} <span class="ruc-page-h1-ruc">RUC ${escapeHtml(ruc)}</span></h1>
-    ${CRP.resultPanel(record, { mapSvg: mapSvg, deptName: dept ? titleCase(dept) : '', heading: false })}
+    <h1 class="ruc-page-h1">${escapeHtml(name)} <span class="ruc-page-h1-ruc">RUC ${escapeHtml(ruc)}</span></h1>
+    <p class="ruc-answer">${answer}${answerEstado}</p>
+    ${CRP.resultPanel(record, {
+      mapSvg: mapSvg,
+      deptName: dept ? titleCase(dept) : '',
+      heading: false,
+      // La fecha del dato, no la de hoy: "Verificado con SUNAT" con la fecha
+      // del día en una ficha de hace meses es una afirmación falsa.
+      consultedAt: record.updatedAt ? String(record.updatedAt).slice(0, 10) : undefined
+    })}
     <div class="print-only print-foot">
       <span>Ficha generada en <strong>consultaruc-pe.com</strong> · Fuente: datos públicos de la SUNAT · Documento informativo, no oficial.</span>
     </div>
 
     <section class="ruc-summary">
-      <h2>Resumen del RUC ${escapeHtml(ruc)}</h2>
-      <p class="ruc-summary-lead">${escapeHtml(buildSummary(ruc, record, dept))}</p>
+      ${profile ? `<h2>Acerca ${escapeHtml(names.deN)}</h2>
+      <p class="ruc-summary-lead">${escapeHtml(profile.about)}</p>
+      ${profile.guide ? `<p class="ruc-guide-link"><a href="${profile.guide.href}">${escapeHtml(profile.guide.label)}</a></p>` : ''}
+      ${siblings.length ? `<h3 class="ruc-rel-title">${profile.group === 'Ministerio Público' ? 'RUC de otras sedes del Ministerio Público' : `Otras empresas de ${escapeHtml(profile.group)}`}</h3>
+      <ul class="ruc-rel">${siblings.map(relItem).join('')}</ul>` : ''}
+      ` : ''}
+      ${insights.length ? `<h2${profile ? ' class="ruc-sec-title"' : ''}>Qué significan los datos ${escapeHtml(names.deN)}</h2>
+      <ul class="ruc-insights">
+        ${insights.map((i) => `<li>${i}</li>`).join('\n        ')}
+      </ul>` : ''}
 
-      <h2 class="ruc-faq-title">Preguntas frecuentes sobre el RUC ${escapeHtml(ruc)}</h2>
+      <h2 class="ruc-faq-title">Preguntas frecuentes sobre el RUC ${escapeHtml(names.deN)}</h2>
       <div class="ruc-faq">
         ${faqList.map((f) => `<div class="ruc-faq-item"><h3>${escapeHtml(f.q)}</h3><p>${escapeHtml(f.a)}</p></div>`).join('\n        ')}
       </div>
+
+      ${sameSector.length ? `<h2 class="ruc-sec-title">Más fichas de ${escapeHtml(SECTORS[profile.sector])}</h2>
+      <ul class="ruc-rel">${sameSector.map(relItem).join('')}</ul>` : ''}
 
       <div class="ruc-summary-links">
         <a href="/ficha-ruc/">Consultar otro RUC</a>
         <a href="/verificar-ruc-multiple/">Verificar varios a la vez</a>
         <a href="/razon-social/">Buscar por nombre</a>
         <a href="/empresas-populares/">Directorio de empresas</a>
+        <a href="/actualizar-datos-ruc/">Actualizar datos de tu RUC</a>
+        <a href="/activar-ruc/">Activar o reactivar un RUC</a>
         <a href="/faq/">Preguntas frecuentes</a>
       </div>
     </section>
@@ -429,10 +585,12 @@ ${renderNav('ficha-ruc')}
         </div>
         <div class="footer-col">
           <h3>Guías y recursos</h3>
-          <a href="/#f1">¿Qué es el RUC?</a>
+          <a href="/#s1">¿Qué es el RUC?</a>
           <a href="/faq/">Preguntas frecuentes</a>
           <a href="/clave-sol/">Clave SOL</a>
           <a href="/recibo-por-honorarios/">Recibo por honorarios</a>
+          <a href="/activar-ruc/">Activar o reactivar RUC</a>
+          <a href="/actualizar-datos-ruc/">Actualizar datos del RUC</a>
           <a href="/sat-lima-vs-sunat/">SAT vs SUNAT</a>
           <a href="/empresas-populares/">Empresas populares</a>
         </div>

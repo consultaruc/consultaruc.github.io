@@ -677,23 +677,34 @@ export function getSearchStats(hours = 720, limit = 12) {
   };
 }
 
-// Las fichas que entran al sitemap. Deliberadamente NO es "todos los RUC":
-// sólo los que alguien buscó de verdad y además tienen datos propios que
-// justifiquen indexarlos (el mismo umbral que decide noindex en
-// renderRucPage.js). Lo que se quitó en su día fue el relleno aleatorio para
-// llegar a mil URLs; esto es lo contrario, demanda real y acotada.
+// En cuántos días distintos se buscó un RUC. Es la señal de demanda con la que
+// indexableRucs.js decide si una ficha fuera del directorio curado se indexa.
+const stmtSearchDays = db.prepare(
+  'SELECT COUNT(DISTINCT day) AS days FROM ruc_search WHERE ruc = ? AND found = 1'
+);
+
+export function countSearchDays(ruc) {
+  return stmtSearchDays.get(ruc)?.days || 0;
+}
+
+// Las fichas buscadas que entran al sitemap. Deliberadamente NO es "todos los
+// RUC": mismo criterio que isIndexableRuc() en indexableRucs.js (ficha
+// enriquecida, con domicilio, y buscada en varios días distintos), para que
+// nada de lo que se ofrece a Google lleve noindex.
 const stmtSitemapRucs = db.prepare(`
   SELECT s.ruc, MAX(s.ts) AS lastTs, COUNT(*) AS n
   FROM ruc_search s JOIN ruc r ON r.ruc = s.ruc
   WHERE s.found = 1
     AND (r.direccion IS NOT NULL AND r.direccion != '')
+    AND r.tipo_contribuyente IS NOT NULL
   GROUP BY s.ruc
+  HAVING COUNT(DISTINCT s.day) >= ?
   ORDER BY n DESC, lastTs DESC
   LIMIT ?
 `);
 
-export function getSearchedRucsForSitemap(limit = 500) {
-  return stmtSitemapRucs.all(limit);
+export function getSearchedRucsForSitemap(limit, minDays) {
+  return stmtSitemapRucs.all(minDays, limit);
 }
 
 // Lo mismo, pero con la ficha entera, para poder pintar tarjetas en el

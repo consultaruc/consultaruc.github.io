@@ -2443,6 +2443,21 @@ html { scroll-behavior: smooth; }
 .ruc-summary-links { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 1.75rem; padding-top: 1.4rem; border-top: 1px solid var(--border-color); }
 .ruc-summary-links a { font-size: 0.82rem; font-weight: 600; padding: 0.5rem 0.95rem; border-radius: 999px; background: color-mix(in srgb, var(--geo-orange) 11%, transparent); color: var(--geo-orange-text); text-decoration: none; transition: background 0.15s, color 0.15s; }
 .ruc-summary-links a:hover { background: var(--geo-orange); color: #fff; }
+/* Respuesta directa bajo el <h1>: la frase que un buscador o un asistente
+   puede citar tal cual ("El RUC de EsSalud es 20131257750…"). */
+.ruc-answer { max-width: var(--container); margin: -0.35rem auto 1.1rem; font-size: 1rem; line-height: 1.6; color: var(--text-main); }
+.ruc-summary .ruc-sec-title { margin: 1.85rem 0 0.9rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); font-size: 1.15rem; }
+.ruc-guide-link { margin: 0.75rem 0 0; font-size: 0.92rem; font-weight: 600; }
+.ruc-guide-link a { color: var(--geo-orange-text); }
+.ruc-rel-title { font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--geo-navy); margin: 1.3rem 0 0.6rem; }
+.ruc-rel { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.5rem 1.25rem; }
+.ruc-rel li { font-size: 0.9rem; line-height: 1.45; }
+.ruc-rel a { color: var(--geo-navy); font-weight: 600; }
+.ruc-rel-num { display: block; font-family: var(--mono); font-size: 0.78rem; color: var(--text-muted); }
+.ruc-insights { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
+.ruc-insights li { font-size: 0.94rem; line-height: 1.65; color: var(--text-main); padding-left: 1.1rem; position: relative; }
+.ruc-insights li::before { content: ''; position: absolute; left: 0; top: 0.62em; width: 6px; height: 6px; border-radius: 50%; background: var(--geo-orange); }
+.ruc-insights a { color: var(--geo-orange-text); font-weight: 600; }
 @media (max-width: 640px) { .ruc-summary { padding: 1.3rem 1.15rem; border-radius: 12px; } .ruc-summary > h2 { font-size: 1.15rem; } }
 
 /* --- Image zoom / lightbox (all .art-figure images, site-wide) --- */
@@ -2622,6 +2637,7 @@ body:not(.light-theme) .content-page a:hover { color: #9DBBFF; }
 .art-section { scroll-margin-top: 80px; padding-top: 1.5rem; }
 .art-section h2 { font-size: 1.4rem; font-weight: 800; margin: 0.5rem 0 1rem; letter-spacing: -.02em; }
 .art-closing { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); font-size: 1.02rem; color: var(--text-muted); }
+.art-sources { margin-top: 1.25rem; font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); }
 
 /* step infographic */
 .art-infographic { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; margin: 1.4rem 0; }
