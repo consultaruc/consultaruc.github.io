@@ -35,28 +35,36 @@ const DEPT_BY_UBIGEO = {
   '25': 'UCAYALI'
 };
 
+// Domicilio que acaba en "... DEPARTAMENTO - PROVINCIA - DISTRITO". El grupo
+// captura el texto previo a la primera " - " sin cruzar dígitos, así que en
+// "JR. X NRO. 1178 CERCADO DE LIMA LIMA - LIMA - LIMA" queda "CERCADO DE LIMA LIMA".
+const ADDRESS_TAIL = /([A-ZÁÉÍÓÚÑ ]+?)\s+-\s+[A-ZÁÉÍÓÚÑ ]+\s+-\s+[A-ZÁÉÍÓÚÑ ]+\s*$/;
+const DEPT_NAMES_LONGEST_FIRST = Object.keys(DEPT_COORDS).sort((a, b) => b.length - a.length);
+
 /**
- * The reduced padrón often leaves `departamento` empty, but the domicilio
- * fiscal usually ends with "... DEPARTAMENTO - PROVINCIA - DISTRITO".
+ * The reduced padrón often leaves `departamento` empty.
  *
- * Order matters: the address is tried before the ubigeo because it carries the
- * department SUNAT actually printed on the ficha. Longest name first so
- * "LA LIBERTAD" wins over a stray "LIMA" elsewhere in the string. The ubigeo
- * is the fallback for addresses with no department name in them at all.
+ * The ubigeo goes first: it is a code, not free text, so it can't be wrong in
+ * the way an address can. Searching the whole address for a department name
+ * used to put "CAL. LIMA CON AYACUCHO" (Piura) in Ayacucho and "AV. REPUBLICA
+ * DE PANAMA" (Lima) in Ica, because "REPUBLICA" contains "ICA". Without a
+ * ubigeo, only the "DEPARTAMENTO - PROVINCIA - DISTRITO" tail is trusted.
+ * Longest name first so "LA LIBERTAD" wins over "LIMA".
  */
 export function deriveDept(departamento, address, ubigeo) {
   if (departamento) return departamento.toUpperCase().trim();
 
-  const up = (address || '').toUpperCase();
-  if (up) {
-    const keys = Object.keys(DEPT_COORDS).sort((a, b) => b.length - a.length);
-    for (const k of keys) {
-      if (up.includes(k)) return k;
+  const code = String(ubigeo || '').trim().slice(0, 2);
+  if (DEPT_BY_UBIGEO[code]) return DEPT_BY_UBIGEO[code];
+
+  const tail = (address || '').toUpperCase().match(ADDRESS_TAIL);
+  if (tail) {
+    const head = tail[1].trim();
+    for (const k of DEPT_NAMES_LONGEST_FIRST) {
+      if (head === k || head.endsWith(' ' + k)) return k;
     }
   }
-
-  const code = String(ubigeo || '').trim().slice(0, 2);
-  return DEPT_BY_UBIGEO[code] || '';
+  return '';
 }
 
 export function titleCase(s) {

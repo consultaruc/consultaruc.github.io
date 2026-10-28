@@ -312,22 +312,25 @@ const DEPT_BY_UBIGEO = {
   '25': 'UCAYALI'
 };
 
-// When `departamento` isn't set, read it off the address tail
-// ("... DEPARTAMENTO - PROVINCIA - DISTRITO"). Longest name first so
-// "LA LIBERTAD" wins over a stray "LIMA". Addresses that are just a street
-// ("AV. MATERIALES NRO. 2828") carry no department at all, so the ubigeo's
-// first two digits — which are the department code — are the last resort.
+// The ubigeo's first two digits ARE the department code, so they go first.
+// Searching the whole address for a department name put "CAL. LIMA CON
+// AYACUCHO" (Piura) in Ayacucho and "REPUBLICA" (contains "ICA") in Ica.
+// Without a ubigeo, only the "DEPARTAMENTO - PROVINCIA - DISTRITO" tail is
+// trusted; longest name first so "LA LIBERTAD" wins over "LIMA".
+const ADDRESS_TAIL = /([A-ZÁÉÍÓÚÑ ]+?)\s+-\s+[A-ZÁÉÍÓÚÑ ]+\s+-\s+[A-ZÁÉÍÓÚÑ ]+\s*$/;
 function deriveDept(departamento, address, ubigeo) {
   if (departamento) return departamento;
-  const up = (address || '').toUpperCase();
-  if (up) {
+  const code = String(ubigeo || '').trim().slice(0, 2);
+  if (DEPT_BY_UBIGEO[code]) return DEPT_BY_UBIGEO[code];
+  const tail = (address || '').toUpperCase().match(ADDRESS_TAIL);
+  if (tail) {
+    const head = tail[1].trim();
     const keys = Object.keys(DEPT_COORDS).sort((a, b) => b.length - a.length);
     for (const k of keys) {
-      if (up.includes(k)) return k;
+      if (head === k || head.endsWith(' ' + k)) return k;
     }
   }
-  const code = String(ubigeo || '').trim().slice(0, 2);
-  return DEPT_BY_UBIGEO[code] || '';
+  return '';
 }
 
 function setMapMarker(departamento) {
