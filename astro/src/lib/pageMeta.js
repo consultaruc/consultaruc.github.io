@@ -16,16 +16,18 @@ export const SITE_NAME = 'Consulta RUC Perú';
 
 export const PAGE_META = [
   { slug: '', title: 'Consulta RUC Gratis - SUNAT Perú', desc: 'Consulta el RUC de empresas y personas en Perú, gratis y al instante: razón social, estado (activo/habido), domicilio fiscal y actividad. Datos SUNAT.' },
-  { slug: 'ficha-ruc', title: 'Ficha RUC Perú - Consulta y Descarga Gratis', desc: 'Consulta y descarga la ficha RUC de cualquier empresa o persona en Perú: razón social, estado, condición de domicilio y actividad económica.' },
-  { slug: 'razon-social', title: 'Buscar Empresa por Razón Social en Perú', desc: 'Busca el RUC de cualquier empresa peruana escribiendo su razón social o nombre comercial. Resultados instantáneos desde el Padrón de SUNAT.' },
+  { slug: 'ficha-ruc', title: 'Ficha RUC SUNAT: Consulta, Descarga e Imprime Gratis', desc: 'Consulta, descarga e imprime gratis la ficha RUC de cualquier empresa o persona en Perú: razón social, estado, condición de domicilio y actividad económica.' },
+  { slug: 'razon-social', title: 'Buscar Empresa por Nombre o Razón Social en Perú', desc: 'Busca el RUC de cualquier empresa peruana escribiendo su razón social o nombre comercial. Resultados instantáneos desde el Padrón de SUNAT.' },
   { slug: 'verificar-ruc-multiple', title: 'Verificación Múltiple de RUC (Excel/CSV)', desc: 'Verifica el estado de múltiples RUC a la vez subiendo un archivo CSV o pegando una lista. Ideal para contadores y gestorías que validan proveedores.' },
   { slug: 'sello-verificado', title: 'Sello Verificado para tu Web', desc: 'Agrega un sello de verificación RUC en tu propia página web y demuestra a tus clientes que tu empresa está activa y habida ante SUNAT.' },
   { slug: 'tipo-de-cambio-sunat', title: 'Tipo de Cambio SUNAT Hoy: Compra y Venta del Dólar', desc: 'Tipo de cambio oficial SUNAT de hoy: precio de compra y venta del dólar. Historial de los últimos días, actualizado automáticamente todos los días hábiles.' },
   { slug: 'calculadora-tributaria', title: 'Calculadora de Régimen Tributario 2026: NRUS, RER, MYPE', desc: 'Compara NRUS, RER, Régimen MYPE Tributario y Régimen General según tus ingresos anuales. Calculadora orientativa 2026 con la UIT vigente de S/ 5,500.' },
-  { slug: 'empresas-populares', title: 'Directorio de Empresas Populares en Perú - Consulta RUC', desc: 'Directorio de las empresas más consultadas en Perú: BCP, Toyota del Perú, Supermercados Peruanos y más. Consulta su RUC, estado y domicilio fiscal.' },
+  { slug: 'empresas-populares', title: 'Directorio de Empresas Populares en Perú - Consulta RUC', desc: 'Directorio de las empresas y entidades públicas más consultadas del Perú: BCP, Plaza Vea, SUNAT, EsSalud, Ministerio Público y más. Consulta su RUC y estado.' },
   { slug: 'faq', title: 'Preguntas Frecuentes sobre Consulta RUC Perú', desc: 'Resolvemos las dudas más comunes sobre cómo consultar el RUC en Perú: qué significa activo y habido, cómo buscar por DNI, y más.' },
-  { slug: 'clave-sol', title: '¿Qué es la Clave SOL de SUNAT? Guía 2026', desc: 'Guía sobre qué es la Clave SOL de SUNAT, para qué sirve, cómo obtenerla y qué hacer si la olvidaste. Toda la información en un solo lugar.' },
-  { slug: 'recibo-por-honorarios', title: 'Recibo por Honorarios Electrónico (RHE) - Guía 2026', desc: 'Qué es el Recibo por Honorarios Electrónico (RHE) de SUNAT, quién debe emitirlo y cómo funciona la retención del impuesto a la renta de cuarta categoría.' },
+  { slug: 'clave-sol', title: 'Clave SOL SUNAT: Cómo Obtenerla, Recuperarla y Cambiarla', desc: 'Cómo obtener o crear tu Clave SOL de SUNAT, cómo recuperarla si la olvidaste y cómo cambiarla. Qué es, para qué sirve y cómo mantenerla segura.' },
+  { slug: 'activar-ruc', title: 'Activar o Reactivar RUC en SUNAT: Paso a Paso', desc: '¿Tu RUC está suspendido o de baja? Aprende a saber si está activo y cómo reactivarlo, comunicar el reinicio de actividades o suspenderlo en SUNAT.' },
+  { slug: 'actualizar-datos-ruc', title: 'Actualizar Datos del RUC en SUNAT: Paso a Paso', desc: 'Actualiza tu RUC con Clave SOL: domicilio fiscal, actividad económica, nombre comercial, celular y correo. Pasos del Formulario Virtual 3128 de SUNAT.' },
+  { slug: 'recibo-por-honorarios', title: 'Recibo por Honorarios Electrónico: Cómo Emitir tu RHE', desc: 'Cómo emitir tu recibo por honorarios electrónico (RHE) en SUNAT, quién debe emitirlo y cómo funciona la retención del impuesto a la renta de cuarta categoría.' },
   { slug: 'sat-lima-vs-sunat', title: 'SAT Lima vs. SUNAT: ¿Cuál es la diferencia?', desc: 'SAT de Lima y SUNAT son entidades diferentes. Descubre cuál te corresponde según tu trámite: impuesto predial, papeletas municipales, o RUC e impuestos nacionales.' },
   { slug: 'comercio-exterior-ruc', title: 'Comercio Exterior en el RUC: Qué Significa en SUNAT', desc: "Qué significa 'Actividad Comercio Exterior' en la ficha RUC de SUNAT, cómo saber si una empresa importa o exporta y cómo habilitar esta actividad." },
   { slug: 'consulta-essalud', title: 'Consulta EsSalud: Acreditación y Derechohabientes 2026', desc: 'Cómo consultar tu acreditación de EsSalud y la de tus derechohabientes con DNI, a través de la plataforma oficial VIVA EsSalud. Guía paso a paso 2026.' },
@@ -39,7 +41,7 @@ export const PAGE_META = [
 export const STATIC_PAGES = PAGE_META.map((m) => m.slug);
 
 export const TOOL_SLUGS = new Set(['ficha-ruc', 'razon-social', 'verificar-ruc-multiple', 'calculadora-tributaria', 'tipo-de-cambio-sunat', 'empresas-populares', 'sello-verificado']);
-export const GUIDE_SLUGS = new Set(['clave-sol', 'recibo-por-honorarios', 'sat-lima-vs-sunat', 'comercio-exterior-ruc', 'consulta-essalud', 'consulta-rnp', 'faq']);
+export const GUIDE_SLUGS = new Set(['clave-sol', 'activar-ruc', 'actualizar-datos-ruc', 'recibo-por-honorarios', 'sat-lima-vs-sunat', 'comercio-exterior-ruc', 'consulta-essalud', 'consulta-rnp', 'faq']);
 
 // One representative image per page for the image-sitemap extension (helps
 // image SEO). Content pages use their hero; home uses the branded OG card.
@@ -48,6 +50,8 @@ export const PAGE_IMG = {
   'ficha-ruc': '/img/ficha-ruc-01-anatomia.webp',
   'razon-social': '/img/razon-social-01-del-nombre-al-ruc.webp',
   'clave-sol': '/img/clave-sol-1-llave.webp',
+  'activar-ruc': '/img/activar-ruc-01-que-hacer-segun-estado.webp',
+  'actualizar-datos-ruc': '/img/actualizar-ruc-01-datos-que-puedes-cambiar.webp',
   'recibo-por-honorarios': '/img/recibo-1-documento.webp',
   'comercio-exterior-ruc': '/img/comercio-1-hero.webp',
   'consulta-essalud': '/img/essalud-1-hero.webp',

@@ -6,7 +6,7 @@ import { STATIC_PAGES, TOOL_SLUGS, GUIDE_SLUGS, PAGE_IMG } from './src/lib/pageM
 
 const SITE = 'https://consultaruc-pe.com';
 
-// Las 19 páginas estáticas, como URL absoluta y con la barra final que sirve
+// Las páginas estáticas de pageMeta.js, como URL absoluta y con la barra final que sirve
 // el sitio. Es la lista blanca del sitemap: lo que no esté aquí, no entra.
 const PUBLIC_URLS = new Map(
   STATIC_PAGES.map((slug) => [`${SITE}/${slug}${slug ? '/' : ''}`, slug])

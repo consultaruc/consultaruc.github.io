@@ -1,7 +1,7 @@
 /**
  * Single source of truth for the header menu.
  *
- * Every public page is reachable from here - 19 in total - grouped so the bar
+ * Every public page is reachable from here - 21 in total - grouped so the bar
  * itself stays short (6 items) instead of turning into a wall of links.
  * Used both by the SSR /ruc/:ruc route and (Phase 7) by BaseLayout.astro for
  * every static page, so the two can't drift apart - unlike the original
@@ -31,6 +31,8 @@ export const NAV = [
     children: [
       { label: 'Preguntas Frecuentes', href: '/faq/', page: 'faq' },
       { label: 'Clave SOL', href: '/clave-sol/', page: 'clave-sol' },
+      { label: 'Activar o Reactivar RUC', href: '/activar-ruc/', page: 'activar-ruc' },
+      { label: 'Actualizar Datos del RUC', href: '/actualizar-datos-ruc/', page: 'actualizar-datos-ruc' },
       { label: 'Recibo por Honorarios', href: '/recibo-por-honorarios/', page: 'recibo-por-honorarios' },
       { label: 'SAT Lima vs SUNAT', href: '/sat-lima-vs-sunat/', page: 'sat-lima-vs-sunat' },
       { label: 'Comercio Exterior', href: '/comercio-exterior-ruc/', page: 'comercio-exterior-ruc' },

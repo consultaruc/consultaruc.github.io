@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 ---
 <BaseLayout
-  title={"Buscar Empresa por Razón Social en Perú | Consulta RUC"}
+  title={"Buscar Empresa por Nombre o Razón Social en Perú | Consulta RUC"}
   description={"Busca el RUC de cualquier empresa peruana escribiendo su razón social o nombre comercial. Resultados instantáneos desde el Padrón de SUNAT."}
   canonical={"https://consultaruc-pe.com/razon-social/"}
   activePage="razon-social"
@@ -12,19 +12,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Consulta RUC Perú">
   <meta property="og:locale" content="es_PE">
-  <meta property="og:title" content="Buscar Empresa por Razón Social en Perú | Consulta RUC">
+  <meta property="og:title" content="Buscar Empresa por Nombre o Razón Social en Perú | Consulta RUC">
   <meta property="og:description" content="Busca el RUC de cualquier empresa peruana escribiendo su razón social o nombre comercial. Resultados instantáneos desde el Padrón de SUNAT.">
   <meta property="og:url" content="https://consultaruc-pe.com/razon-social/">
   <meta property="og:image" content="https://consultaruc-pe.com/img/razon-social-01-del-nombre-al-ruc.webp">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="670">
-  <meta property="og:image:alt" content="Buscar Empresa por Razón Social en Perú | Consulta RUC">
+  <meta property="og:image:alt" content="Buscar Empresa por Nombre o Razón Social en Perú | Consulta RUC">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Buscar Empresa por Razón Social en Perú | Consulta RUC">
+  <meta name="twitter:title" content="Buscar Empresa por Nombre o Razón Social en Perú | Consulta RUC">
   <meta name="twitter:description" content="Busca el RUC de cualquier empresa peruana escribiendo su razón social o nombre comercial. Resultados instantáneos desde el Padrón de SUNAT.">
   <meta name="twitter:image" content="https://consultaruc-pe.com/img/razon-social-01-del-nombre-al-ruc.webp">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Inicio","item":"https://consultaruc-pe.com/"},{"@type":"ListItem","position":2,"name":"Búsqueda por Razón Social","item":"https://consultaruc-pe.com/razon-social/"}]}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Buscar Empresa por Razón Social en Perú","description":"Busca el RUC de cualquier empresa peruana escribiendo su razón social o nombre comercial. Resultados instantáneos desde el Padrón de SUNAT.","image":["https://consultaruc-pe.com/img/razon-social-01-del-nombre-al-ruc.webp"],"inLanguage":"es-PE","author":{"@type":"Organization","name":"Consulta RUC Perú","url":"https://consultaruc-pe.com"},"publisher":{"@type":"Organization","name":"Consulta RUC Perú","url":"https://consultaruc-pe.com","logo":{"@type":"ImageObject","url":"https://consultaruc-pe.com/icon-512.png"}},"datePublished":"2026-07-24","dateModified":"2026-07-26","mainEntityOfPage":{"@type":"WebPage","@id":"https://consultaruc-pe.com/razon-social/"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Buscar Empresa por Nombre o Razón Social en Perú","description":"Busca el RUC de cualquier empresa peruana escribiendo su razón social o nombre comercial. Resultados instantáneos desde el Padrón de SUNAT.","image":["https://consultaruc-pe.com/img/razon-social-01-del-nombre-al-ruc.webp"],"inLanguage":"es-PE","author":{"@type":"Organization","name":"Consulta RUC Perú","url":"https://consultaruc-pe.com"},"publisher":{"@type":"Organization","name":"Consulta RUC Perú","url":"https://consultaruc-pe.com","logo":{"@type":"ImageObject","url":"https://consultaruc-pe.com/icon-512.png"}},"datePublished":"2026-07-24","dateModified":"2026-07-26","mainEntityOfPage":{"@type":"WebPage","@id":"https://consultaruc-pe.com/razon-social/"}}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"¿Puedo encontrar el RUC de una empresa solo con su nombre?","acceptedAnswer":{"@type":"Answer","text":"Sí. Al buscar por razón social escribes el nombre —completo o parcial— y el sistema te muestra las coincidencias con su número de RUC y su situación oficial."}},{"@type":"Question","name":"¿Por qué no encuentro una empresa que sé que existe?","acceptedAnswer":{"@type":"Answer","text":"Suele ser porque buscas por su nombre comercial o marca y no por su denominación legal, o por una diferencia de tildes o palabras. Escribe menos palabras, las más distintivas, y prueba variantes."}},{"@type":"Question","name":"¿Razón social y nombre comercial son lo mismo?","acceptedAnswer":{"@type":"Answer","text":"No. La razón social es el nombre legal de la empresa; el nombre comercial es con el que se presenta al público. Pueden ser muy distintos, y en las facturas va siempre la razón social."}},{"@type":"Question","name":"¿Qué hago si aparecen varias empresas con nombres parecidos?","acceptedAnswer":{"@type":"Answer","text":"Desempata con un dato adicional: el domicilio fiscal, el distrito o la actividad económica. No asumas que el primer resultado es el correcto solo porque el nombre calza."}},{"@type":"Question","name":"¿La búsqueda por nombre es gratis?","acceptedAnswer":{"@type":"Answer","text":"Sí. Es pública y gratuita, no requiere registro ni Clave SOL. Al encontrar la empresa obtienes su RUC y su situación al instante."}},{"@type":"Question","name":"¿Sirve para verificar a un proveedor antes de pagarle?","acceptedAnswer":{"@type":"Answer","text":"Totalmente. Buscas por su nombre, confirmas que el resultado corresponde a él y revisas que esté activo y habido antes de enviar cualquier adelanto."}}]}</script>
   
   </Fragment>
@@ -298,6 +298,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <p>La búsqueda por nombre no sirve solo para empresas privadas: las entidades públicas, los ministerios, los municipios y los organismos del Estado también tienen su propio registro y su denominación oficial. Si necesitas emitir un comprobante a una entidad estatal o verificar sus datos para un trámite, buscarla por su nombre te lleva a su identidad tributaria formal igual que con cualquier empresa.</p>
         <p>Esto es especialmente útil para proveedores del Estado, que deben facturar a nombre exacto de la entidad contratante. El nombre coloquial de una institución no siempre coincide con su denominación oficial registrada, y equivocarse en el comprobante puede retrasar un pago público. Confirmar la denominación correcta por búsqueda evita ese tipo de fricciones administrativas.</p>
         <p>Para el ciudadano que fiscaliza, poder encontrar por nombre a una entidad pública y ver su registro es también una forma de transparencia. La misma herramienta que usas para verificar a un proveedor privado te permite confirmar los datos formales de una institución, cerrando el círculo entre el sector privado y el público bajo un mismo principio de información abierta.</p>
+        <p>En nuestro <a href="/empresas-populares/#estado">directorio</a> tienes a mano el RUC de entidades como la <a href="/ruc/20131312955">SUNAT</a>, <a href="/ruc/20131257750">EsSalud</a>, el <a href="/ruc/20131370301">Ministerio Público</a> o la <a href="/ruc/20131380951">Municipalidad de Lima</a>.</p>
       </section>
 
       <section class="art-section" id="r24">

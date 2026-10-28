@@ -1,0 +1,244 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const TITLE = 'Actualizar Datos del RUC en SUNAT: Paso a Paso';
+const DESC = 'Actualiza tu RUC con Clave SOL: domicilio fiscal, actividad económica, nombre comercial, celular y correo. Pasos del Formulario Virtual 3128 de SUNAT.';
+const URL = 'https://consultaruc-pe.com/actualizar-datos-ruc/';
+const IMG = 'https://consultaruc-pe.com/img/actualizar-ruc-01-datos-que-puedes-cambiar.webp';
+
+const FAQ = [
+  { q: '¿Puedo actualizar mi ficha RUC sin Clave SOL?', a: 'En línea, no: el Formulario Virtual 3128 se abre con tu Clave SOL. Sin ella, puedes recuperarla primero o hacer el trámite en un Centro de Servicios al Contribuyente de la SUNAT.' },
+  { q: '¿Actualizar la ficha RUC y actualizar los datos del RUC es lo mismo?', a: 'Sí. La ficha RUC muestra los datos que tienes registrados en la SUNAT; cuando los actualizas con el Formulario 3128, tu ficha refleja el cambio.' },
+  { q: '¿Cómo cambio mi actividad económica en SUNAT?', a: 'Con tu Clave SOL, en el Formulario Virtual 3128 «Modificación de Datos del RUC», donde puedes cambiar tu actividad económica principal y las secundarias.' },
+  { q: '¿En cuánto tiempo debo comunicar el cambio de domicilio fiscal?', a: 'La SUNAT indica que el cambio de domicilio fiscal se comunica dentro de un día hábil desde que ocurre.' },
+  { q: '¿Qué hago si mi domicilio figura como no habido?', a: 'En ese caso el cambio de domicilio no se hace en línea: debes acudir a un Centro de Servicios al Contribuyente de la SUNAT.' },
+  { q: '¿Cómo compruebo que el cambio quedó registrado?', a: 'Guarda el CIR que genera la SUNAT al final del trámite y revisa tus datos con una consulta RUC, que es pública y gratuita.' }
+];
+
+const STEPS = [
+  'Entra a SUNAT Operaciones en Línea (SOL) con tu Clave SOL y abre la sección «Mis trámites y consultas».',
+  'Ve a «Mi RUC y otros registros» › «Actualizo información de mi RUC» › «RUC» › «Form. 3128 Modificación de datos del RUC».',
+  'Elige el dato que quieres cambiar y registra la nueva información que te pide el formulario.',
+  'Revisa el resumen de los cambios y confirma con «Aceptar».',
+  'Guarda el CIR (Comprobante de Información Registrada) que se genera con el número de orden del trámite.'
+];
+
+const ld = [
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://consultaruc-pe.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Actualizar datos del RUC', item: URL }
+  ] },
+  { '@context': 'https://schema.org', '@type': 'Article', headline: 'Cómo actualizar los datos de tu RUC en SUNAT', description: DESC,
+    image: [IMG, 'https://consultaruc-pe.com/img/actualizar-ruc-02-pasos-formulario-3128.webp', 'https://consultaruc-pe.com/img/actualizar-ruc-03-cir-constancia.webp'],
+    inLanguage: 'es-PE',
+    author: { '@type': 'Organization', name: 'Consulta RUC Perú', url: 'https://consultaruc-pe.com' },
+    publisher: { '@type': 'Organization', name: 'Consulta RUC Perú', url: 'https://consultaruc-pe.com', logo: { '@type': 'ImageObject', url: 'https://consultaruc-pe.com/icon-512.png' } },
+    datePublished: '2026-10-28', dateModified: '2026-10-28',
+    mainEntityOfPage: { '@type': 'WebPage', '@id': URL } },
+  { '@context': 'https://schema.org', '@type': 'HowTo', name: 'Cómo actualizar los datos del RUC con el Formulario Virtual 3128', inLanguage: 'es-PE',
+    tool: [{ '@type': 'HowToTool', name: 'Clave SOL' }],
+    step: STEPS.map((text, i) => ({ '@type': 'HowToStep', position: i + 1, text })) },
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: FAQ.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) }
+];
+---
+<BaseLayout
+  title={`${TITLE} | Consulta RUC`}
+  description={DESC}
+  canonical={URL}
+  activePage="actualizar-datos-ruc"
+  bodyClass="light-theme"
+>
+  <Fragment slot="head">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Consulta RUC Perú">
+  <meta property="og:locale" content="es_PE">
+  <meta property="og:title" content={TITLE}>
+  <meta property="og:description" content={DESC}>
+  <meta property="og:url" content={URL}>
+  <meta property="og:image" content={IMG}>
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="670">
+  <meta property="og:image:alt" content="Datos del RUC que puedes actualizar en línea con el Formulario Virtual 3128 de SUNAT">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content={TITLE}>
+  <meta name="twitter:description" content={DESC}>
+  <meta name="twitter:image" content={IMG}>
+  {ld.map((obj) => <script type="application/ld+json" set:html={JSON.stringify(obj)} />)}
+  </Fragment>
+
+  <nav class="breadcrumb"><a href="/">Inicio</a> › Actualizar datos del RUC</nav>
+
+  <main class="article-main">
+  <div class="page-head">
+    <h1>Cómo actualizar los datos de tu RUC en SUNAT</h1>
+    <p class="content-updated">Última actualización: octubre de 2026</p>
+    <p class="page-lead">Qué datos de tu RUC puedes cambiar por internet, los pasos del Formulario Virtual 3128 y los casos en los que tienes que ir a la SUNAT.</p>
+  </div>
+
+  <div class="home-article">
+    <aside class="art-toc" id="artToc">
+      <p class="art-toc-title">Contenido de esta guía</p>
+      <div class="art-toc-progress-label"><span>Progreso de lectura</span><span class="art-toc-pct">0%</span></div>
+      <div class="art-toc-progress"><span class="art-toc-progress-fill"></span></div>
+      <nav>
+        <a href="#ad1">1. Qué datos puedes actualizar</a>
+        <a href="#ad2">2. Paso a paso en SUNAT</a>
+        <a href="#ad3">3. Cambiar la actividad económica</a>
+        <a href="#ad4">4. Cambio de domicilio fiscal</a>
+        <a href="#ad5">5. Nombre comercial, celular y anexos</a>
+        <a href="#ad6">6. Cuándo ir a la SUNAT</a>
+        <a href="#ad7">7. El CIR</a>
+        <a href="#ad8">8. Errores frecuentes</a>
+        <a href="#ad9">9. Preguntas frecuentes</a>
+      </nav>
+    </aside>
+
+    <div class="art-main">
+      <div class="art-byline">
+        <div class="art-byline-av">CR</div>
+        <div class="art-byline-main">
+          <p class="art-byline-name"><strong>Equipo Editorial de Consulta RUC Perú</strong><span class="art-byline-badge"><span class="ic" data-icon="badge-check"></span> Revisado</span></p>
+          <div class="art-byline-meta">
+            <span><span class="ic" data-icon="calendar"></span> Actualizado: octubre de 2026</span>
+            <span><span class="ic" data-icon="clock"></span> <span class="js-readtime">—</span> min de lectura</span>
+            <span><span class="ic" data-icon="shield-check"></span> Fuente: SUNAT</span>
+          </div>
+        </div>
+        <div class="art-byline-actions">
+          <button type="button" class="art-byline-btn js-share" title="Copiar enlace" aria-label="Copiar enlace de la página"><span class="ic" data-icon="send"></span></button>
+        </div>
+      </div>
+      <div class="art-body">
+      <p class="art-lead"><strong>Los datos del RUC se actualizan en línea con tu Clave SOL</strong>, en el Formulario Virtual N.° 3128 «Modificación de Datos del RUC». Desde ahí cambias tu domicilio fiscal, tu actividad económica, tu nombre comercial, tu celular y correo, y otros datos. Al terminar, la SUNAT genera un CIR como constancia.</p>
+      <p>Mantener estos datos al día es una obligación del contribuyente. También es lo que hace que tu <a href="/ficha-ruc/">ficha RUC</a> muestre a tus clientes y proveedores la información correcta.</p>
+
+      <section class="art-section" id="ad1">
+        <h2>Qué datos del RUC puedes actualizar por internet</h2>
+        <p>Según la SUNAT, con el Formulario Virtual 3128 puedes hacer estos trámites en línea:</p>
+        <ul>
+          <li>Actualización del <strong>domicilio fiscal</strong>.</li>
+          <li><strong>Actividad económica</strong> principal y secundarias.</li>
+          <li><strong>Nombre comercial</strong>.</li>
+          <li>Actualización del <strong>celular y correo electrónico</strong>.</li>
+          <li>Alta, modificación o baja de <strong>establecimientos anexos</strong>.</li>
+          <li>Alta y baja de <strong>tributos</strong> afectos en el RUC.</li>
+          <li><a href="/activar-ruc/#ar6">Suspensión temporal</a> y <a href="/activar-ruc/#ar3">reinicio de actividades</a>.</li>
+          <li><a href="/activar-ruc/#ar7">Baja de inscripción</a> de personas naturales, sociedades conyugales o sucesiones indivisas, por cierre o cese de actividades.</li>
+          <li>Condición del inmueble declarado como domicilio fiscal.</li>
+          <li>Código de profesión u oficio.</li>
+          <li>Condición de domicilio en el país.</li>
+        </ul>
+        <figure class="art-figure"><img src="/img/actualizar-ruc-01-datos-que-puedes-cambiar.webp" alt="Datos del RUC que puedes actualizar en línea con el Formulario Virtual 3128: domicilio fiscal, actividad económica, nombre comercial, celular y correo, establecimientos anexos, tributos, suspensión o reinicio, baja de persona natural y otros" width="1200" height="670" loading="lazy" decoding="async"></figure>
+      </section>
+
+      <section class="art-section" id="ad2">
+        <h2>Cómo actualizar tus datos en SUNAT paso a paso</h2>
+        <p>El camino es el mismo para cualquiera de los cambios de la lista:</p>
+        <ol>
+          {STEPS.map((s) => <li>{s}</li>)}
+        </ol>
+        <figure class="art-figure"><img src="/img/actualizar-ruc-02-pasos-formulario-3128.webp" alt="Cuatro pasos para actualizar el RUC en SUNAT: ingresar a Operaciones en Línea con Clave SOL, abrir Mis trámites y consultas, ir a Mi RUC y otros registros hasta el Formulario 3128, y registrar y aceptar el cambio" width="1200" height="670" loading="lazy" decoding="async"></figure>
+        <div class="art-callout"><strong>¿Olvidaste tu Clave SOL?</strong> Recupérala antes de empezar. Te lo explicamos en la guía de la <a href="/clave-sol/">Clave SOL</a>.</div>
+      </section>
+
+      <section class="art-section" id="ad3">
+        <h2>Cómo cambiar la actividad económica en SUNAT</h2>
+        <p>La actividad económica de tu RUC es el giro que declaraste ante la SUNAT, identificado con un <a href="/#s20">código CIIU</a>. La <strong>principal</strong> es la que te genera más ingresos; las <strong>secundarias</strong>, otros giros que también realizas.</p>
+        <p>Para ver qué actividad tienes registrada, haz una <a href="/">consulta RUC</a> y busca el campo «Actividad económica principal».</p>
+        <p>Para cambiarla, entra al Formulario 3128 con tu Clave SOL y modifica la actividad principal o las secundarias. Conviene hacerlo cuando empiezas un giro nuevo o dejas uno que ya no realizas.</p>
+        <p>Elige el código que describa lo que realmente haces. Ciertas actividades no pueden acogerse a algunos regímenes tributarios; si tienes dudas, revisa la <a href="/calculadora-tributaria/">calculadora de régimen tributario</a>.</p>
+      </section>
+
+      <section class="art-section" id="ad4">
+        <h2>Cambio de domicilio fiscal: plazo y casos especiales</h2>
+        <p>Si te mudas o trasladas tu negocio, la SUNAT indica que el cambio de domicilio fiscal se comunica <strong>dentro de un día hábil</strong> desde que ocurre. Por lo general se hace en línea, con el mismo formulario.</p>
+        <p>Hay dos excepciones en las que debes ir a un Centro de Servicios al Contribuyente:</p>
+        <ul>
+          <li>Tu domicilio figura como <strong>no habido</strong>.</li>
+          <li>Tu domicilio tiene alguna restricción, por ejemplo por un procedimiento de cobranza coactiva o de fiscalización en curso.</li>
+        </ul>
+        <p>Un domicilio desactualizado es una de las causas más comunes de la condición <a href="/#s9">«no habido»</a>, que tus clientes y proveedores verán en cualquier consulta de tu RUC.</p>
+      </section>
+
+      <section class="art-section" id="ad5">
+        <h2>Nombre comercial, celular, correo y establecimientos anexos</h2>
+        <p><strong>Nombre comercial.</strong> Es el nombre con el que te conocen tus clientes, que puede ser distinto de tu razón social. Si cambias de marca, actualízalo para que tu ficha lo muestre.</p>
+        <p><strong>Celular y correo electrónico.</strong> Son los datos de contacto que la SUNAT tiene de ti. Mantenerlos al día también te facilita recuperar tu Clave SOL si la olvidas.</p>
+        <p><strong>Establecimientos anexos.</strong> Son los locales que tienes además de tu domicilio fiscal: tiendas, almacenes u oficinas. Cada uno se da de alta, se modifica o se da de baja en el mismo formulario.</p>
+      </section>
+
+      <section class="art-section" id="ad6">
+        <h2>Cuándo tienes que ir a un Centro de Servicios de la SUNAT</h2>
+        <p>La mayoría de los cambios se hacen en línea, pero no todos:</p>
+        <ul>
+          <li>Cambiar un domicilio fiscal <strong>no habido</strong> o con restricciones.</li>
+          <li><a href="/activar-ruc/#ar4">Reactivar un RUC dado de baja</a>.</li>
+          <li>Hacer el trámite <strong>sin Clave SOL</strong>.</li>
+        </ul>
+        <p>Si el dato que necesitas cambiar no aparece en el Formulario 3128, consulta en la Central de Consultas qué canal corresponde: <strong>0-801-12-100</strong> o <strong>(01) 315-0730</strong>.</p>
+      </section>
+
+      <section class="art-section" id="ad7">
+        <h2>El CIR: la constancia de tu actualización</h2>
+        <p>Cuando terminas un trámite en el Formulario 3128, la SUNAT genera el <strong>CIR</strong> (Comprobante de Información Registrada) con el <strong>número de orden</strong> de la transacción. Es tu constancia de lo que comunicaste y de cuándo lo hiciste.</p>
+        <p>Guárdalo. Después, comprueba con una <a href="/">consulta RUC</a> que tus datos ya aparecen como esperabas.</p>
+        <figure class="art-figure"><img src="/img/actualizar-ruc-03-cir-constancia.webp" alt="Ejemplo de CIR o Comprobante de Información Registrada de SUNAT con número de orden, RUC, trámite y dato actualizado, y recomendaciones para guardarlo y verificar el cambio con una consulta RUC" width="1200" height="670" loading="lazy" decoding="async"></figure>
+      </section>
+
+      <section class="art-section" id="ad8">
+        <h2>Errores frecuentes al actualizar el RUC</h2>
+        <ul>
+          <li><strong>Mudarse y no comunicarlo a tiempo.</strong> Un domicilio desactualizado puede terminar en la condición de no habido.</li>
+          <li><strong>Facturar algo que no coincide con tu actividad económica.</strong> Actualízala cuando cambie tu giro.</li>
+          <li><strong>No guardar el CIR.</strong> Es la prueba de lo que comunicaste.</li>
+          <li><strong>Dejar desactualizados el celular y el correo,</strong> y luego no poder recuperar la Clave SOL con facilidad.</li>
+        </ul>
+      </section>
+
+      <section class="art-section" id="ad9">
+        <h2>Preguntas frecuentes sobre la actualización de datos del RUC</h2>
+        <div class="art-faq">
+          {FAQ.map((f) => <details><summary>{f.q}</summary><p>{f.a}</p></details>)}
+        </div>
+      </section>
+
+      <p class="art-closing">Actualizar tu RUC es un trámite de minutos si tienes tu Clave SOL a mano. Cuando termines, haz una <a href="/">consulta RUC</a> para ver tu ficha al día. Si tu RUC además está suspendido o de baja, sigue la guía para <a href="/activar-ruc/">activar o reactivar tu RUC</a>.</p>
+
+      <p class="art-sources"><strong>Fuentes oficiales:</strong> SUNAT, <a href="https://emprender.sunat.gob.pe/sites/default/files/inline-files/Modifica_datos_Ruc.pdf" target="_blank" rel="noopener">Realiza la modificación de datos del RUC</a>; SUNAT, <a href="https://centrovirtual.sunat.gob.pe/tramites/actualizar-datos-ruc" target="_blank" rel="noopener">Actualización y/o modificación de datos en el RUC</a>.</p>
+      </div>
+    </div>
+
+    <aside class="art-aside" id="artAside">
+      <div class="art-aside-inner">
+
+        <div class="aside-card aside-search">
+          <h3><span class="ic" data-icon="search"></span> Consulta rápida</h3>
+          <form id="asideQuickForm" class="aside-quick">
+            <input type="text" id="asideQuickInput" inputmode="numeric" maxlength="11"
+              placeholder="Escribe un RUC (11 dígitos)" aria-label="RUC">
+            <button type="submit" aria-label="Consultar"><span class="ic" data-icon="arrow-right"></span></button>
+          </form>
+          <p class="aside-quick-hint">También puedes <a href="/razon-social/">buscar por nombre</a> o <a href="/verificar-ruc-multiple/">verificar una lista</a>.</p>
+        </div>
+
+        <div class="aside-card">
+          <h3><span class="ic" data-icon="clock"></span> Consultas recientes</h3>
+          <div id="artHistoryList"><p class="aside-empty">Tus búsquedas aparecerán aquí.</p></div>
+        </div>
+
+        <div class="aside-card">
+          <h3><span class="ic" data-icon="book-open"></span> Guías relacionadas</h3>
+          <a href="/activar-ruc/" class="aside-link"><span class="ic" data-icon="badge-check"></span> Activar o reactivar RUC</a>
+          <a href="/clave-sol/" class="aside-link"><span class="ic" data-icon="shield-check"></span> Clave SOL</a>
+          <a href="/ficha-ruc/" class="aside-link"><span class="ic" data-icon="file-text"></span> Ficha RUC</a>
+          <a href="/calculadora-tributaria/" class="aside-link"><span class="ic" data-icon="calculator"></span> Calculadora de régimen</a>
+        </div>
+
+        <button type="button" id="asideTop" class="aside-top"><span class="ic" data-icon="arrow-up"></span> Volver arriba</button>
+
+      </div>
+    </aside>
+  </div>
+
+  </main>
+</BaseLayout>

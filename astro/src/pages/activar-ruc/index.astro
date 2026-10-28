@@ -1,0 +1,249 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const TITLE = 'Activar o Reactivar RUC en SUNAT: Paso a Paso';
+const DESC = '¿Tu RUC está suspendido o de baja? Aprende a saber si está activo y cómo reactivarlo, comunicar el reinicio de actividades o suspenderlo en SUNAT.';
+const URL = 'https://consultaruc-pe.com/activar-ruc/';
+const IMG = 'https://consultaruc-pe.com/img/activar-ruc-01-que-hacer-segun-estado.webp';
+
+const FAQ = [
+  { q: '¿Puedo reactivar mi RUC por internet?', a: 'Depende del estado. Si tu RUC está en suspensión temporal, sí: comunicas el reinicio de actividades en SUNAT Operaciones en Línea con tu Clave SOL. Si fue dado de baja (definitiva o de oficio), la reactivación se pide en un Centro de Servicios al Contribuyente.' },
+  { q: '¿Cuánto tiempo puede estar suspendido un RUC?', a: 'Hasta 12 meses. Dentro de ese plazo puedes comunicar el reinicio de actividades o pedir la baja. Si se cumple el plazo sin que comuniques nada, la SUNAT puede dar de baja tu RUC de oficio.' },
+  { q: '¿Cómo sé si mi RUC ya está activo otra vez?', a: 'Haz una consulta RUC con tu número y revisa el campo «Estado del contribuyente»: debe decir ACTIVO. La consulta es pública, gratuita y no necesita Clave SOL.' },
+  { q: '¿Qué es el CIR que me da la SUNAT?', a: 'Es el Comprobante de Información Registrada: la constancia que genera la SUNAT al terminar un trámite del Formulario 3128, como la suspensión o el reinicio de actividades. Incluye el número de orden del trámite.' },
+  { q: '¿Necesito Clave SOL para reactivar mi RUC?', a: 'Para comunicar el reinicio de actividades en línea, sí. Para reactivar un RUC dado de baja vas a un Centro de Servicios al Contribuyente, donde se presentan los documentos de inscripción.' },
+  { q: '¿A qué número llamo si tengo dudas sobre mi RUC?', a: 'A la Central de Consultas de la SUNAT: 0-801-12-100 desde teléfonos fijos o (01) 315-0730 desde fijos y celulares.' }
+];
+
+const STEPS_REINICIO = [
+  'Ingresa con tu Clave SOL a SUNAT Operaciones en Línea y entra a «Mis trámites y consultas».',
+  'Abre «Mi RUC y otros registros», luego «Actualizo información de mi RUC» y el Formulario 3128 de modificación de datos.',
+  'Elige la opción «Suspensión / Reinicio de Actividades» y pulsa «Ingrese aquí».',
+  'Registra la fecha de reinicio y los datos que te pida el formulario, revisa el resumen y confirma con «Aceptar».',
+  'Al final, la SUNAT genera tu CIR (Comprobante de Información Registrada): guárdalo como constancia del reinicio.'
+];
+
+const ld = [
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://consultaruc-pe.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Activar o reactivar RUC', item: URL }
+  ] },
+  { '@context': 'https://schema.org', '@type': 'Article', headline: 'Cómo activar o reactivar tu RUC en SUNAT', description: DESC,
+    image: [IMG, 'https://consultaruc-pe.com/img/activar-ruc-02-saber-si-esta-activo.webp', 'https://consultaruc-pe.com/img/activar-ruc-03-suspension-12-meses.webp'],
+    inLanguage: 'es-PE',
+    author: { '@type': 'Organization', name: 'Consulta RUC Perú', url: 'https://consultaruc-pe.com' },
+    publisher: { '@type': 'Organization', name: 'Consulta RUC Perú', url: 'https://consultaruc-pe.com', logo: { '@type': 'ImageObject', url: 'https://consultaruc-pe.com/icon-512.png' } },
+    datePublished: '2026-10-28', dateModified: '2026-10-28',
+    mainEntityOfPage: { '@type': 'WebPage', '@id': URL } },
+  { '@context': 'https://schema.org', '@type': 'HowTo', name: 'Cómo reactivar un RUC en suspensión temporal (reinicio de actividades)', inLanguage: 'es-PE',
+    tool: [{ '@type': 'HowToTool', name: 'Clave SOL' }],
+    step: STEPS_REINICIO.map((text, i) => ({ '@type': 'HowToStep', position: i + 1, text })) },
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: FAQ.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) }
+];
+---
+<BaseLayout
+  title={`${TITLE} | Consulta RUC`}
+  description={DESC}
+  canonical={URL}
+  activePage="activar-ruc"
+  bodyClass="light-theme"
+>
+  <Fragment slot="head">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Consulta RUC Perú">
+  <meta property="og:locale" content="es_PE">
+  <meta property="og:title" content={TITLE}>
+  <meta property="og:description" content={DESC}>
+  <meta property="og:url" content={URL}>
+  <meta property="og:image" content={IMG}>
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="670">
+  <meta property="og:image:alt" content="Qué hacer según el estado de tu RUC: activo, suspensión temporal, baja provisional de oficio y baja definitiva">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content={TITLE}>
+  <meta name="twitter:description" content={DESC}>
+  <meta name="twitter:image" content={IMG}>
+  {ld.map((obj) => <script type="application/ld+json" set:html={JSON.stringify(obj)} />)}
+  </Fragment>
+
+  <nav class="breadcrumb"><a href="/">Inicio</a> › Activar o reactivar RUC</nav>
+
+  <main class="article-main">
+  <div class="page-head">
+    <h1>Cómo activar o reactivar tu RUC en SUNAT</h1>
+    <p class="content-updated">Última actualización: octubre de 2026</p>
+    <p class="page-lead">Cómo saber si tu RUC está activo, qué hacer según su estado y los pasos para reactivarlo o suspenderlo, con lo que indica la propia SUNAT.</p>
+  </div>
+
+  <div class="home-article">
+    <aside class="art-toc" id="artToc">
+      <p class="art-toc-title">Contenido de esta guía</p>
+      <div class="art-toc-progress-label"><span>Progreso de lectura</span><span class="art-toc-pct">0%</span></div>
+      <div class="art-toc-progress"><span class="art-toc-progress-fill"></span></div>
+      <nav>
+        <a href="#ar1">1. Cómo saber si tu RUC está activo</a>
+        <a href="#ar2">2. Qué hacer según el estado</a>
+        <a href="#ar3">3. Reactivar un RUC suspendido</a>
+        <a href="#ar4">4. Reactivar un RUC dado de baja</a>
+        <a href="#ar5">5. Baja provisional de oficio</a>
+        <a href="#ar6">6. Cómo suspender tu RUC</a>
+        <a href="#ar7">7. Dar de baja el RUC (persona natural)</a>
+        <a href="#ar8">8. Errores frecuentes</a>
+        <a href="#ar9">9. Preguntas frecuentes</a>
+      </nav>
+    </aside>
+
+    <div class="art-main">
+      <div class="art-byline">
+        <div class="art-byline-av">CR</div>
+        <div class="art-byline-main">
+          <p class="art-byline-name"><strong>Equipo Editorial de Consulta RUC Perú</strong><span class="art-byline-badge"><span class="ic" data-icon="badge-check"></span> Revisado</span></p>
+          <div class="art-byline-meta">
+            <span><span class="ic" data-icon="calendar"></span> Actualizado: octubre de 2026</span>
+            <span><span class="ic" data-icon="clock"></span> <span class="js-readtime">—</span> min de lectura</span>
+            <span><span class="ic" data-icon="shield-check"></span> Fuente: SUNAT</span>
+          </div>
+        </div>
+        <div class="art-byline-actions">
+          <button type="button" class="art-byline-btn js-share" title="Copiar enlace" aria-label="Copiar enlace de la página"><span class="ic" data-icon="send"></span></button>
+        </div>
+      </div>
+      <div class="art-body">
+      <p class="art-lead"><strong>Activar o reactivar un RUC depende de su estado.</strong> Si está en <strong>suspensión temporal</strong>, basta con comunicar el reinicio de actividades en SUNAT Operaciones en Línea con tu Clave SOL. Si fue <strong>dado de baja</strong>, ya sea a tu pedido o de oficio, la reactivación se pide en un Centro de Servicios al Contribuyente. Y si ya figura como <strong>activo</strong>, no tienes que hacer nada.</p>
+      <p>Por eso el primer paso siempre es el mismo: comprobar en qué estado está tu RUC hoy.</p>
+
+      <section class="art-section" id="ar1">
+        <h2>Cómo saber si tu RUC está activo</h2>
+        <p>Saber si tu RUC está activo toma menos de un minuto y no necesitas Clave SOL. La consulta es pública y gratuita.</p>
+        <ol>
+          <li>Abre la <a href="/">consulta RUC</a>.</li>
+          <li>Escribe tu número de RUC de 11 dígitos. Si eres persona natural, también puedes buscar con tu DNI en la pestaña correspondiente.</li>
+          <li>Revisa el campo <strong>«Estado del contribuyente»</strong>: si dice <strong>ACTIVO</strong>, tu RUC está operativo.</li>
+        </ol>
+        <p>Mira también la <strong>condición de domicilio</strong>. Lo esperable es que diga <strong>HABIDO</strong>. Un RUC activo pero <em>no habido</em> también te traerá problemas, y se resuelve actualizando tu domicilio fiscal (lo explicamos en la guía para <a href="/actualizar-datos-ruc/">actualizar los datos de tu RUC</a>).</p>
+        <figure class="art-figure"><img src="/img/activar-ruc-02-saber-si-esta-activo.webp" alt="Cómo saber si tu RUC está activo: escribe el número de RUC en la consulta, pulsa Consultar y revisa que el estado del contribuyente diga ACTIVO y la condición de domicilio HABIDO" width="1200" height="670" loading="lazy" decoding="async"></figure>
+        <p>Si necesitas un documento para presentar en un trámite, revisa nuestra guía de la <a href="/ficha-ruc/">ficha RUC</a>.</p>
+      </section>
+
+      <section class="art-section" id="ar2">
+        <h2>Qué hacer según el estado de tu RUC</h2>
+        <p>La SUNAT define seis estados posibles para un RUC. Cada uno tiene su propio camino para volver a operar:</p>
+        <div class="art-table-wrap">
+          <table class="art-table">
+            <thead><tr><th>Estado</th><th>Qué significa</th><th>Qué hacer</th></tr></thead>
+            <tbody>
+              <tr><td><span class="art-badge ok">ACTIVO</span></td><td>Realizas actividades que generan obligaciones tributarias.</td><td>Nada: puedes operar con normalidad.</td></tr>
+              <tr><td><span class="art-badge warn">SUSPENSIÓN TEMPORAL</span></td><td>Comunicaste que dejaste de operar por un tiempo.</td><td>Comunica el <a href="#ar3">reinicio de actividades</a> en línea o, si no vas a volver, pide la baja.</td></tr>
+              <tr><td><span class="art-badge warn">BAJA PROVISIONAL</span></td><td>Pediste la baja y la SUNAT la está evaluando.</td><td>Espera la respuesta de la SUNAT.</td></tr>
+              <tr><td><span class="art-badge bad">BAJA DEFINITIVA</span></td><td>La SUNAT aprobó la baja que solicitaste.</td><td><a href="#ar4">Pide la reactivación</a> en un Centro de Servicios al Contribuyente.</td></tr>
+              <tr><td><span class="art-badge bad">BAJA PROVISIONAL DE OFICIO</span></td><td>La SUNAT presume que podrías haber dejado de operar.</td><td><a href="#ar5">Regulariza</a> por teléfono o en un Centro de Servicios.</td></tr>
+              <tr><td><span class="art-badge bad">BAJA DEFINITIVA DE OFICIO</span></td><td>La SUNAT presume que dejaste de operar y te dio de baja.</td><td><a href="#ar4">Pide la reactivación</a> en un Centro de Servicios al Contribuyente.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <figure class="art-figure"><img src="/img/activar-ruc-01-que-hacer-segun-estado.webp" alt="Qué hacer según el estado de tu RUC: activo no requiere trámite, suspensión temporal se reactiva en línea con Clave SOL, baja provisional de oficio se regulariza por teléfono o en persona y baja definitiva se reactiva en un Centro de Servicios" width="1200" height="670" loading="lazy" decoding="async"></figure>
+      </section>
+
+      <section class="art-section" id="ar3">
+        <h2>Cómo reactivar un RUC en suspensión temporal</h2>
+        <p>Si suspendiste tu RUC y vuelves a trabajar, no tienes que inscribirte de nuevo. Lo que haces es <strong>comunicar el reinicio de actividades</strong>, en el mismo formulario con el que se comunica la suspensión:</p>
+        <ol>
+          {STEPS_REINICIO.map((s) => <li>{s}</li>)}
+        </ol>
+        <p>Hazlo antes de volver a emitir comprobantes. Cuando termines, comprueba con una <a href="/">consulta RUC</a> que el estado ya figura como ACTIVO.</p>
+        <div class="art-callout"><strong>¿No recuerdas tu Clave SOL?</strong> La necesitas para este trámite. En nuestra guía de la <a href="/clave-sol/">Clave SOL</a> te explicamos cómo recuperarla.</div>
+      </section>
+
+      <section class="art-section" id="ar4">
+        <h2>Cómo reactivar un RUC dado de baja</h2>
+        <p>Si tu RUC está en <strong>baja definitiva</strong> (la pediste tú) o en <strong>baja definitiva de oficio</strong> (la aplicó la SUNAT), la reactivación no se hace en línea. Se pide en un <strong>Centro de Servicios al Contribuyente</strong> de la SUNAT.</p>
+        <p>Según la SUNAT, el trámite lo hace el titular o su representante legal, presentando la documentación que se exige para inscribirse en el RUC, «como si fuera la primera vez».</p>
+        <p>Si va otra persona en tu nombre:</p>
+        <ul>
+          <li>Debe llevar una carta poder con firma legalizada ante notario o autenticada por un fedatario de la SUNAT.</li>
+          <li>Para una <strong>persona natural</strong>, se presenta el Formulario N.° 2119.</li>
+          <li>Para una <strong>persona jurídica</strong>, el Formulario N.° 2119 junto con el Formulario N.° 2054 y su anexo, con los datos de los representantes legales.</li>
+        </ul>
+        <p>Si el representante legal no es el que figura en el RUC, debe presentar el documento que acredite su representación, inscrito en Registros Públicos cuando corresponda.</p>
+        <div class="art-callout"><strong>Antes de ir:</strong> llama a la Central de Consultas (0-801-12-100 o (01) 315-0730) y confirma los requisitos de tu caso. Te ahorra una segunda visita.</div>
+      </section>
+
+      <section class="art-section" id="ar5">
+        <h2>Baja provisional de oficio: cómo regularizar</h2>
+        <p>Este estado lo pone la propia SUNAT cuando presume que podrías haber dejado de realizar actividades. Suele ocurrir cuando un RUC pasa tiempo sin declarar ni emitir comprobantes.</p>
+        <p>Para regularizarlo, la SUNAT indica llamar a la Central de Consultas al <strong>(01) 315-0730</strong> o al <strong>0-801-12-100</strong>, o acudir a un Centro de Servicios al Contribuyente. Si sigues operando, conviene hacerlo cuanto antes.</p>
+      </section>
+
+      <section class="art-section" id="ar6">
+        <h2>Cómo suspender tu RUC temporalmente</h2>
+        <p>Si vas a dejar de trabajar por un tiempo, pero no quieres cerrar tu RUC, lo que corresponde es comunicar la <strong>suspensión temporal de actividades</strong>. Se hace en línea con tu Clave SOL, por el mismo camino que el reinicio: los tres primeros pasos de la <a href="#ar3">sección anterior</a>, hasta la opción «Suspensión / Reinicio de Actividades».</p>
+        <p>Lo que cambia es lo que registras: la <strong>fecha de suspensión</strong> y los datos del último comprobante de pago que emitiste o recibiste. Después aceptas, revisas el resumen y confirmas. El trámite termina cuando se genera tu CIR.</p>
+        <p>La suspensión puede durar <strong>hasta 12 meses</strong>. Dentro de ese plazo puedes comunicar el reinicio o pedir la baja. Si el plazo se cumple sin que comuniques nada, la SUNAT puede dar de baja tu RUC de oficio.</p>
+        <figure class="art-figure"><img src="/img/activar-ruc-03-suspension-12-meses.webp" alt="Línea de tiempo de la suspensión temporal del RUC: hasta 12 meses, durante los cuales puedes comunicar el reinicio de actividades o pedir la baja; sin comunicar nada al cumplirse el plazo, la SUNAT puede dar de baja el RUC de oficio" width="1200" height="670" loading="lazy" decoding="async"></figure>
+      </section>
+
+      <section class="art-section" id="ar7">
+        <h2>Dar de baja el RUC de una persona natural</h2>
+        <p>Si cerraste tu negocio o dejaste de trabajar como independiente de forma definitiva, puedes pedir la <strong>baja de inscripción en el RUC</strong> por cierre o cese de actividades. Para personas naturales, sociedades conyugales y sucesiones indivisas, es uno de los trámites del mismo Formulario 3128, con tu Clave SOL.</p>
+        <p>Piénsalo bien antes de hacerlo. Si después quieres volver a operar, ya no bastará un trámite en línea: tendrás que pedir la reactivación en un Centro de Servicios.</p>
+        <p>Si solo vas a parar por unos meses, la <a href="#ar6">suspensión temporal</a> es la opción más flexible. Las personas jurídicas siguen un procedimiento distinto para su baja.</p>
+      </section>
+
+      <section class="art-section" id="ar8">
+        <h2>Errores frecuentes al reactivar o suspender el RUC</h2>
+        <ul>
+          <li><strong>Confundir suspensión con baja.</strong> La suspensión se revierte en línea con el reinicio de actividades; la baja definitiva exige ir a un Centro de Servicios.</li>
+          <li><strong>Dejar pasar los 12 meses de suspensión</strong> sin comunicar nada, y encontrarse con una baja de oficio.</li>
+          <li><strong>Volver a trabajar sin comunicar el reinicio.</strong> Comunícalo antes de emitir comprobantes.</li>
+          <li><strong>Mirar solo el estado y no la condición.</strong> Un RUC activo pero no habido también es un problema; <a href="/actualizar-datos-ruc/">actualiza tu domicilio fiscal</a>.</li>
+          <li><strong>No guardar el CIR.</strong> Es tu constancia del trámite y lleva el número de orden.</li>
+        </ul>
+      </section>
+
+      <section class="art-section" id="ar9">
+        <h2>Preguntas frecuentes sobre activar o reactivar el RUC</h2>
+        <div class="art-faq">
+          {FAQ.map((f) => <details><summary>{f.q}</summary><p>{f.a}</p></details>)}
+        </div>
+      </section>
+
+      <p class="art-closing">En resumen: <a href="/">consulta tu RUC</a> para ver su estado, y según lo que diga, comunica el reinicio en línea o pide la reactivación en un Centro de Servicios. Si además necesitas cambiar tu domicilio, tu actividad económica u otros datos, sigue la guía para <a href="/actualizar-datos-ruc/">actualizar los datos de tu RUC en SUNAT</a>.</p>
+
+      <p class="art-sources"><strong>Fuentes oficiales:</strong> SUNAT, <a href="https://orientacion.sunat.gob.pe/7144-10-estados-del-ruc" target="_blank" rel="noopener">Estados del RUC</a>; SUNAT, <a href="https://orientacion.sunat.gob.pe/reactivacion-del-numero-de-ruc" target="_blank" rel="noopener">Reactivación del número de RUC</a>; SUNAT, <a href="https://orientacion.sunat.gob.pe/sites/default/files/inline-files/IM_036_Suspensi%C3%B3n%20temporal%20de%20actividades.pdf" target="_blank" rel="noopener">Pasos para la suspensión temporal de actividades</a>.</p>
+      </div>
+    </div>
+
+    <aside class="art-aside" id="artAside">
+      <div class="art-aside-inner">
+
+        <div class="aside-card aside-search">
+          <h3><span class="ic" data-icon="search"></span> Consulta rápida</h3>
+          <form id="asideQuickForm" class="aside-quick">
+            <input type="text" id="asideQuickInput" inputmode="numeric" maxlength="11"
+              placeholder="Escribe un RUC (11 dígitos)" aria-label="RUC">
+            <button type="submit" aria-label="Consultar"><span class="ic" data-icon="arrow-right"></span></button>
+          </form>
+          <p class="aside-quick-hint">También puedes <a href="/razon-social/">buscar por nombre</a> o <a href="/verificar-ruc-multiple/">verificar una lista</a>.</p>
+        </div>
+
+        <div class="aside-card">
+          <h3><span class="ic" data-icon="clock"></span> Consultas recientes</h3>
+          <div id="artHistoryList"><p class="aside-empty">Tus búsquedas aparecerán aquí.</p></div>
+        </div>
+
+        <div class="aside-card">
+          <h3><span class="ic" data-icon="book-open"></span> Guías relacionadas</h3>
+          <a href="/actualizar-datos-ruc/" class="aside-link"><span class="ic" data-icon="file-text"></span> Actualizar datos del RUC</a>
+          <a href="/clave-sol/" class="aside-link"><span class="ic" data-icon="shield-check"></span> Clave SOL</a>
+          <a href="/ficha-ruc/" class="aside-link"><span class="ic" data-icon="file-text"></span> Ficha RUC</a>
+          <a href="/calculadora-tributaria/" class="aside-link"><span class="ic" data-icon="calculator"></span> Calculadora de régimen</a>
+        </div>
+
+        <button type="button" id="asideTop" class="aside-top"><span class="ic" data-icon="arrow-up"></span> Volver arriba</button>
+
+      </div>
+    </aside>
+  </div>
+
+  </main>
+</BaseLayout>
